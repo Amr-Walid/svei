@@ -1,0 +1,27 @@
+# Build
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Uploads (runtime user content)
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+
+# Misc
+*.log
+.DS_Store
+Thumbs.db
+node_modules/
