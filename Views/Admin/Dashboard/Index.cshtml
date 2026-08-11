@@ -1,0 +1,238 @@
+@model DashboardVm
+@{
+    var isAr = Lang.IsAr;
+    ViewData["Title"] = isAr ? "الرئيسية" : "Dashboard";
+    ViewData["PageIcon"] = "fa-solid fa-gauge-high";
+
+    var siteName = Cfg.Get("site.name", "SVEI");
+    var greeting = isAr ? "أهلاً بك في لوحة تحكم" : "Welcome to the admin panel of";
+
+    var tiles = new (string Ar, string En, int N, string Icon, string Cls, string Url)[]
+    {
+        ("المنتجات","Products",             Model.Products,        "fa-solid fa-mobile-screen",   "",             "/Admin/e/products"),
+        ("خطوط الإنتاج","Production lines", Model.ProductionLines, "fa-solid fa-industry",        "ad-stat--cyan","/Admin/e/production-lines"),
+        ("الأخبار","News",                  Model.News,            "fa-solid fa-newspaper",       "ad-stat--green","/Admin/e/news"),
+        ("الفعاليات","Events",              Model.Events,          "fa-solid fa-calendar-days",   "ad-stat--amber","/Admin/e/events"),
+        ("الوظائف","Jobs",                  Model.Jobs,            "fa-solid fa-briefcase",       "",             "/Admin/e/jobs"),
+        ("الخدمات","Services",              Model.Services,        "fa-solid fa-screwdriver-wrench","ad-stat--cyan","/Admin/e/services"),
+        ("العلامات","Brands",               Model.Brands,          "fa-solid fa-copyright",       "ad-stat--green","/Admin/e/brands"),
+        ("صور المعرض","Gallery images",     Model.GalleryImages,   "fa-solid fa-images",          "ad-stat--amber","/Admin/e/albums"),
+    };
+
+    var inbox = new (string Ar, string En, int N, string Icon, string Url)[]
+    {
+        ("رسائل جديدة","New messages",         Model.UnreadMessages,      "fa-solid fa-envelope",              "/Admin/e/messages"),
+        ("طلبات أسعار","Quote requests",       Model.UnreadQuotes,        "fa-solid fa-file-invoice-dollar",   "/Admin/e/quotes"),
+        ("طلبات توظيف","Job applications",     Model.UnreadApplications,  "fa-solid fa-file-signature",        "/Admin/e/applications"),
+        ("تسجيلات فعاليات","Registrations",    Model.UnreadRegistrations, "fa-solid fa-user-check",            "/Admin/e/event-registrations"),
+        ("طلبات شراكة","Partner requests",     Model.UnreadPartners,      "fa-solid fa-handshake",             "/Admin/e/partners"),
+        ("مشتركو النشرة","Subscribers",        Model.Subscribers,         "fa-solid fa-paper-plane",           "/Admin/e/subscribers"),
+    };
+
+    var content = new (string Ar, string En, int N, string Icon, string Url)[]
+    {
+        ("إعدادات الموقع","Site settings", Model.Settings,     "fa-solid fa-sliders",        "/Admin/e/settings"),
+        ("أقسام الصفحات","Page sections",  Model.Sections,     "fa-solid fa-puzzle-piece",   "/Admin/e/sections"),
+        ("الترجمات","Translations",        Model.Translations, "fa-solid fa-language",       "/Admin/e/translations"),
+        ("الصفحات الثابتة","Static pages", Model.Pages,        "fa-solid fa-file-lines",     "/Admin/e/pages"),
+    };
+
+    string Ago(DateTime d)
+    {
+        var s = DateTime.UtcNow - d;
+        if (s.TotalMinutes < 1) { return isAr ? "الآن" : "just now"; }
+        if (s.TotalHours < 1) { var m = (int)s.TotalMinutes; return isAr ? $"منذ {m} دقيقة" : $"{m}m ago"; }
+        if (s.TotalDays < 1) { var h = (int)s.TotalHours; return isAr ? $"منذ {h} ساعة" : $"{h}h ago"; }
+        if (s.TotalDays < 30) { var dd = (int)s.TotalDays; return isAr ? $"منذ {dd} يوم" : $"{dd}d ago"; }
+        return d.ToString("yyyy-MM-dd");
+    }
+}
+
+<div class="ad-page">
+    <div>
+        <h1>@greeting @siteName</h1>
+        <p>@(isAr ? "تحكم كامل في كل محتوى الموقع باللغتين العربية والإنجليزية." : "Full control over every piece of site content, in Arabic and English.")</p>
+    </div>
+    <div class="ad-page__actions">
+        <a class="ad-btn" href="/" target="_blank" rel="noopener">
+            <i class="fa-solid fa-globe"></i> @(isAr ? "عرض الموقع" : "View site")
+        </a>
+        <a class="ad-btn ad-btn--pri" href="/Admin/e/settings">
+            <i class="fa-solid fa-sliders"></i> @(isAr ? "الإعدادات" : "Settings")
+        </a>
+    </div>
+</div>
+
+@* ── content counters ─────────────────────────────────────────────────── *@
+<div class="ad-stats">
+    @foreach (var t in tiles)
+    {
+        var cls = "ad-stat " + t.Cls;
+        <a class="@cls" href="@t.Url">
+            <span class="ad-stat__ico"><i class="@t.Icon"></i></span>
+            <span>
+                <span class="ad-stat__n">@t.N</span>
+                <span class="ad-stat__l">@(isAr ? t.Ar : t.En)</span>
+            </span>
+        </a>
+    }
+</div>
+
+<div class="ad-grid" style="margin-top:18px">
+
+    @* ── inbox summary ────────────────────────────────────────────────── *@
+    <div class="c8">
+        <div class="ad-card">
+            <div class="ad-card__hd">
+                <h2><i class="fa-solid fa-inbox"></i> @(isAr ? "صندوق الوارد" : "Inbox")</h2>
+            </div>
+            <div class="ad-card__bd">
+                <div class="ad-stats" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+                    @foreach (var b in inbox)
+                    {
+                        var cls = b.N > 0 ? "ad-stat" : "ad-stat ad-stat--cyan";
+                        <a class="@cls" href="@b.Url">
+                            <span class="ad-stat__ico"><i class="@b.Icon"></i></span>
+                            <span>
+                                <span class="ad-stat__n">@b.N</span>
+                                <span class="ad-stat__l">@(isAr ? b.Ar : b.En)</span>
+                            </span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* ── recent activity feed ─────────────────────────────────────── *@
+        <div class="ad-card">
+            <div class="ad-card__hd">
+                <h2><i class="fa-solid fa-bell"></i> @(isAr ? "أحدث الطلبات والرسائل" : "Latest submissions")</h2>
+            </div>
+            @if (Model.Recent.Count == 0)
+            {
+                <div class="ad-empty">
+                    <i class="fa-solid fa-inbox"></i>
+                    <p>@(isAr ? "لا توجد رسائل بعد." : "No submissions yet.")</p>
+                </div>
+            }
+            else
+            {
+                <div class="ad-feed">
+                    @foreach (var r in Model.Recent)
+                    {
+                        var cls = r.Unread ? "ad-feed__i is-unread" : "ad-feed__i";
+                        <a class="@cls" href="@r.Url">
+                            <span class="ad-feed__ico"><i class="@r.IconClass"></i></span>
+                            <span class="ad-feed__bd">
+                                <span class="ad-feed__t">@r.Title</span>
+                                <span class="ad-feed__m">
+                                    <span class="ad-pill">@r.Kind</span>
+                                    <span>@Ago(r.When)</span>
+                                </span>
+                            </span>
+                            @if (r.Unread)
+                            {
+                                <span class="ad-badge">@(isAr ? "جديد" : "new")</span>
+                            }
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="c4">
+        @* ── content control ──────────────────────────────────────────── *@
+        <div class="ad-card">
+            <div class="ad-card__hd">
+                <h2><i class="fa-solid fa-pen-ruler"></i> @(isAr ? "تحكم في النصوص" : "Text control")</h2>
+            </div>
+            <div class="ad-feed">
+                @foreach (var c in content)
+                {
+                    <a class="ad-feed__i" href="@c.Url">
+                        <span class="ad-feed__ico"><i class="@c.Icon"></i></span>
+                        <span class="ad-feed__bd">
+                            <span class="ad-feed__t">@(isAr ? c.Ar : c.En)</span>
+                            <span class="ad-feed__m">@c.N @(isAr ? "عنصر" : "items")</span>
+                        </span>
+                        <i class="fa-solid @(isAr ? "fa-angle-left" : "fa-angle-right")" style="color:var(--ad-muted)"></i>
+                    </a>
+                }
+            </div>
+        </div>
+
+        @* ── upcoming events ──────────────────────────────────────────── *@
+        <div class="ad-card">
+            <div class="ad-card__hd">
+                <h2><i class="fa-solid fa-calendar-days"></i> @(isAr ? "فعاليات قادمة" : "Upcoming events")</h2>
+            </div>
+            @if (Model.Upcoming.Count == 0)
+            {
+                <div class="ad-empty" style="padding:30px 16px">
+                    <i class="fa-solid fa-calendar-xmark"></i>
+                    <p>@(isAr ? "لا توجد فعاليات قادمة." : "No upcoming events.")</p>
+                    <a class="ad-btn ad-btn--pri ad-btn--sm" href="/Admin/e/events/create">
+                        <i class="fa-solid fa-plus"></i> @(isAr ? "إضافة فعالية" : "New event")
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="ad-feed">
+                    @foreach (var u in Model.Upcoming)
+                    {
+                        var dstr = u.When?.ToString("yyyy-MM-dd") ?? "—";
+                        <a class="ad-feed__i" href="@u.Url">
+                            <span class="ad-feed__ico"><i class="fa-solid fa-calendar-day"></i></span>
+                            <span class="ad-feed__bd">
+                                <span class="ad-feed__t">@u.Title</span>
+                                <span class="ad-feed__m"><span>@dstr</span></span>
+                            </span>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+
+        @* ── audit trail ──────────────────────────────────────────────── *@
+        <div class="ad-card">
+            <div class="ad-card__hd">
+                <h2><i class="fa-solid fa-clock-rotate-left"></i> @(isAr ? "آخر النشاطات" : "Recent activity")</h2>
+            </div>
+            @if (Model.Activity.Count == 0)
+            {
+                <div class="ad-empty" style="padding:30px 16px">
+                    <i class="fa-solid fa-list"></i>
+                    <p>@(isAr ? "لا يوجد نشاط بعد." : "No activity yet.")</p>
+                </div>
+            }
+            else
+            {
+                <div class="ad-feed">
+                    @foreach (var a in Model.Activity)
+                    {
+                        var ico = a.Action switch
+                        {
+                            "create" => "fa-solid fa-plus",
+                            "update" => "fa-solid fa-pen",
+                            "delete" => "fa-solid fa-trash",
+                            _ => "fa-solid fa-circle-info"
+                        };
+                        <div class="ad-feed__i">
+                            <span class="ad-feed__ico"><i class="@ico"></i></span>
+                            <span class="ad-feed__bd">
+                                <span class="ad-feed__t">@(a.Summary ?? a.Entity)</span>
+                                <span class="ad-feed__m">
+                                    <span>@a.User</span>
+                                    <span>·</span>
+                                    <span>@Ago(a.When)</span>
+                                </span>
+                            </span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

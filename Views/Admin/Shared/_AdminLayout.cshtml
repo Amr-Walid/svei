@@ -1,0 +1,179 @@
+@{
+    var isAr = Lang.IsAr;
+    var dir = isAr ? "rtl" : "ltr";
+    var htmlLang = isAr ? "ar" : "en";
+    var badges = ViewData["Badges"] as Dictionary<string, int> ?? new();
+    var inboxTotal = ViewData["InboxTotal"] as int? ?? 0;
+    var pageTitle = ViewData["Title"] as string ?? (isAr ? "لوحة التحكم" : "Dashboard");
+    var pageIcon = ViewData["PageIcon"] as string ?? "fa-solid fa-gauge-high";
+
+    var path = Context.Request.Path.Value ?? "";
+    var isHome = path.Equals("/Admin", StringComparison.OrdinalIgnoreCase)
+              || path.Equals("/Admin/", StringComparison.OrdinalIgnoreCase);
+    var activeKey = ViewData["ActiveKey"] as string ?? "";
+
+    var userEmail = User.Identity?.Name ?? "admin";
+    var initial = userEmail.Length > 0 ? userEmail.Substring(0, 1).ToUpperInvariant() : "A";
+
+    var langHref = isAr ? "/Admin/Lang/en" : "/Admin/Lang/ar";
+    var langText = isAr ? "EN" : "ع";
+    var langTitle = isAr ? "English" : "العربية";
+
+    int Badge(string k) => badges.TryGetValue(k, out var v) ? v : 0;
+}
+<!DOCTYPE html>
+<html lang="@htmlLang" dir="@dir" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>@pageTitle — SVEI</title>
+
+    <link rel="icon" href="~/img/brand/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
+    <link rel="stylesheet" href="~/lib/quill/quill.snow.css" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('svei-admin-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) { }
+        })();
+    </script>
+</head>
+<body class="ad">
+<div class="ad-shell">
+
+    <aside class="ad-sb">
+        <a class="ad-sb__brand" href="/Admin">
+            <img src="~/img/brand/logo-light.svg" alt="SVEI" />
+            <span class="ad-sb__txt">
+                <b>SVEI</b>
+                <small>@(isAr ? "لوحة التحكم" : "ADMIN PANEL")</small>
+            </span>
+        </a>
+
+        <nav class="ad-sb__scroll">
+            <a class="ad-sb__link @(isHome ? "is-on" : "")" href="/Admin" title="@(isAr ? "الرئيسية" : "Dashboard")">
+                <i class="ad-sb__ico fa-solid fa-gauge-high"></i>
+                <span class="ad-sb__txt">@(isAr ? "الرئيسية" : "Dashboard")</span>
+            </a>
+
+            @foreach (var sec in AdminSchema.Sections)
+            {
+                var entities = AdminSchema.Nav(sec.Key).ToList();
+                if (entities.Count == 0) { continue; }
+                var secLabel = isAr ? sec.Ar : sec.En;
+
+                <div class="ad-sb__group">
+                    <i class="@sec.Icon"></i>
+                    <span>@secLabel</span>
+                    @if (sec.Key == "inbox" && inboxTotal > 0)
+                    {
+                        <span class="ad-badge">@inboxTotal</span>
+                    }
+                </div>
+
+                @foreach (var e in entities)
+                {
+                    var isOn = activeKey == e.Key;
+                    var n = e.HasUnread ? Badge(e.Key) : 0;
+                    var label = isAr ? e.TitleAr : e.TitleEn;
+                    var href = "/Admin/e/" + e.Key;
+                    var cls = isOn ? "ad-sb__link is-on" : "ad-sb__link";
+                    <a class="@cls" href="@href" title="@label">
+                        <i class="ad-sb__ico @e.Icon"></i>
+                        <span class="ad-sb__txt">@label</span>
+                        @if (n > 0)
+                        {
+                            <span class="ad-badge">@n</span>
+                        }
+                    </a>
+                }
+            }
+
+            <div class="ad-sb__group">
+                <i class="fa-solid fa-toolbox"></i>
+                <span>@(isAr ? "أدوات" : "Tools")</span>
+            </div>
+            <a class="ad-sb__link @(activeKey == "media" ? "is-on" : "")" href="/Admin/Media">
+                <i class="ad-sb__ico fa-solid fa-images"></i>
+                <span class="ad-sb__txt">@(isAr ? "مكتبة الوسائط" : "Media library")</span>
+            </a>
+            <a class="ad-sb__link @(activeKey == "users" ? "is-on" : "")" href="/Admin/Users">
+                <i class="ad-sb__ico fa-solid fa-user-shield"></i>
+                <span class="ad-sb__txt">@(isAr ? "المستخدمون" : "Users")</span>
+            </a>
+            <a class="ad-sb__link" href="/" target="_blank" rel="noopener">
+                <i class="ad-sb__ico fa-solid fa-arrow-up-right-from-square"></i>
+                <span class="ad-sb__txt">@(isAr ? "عرض الموقع" : "View site")</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="ad-scrim" data-close-sb></div>
+
+    <div class="ad-main">
+        <header class="ad-hd">
+            <button type="button" class="ad-icobtn" data-toggle-sb title="@(isAr ? "طي القائمة" : "Toggle sidebar")">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <div class="ad-hd__title">
+                <i class="@pageIcon"></i>
+                <span>@pageTitle</span>
+            </div>
+
+            <div class="ad-hd__spacer"></div>
+
+            <a class="ad-icobtn" href="@langHref" title="@langTitle">
+                <span style="font-size:11px;font-weight:800">@langText</span>
+            </a>
+
+            <button type="button" class="ad-icobtn" data-theme-toggle title="@(isAr ? "المظهر" : "Theme")">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
+            <div class="ad-hd__user">
+                <span class="ad-hd__avatar">@initial</span>
+                <span>@userEmail</span>
+            </div>
+
+            <form method="post" action="/Account/Logout" style="display:inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="ad-icobtn" title="@(isAr ? "تسجيل الخروج" : "Sign out")">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </form>
+        </header>
+
+        <main class="ad-body">
+            @RenderBody()
+        </main>
+    </div>
+</div>
+
+<div class="ad-toasts">
+    @if (TempData["ok"] is string okMsg)
+    {
+        <div class="ad-toast"><i class="fa-solid fa-circle-check"></i><span>@okMsg</span></div>
+    }
+    @if (TempData["warn"] is string warnMsg)
+    {
+        <div class="ad-toast ad-toast--warn"><i class="fa-solid fa-triangle-exclamation"></i><span>@warnMsg</span></div>
+    }
+    @if (TempData["err"] is string errMsg)
+    {
+        <div class="ad-toast ad-toast--err"><i class="fa-solid fa-circle-xmark"></i><span>@errMsg</span></div>
+    }
+</div>
+
+<script src="~/lib/quill/quill.js"></script>
+<script src="~/lib/sortable/Sortable.min.js"></script>
+<script src="~/js/admin.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

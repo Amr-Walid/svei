@@ -1,0 +1,172 @@
+@model MediaVm
+@{
+    var isAr = Lang.IsAr;
+    ViewData["Title"] = isAr ? "مكتبة الوسائط" : "Media library";
+    ViewData["PageIcon"] = "fa-solid fa-images";
+    ViewData["ActiveKey"] = "media";
+
+    var mb = Model.TotalBytes / 1024.0 / 1024.0;
+    var sizeText = mb >= 1024
+        ? (mb / 1024).ToString("0.0") + " GB"
+        : mb.ToString("0.0") + " MB";
+
+    string Url(string? folder, int page = 1)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(folder)) { parts.Add("folder=" + Uri.EscapeDataString(folder!)); }
+        if (!string.IsNullOrWhiteSpace(Model.Query)) { parts.Add("q=" + Uri.EscapeDataString(Model.Query!)); }
+        if (page > 1) { parts.Add("page=" + page); }
+        return parts.Count == 0 ? "/Admin/Media" : "/Admin/Media?" + string.Join("&", parts);
+    }
+
+    var confirmDelete = isAr ? "حذف هذا الملف نهائياً؟" : "Permanently delete this file?";
+    var imgExts = new[] { ".webp", ".jpg", ".jpeg", ".png", ".gif", ".svg", ".bmp" };
+}
+
+<div class="ad-page">
+    <div>
+        <h1><i class="fa-solid fa-images" style="color:var(--ad-red);margin-inline-end:6px"></i> @(isAr ? "مكتبة الوسائط" : "Media library")</h1>
+        <p>@Model.Total @(isAr ? "ملف" : "files") · @sizeText</p>
+    </div>
+</div>
+
+<div class="ad-card">
+    <div class="ad-card__hd">
+        <h2><i class="fa-solid fa-cloud-arrow-up"></i> @(isAr ? "رفع ملفات" : "Upload files")</h2>
+    </div>
+    <div class="ad-card__bd">
+        <form method="post" action="/Admin/Media/upload" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="ad-grid">
+                <div class="c8">
+                    <div class="ad-f">
+                        <label>@(isAr ? "اختر الملفات (يمكن اختيار أكثر من ملف)" : "Choose files (multiple allowed)")</label>
+                        <input class="ad-in" type="file" name="files" multiple />
+                    </div>
+                </div>
+                <div class="c2">
+                    <div class="ad-f">
+                        <label>@(isAr ? "المجلد" : "Folder")</label>
+                        <input class="ad-in" type="text" name="folder" value="@Model.Folder" dir="ltr" placeholder="library" />
+                    </div>
+                </div>
+                <div class="c2" style="display:flex;align-items:flex-end">
+                    <button type="submit" class="ad-btn ad-btn--pri" style="width:100%">
+                        <i class="fa-solid fa-upload"></i> @(isAr ? "رفع" : "Upload")
+                    </button>
+                </div>
+            </div>
+            <p class="ad-f__hint" style="margin-top:8px">
+                <i class="fa-solid fa-circle-info"></i>
+                @(isAr
+                    ? "الصور تُحوَّل تلقائياً إلى صيغة WebP مع إنشاء نسخة مصغّرة."
+                    : "Images are automatically converted to WebP with a thumbnail generated.")
+            </p>
+        </form>
+    </div>
+</div>
+
+<div class="ad-card">
+    <div class="ad-tools">
+        <form method="get" action="/Admin/Media">
+            @if (!string.IsNullOrWhiteSpace(Model.Folder))
+            {
+                <input type="hidden" name="folder" value="@Model.Folder" />
+            }
+            <input class="ad-in" type="search" name="q" value="@Model.Query"
+                   placeholder="@(isAr ? "بحث…" : "Search…")" data-search />
+            <button type="submit" class="ad-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </form>
+
+        @if (Model.Folders.Count > 0)
+        {
+            <div class="ad-chips">
+                <a class="ad-chip @(string.IsNullOrWhiteSpace(Model.Folder) ? "is-on" : "")" href="@Url(null)">
+                    @(isAr ? "الكل" : "All")
+                </a>
+                @foreach (var f in Model.Folders)
+                {
+                    <a class="ad-chip @(Model.Folder == f ? "is-on" : "")" href="@Url(f)">@f</a>
+                }
+            </div>
+        }
+    </div>
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="ad-empty">
+            <i class="fa-solid fa-photo-film"></i>
+            <p>@(isAr ? "لا توجد ملفات في المكتبة." : "No files in the library.")</p>
+        </div>
+    }
+    else
+    {
+        <div class="ad-card__bd">
+            <div class="ad-media">
+                @foreach (var m in Model.Items)
+                {
+                    var ext = System.IO.Path.GetExtension(m.Path ?? "").ToLowerInvariant();
+                    var isImage = imgExts.Contains(ext);
+                    var thumb = string.IsNullOrWhiteSpace(m.ThumbPath) ? m.Path : m.ThumbPath;
+                    var kb = m.SizeBytes / 1024.0;
+                    var sizeLbl = kb >= 1024 ? (kb / 1024).ToString("0.0") + " MB" : kb.ToString("0") + " KB";
+                    var dims = (m.Width.HasValue && m.Height.HasValue) ? $"{m.Width}×{m.Height}" : "";
+                    var delUrl = "/Admin/Media/delete/" + m.Id;
+
+                    <div class="ad-media__i">
+                        <a class="ad-media__ph" href="@m.Path" target="_blank" rel="noopener" title="@m.FileName">
+                            @if (isImage)
+                            {
+                                <img src="@thumb" alt="@(m.AltAr ?? m.FileName)" loading="lazy" />
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-file-lines"></i>
+                            }
+                        </a>
+                        <div class="ad-media__bd">
+                            <b>@m.FileName</b>
+                            <span>@sizeLbl @dims</span>
+                            <div style="display:flex;gap:5px;margin-top:6px">
+                                <a class="ad-btn ad-btn--sm ad-btn--ico" href="@m.Path" target="_blank" rel="noopener"
+                                   title="@(isAr ? "فتح" : "Open")">
+                                    <i class="fa-solid fa-up-right-from-square"></i>
+                                </a>
+                                <button type="button" class="ad-btn ad-btn--sm ad-btn--ico"
+                                        title="@(isAr ? "نسخ المسار" : "Copy path")"
+                                        onclick="navigator.clipboard.writeText(this.getAttribute('data-p'));window.adToast&amp;&amp;window.adToast('@(isAr ? "تم النسخ" : "Copied")');"
+                                        data-p="@m.Path">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                                <form method="post" action="@delUrl" data-confirm="@confirmDelete" style="display:inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="folder" value="@Model.Folder" />
+                                    <button type="submit" class="ad-btn ad-btn--sm ad-btn--ico ad-btn--danger">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div class="ad-pager">
+                <span>@(isAr ? "صفحة" : "Page") @Model.Page / @Model.TotalPages</span>
+                <div class="ad-pager__nums">
+                    @if (Model.Page > 1)
+                    {
+                        <a href="@Url(Model.Folder, Model.Page - 1)"><i class="fa-solid fa-angle-right"></i></a>
+                    }
+                    @if (Model.Page < Model.TotalPages)
+                    {
+                        <a href="@Url(Model.Folder, Model.Page + 1)"><i class="fa-solid fa-angle-left"></i></a>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>

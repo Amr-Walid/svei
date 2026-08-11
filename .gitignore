@@ -25,3 +25,8 @@ wwwroot/uploads/*
 .DS_Store
 Thumbs.db
 node_modules/
+
+# crash dumps
+core
+core.*
+*.core
