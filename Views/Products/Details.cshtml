@@ -1,0 +1,164 @@
+@model ProductDetailsVm
+@{
+    var p     = Model.Product;
+    var name  = Lang.Pick(p.NameAr, p.NameEn);
+    var sum   = Lang.Pick(p.ShortDescAr, p.ShortDescEn);
+    var body  = Lang.Pick(p.DescAr, p.DescEn);
+    var brand = Lang.Pick(p.Brand?.NameAr, p.Brand?.NameEn);
+    var cat   = Lang.Pick(p.Category?.NameAr, p.Category?.NameEn);
+    var line  = Lang.Pick(p.ProductionLine?.NameAr, p.ProductionLine?.NameEn);
+    var main  = p.MainImagePath ?? "/img/sections/feature3.webp";
+}
+
+<section class="sv-pagehero">
+    <div class="sv-container">
+        <ul class="sv-crumbs">
+            <li><a href="@Lang.Url("/")">@Cfg.T("nav.home")</a></li>
+            <li><a href="@Lang.Url("/products")">@Cfg.T("nav.products")</a></li>
+            <li><span>@name</span></li>
+        </ul>
+        <h1>@name</h1>
+        @if (!string.IsNullOrWhiteSpace(sum))
+        {
+            <p>@sum</p>
+        }
+    </div>
+</section>
+
+<section class="sv-section">
+    <div class="sv-container">
+        <div class="sv-pdp">
+
+            @* ── Media ───────────────────────────────────────────────────── *@
+            <div class="sv-pdp__media sv-reveal" data-lightbox>
+                <a class="sv-pdp__main glightbox" href="@main" data-gallery="product" data-title="@name">
+                    <img src="@main" alt="@name" />
+                </a>
+                @if (p.Images.Count > 0)
+                {
+                    <div class="sv-pdp__thumbs">
+                        @foreach (var im in p.Images)
+                        {
+                            var alt = Lang.Pick(im.AltAr, im.AltEn) ?? name;
+                            <a class="glightbox" href="@im.ImagePath" data-gallery="product" data-title="@alt">
+                                <img src="@im.ImagePath" alt="@alt" loading="lazy" />
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+
+            @* ── Info ────────────────────────────────────────────────────── *@
+            <div class="sv-pdp__info sv-reveal" data-delay="1">
+                @if (!string.IsNullOrWhiteSpace(brand))
+                {
+                    <span class="sv-product__brand">@brand</span>
+                }
+                <h2>@name</h2>
+
+                <ul class="sv-pdp__meta">
+                    @if (!string.IsNullOrWhiteSpace(p.Sku))
+                    {
+                        <li><span>SKU</span><strong>@p.Sku</strong></li>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(p.ModelNumber))
+                    {
+                        <li><span>@(Lang.IsAr ? "الموديل" : "Model")</span><strong>@p.ModelNumber</strong></li>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(cat))
+                    {
+                        <li><span>@Cfg.T("word.category")</span><strong>@cat</strong></li>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        <li>
+                            <span>@Cfg.T("nav.production_lines")</span>
+                            <strong><a href="@Lang.Url($"/production-lines/{p.ProductionLine!.Slug}")">@line</a></strong>
+                        </li>
+                    }
+                    <li>
+                        <span>@(Lang.IsAr ? "التوفر" : "Availability")</span>
+                        <strong class="@(p.InStock ? "sv-ok" : "sv-off")">
+                            @(p.InStock ? (Lang.IsAr ? "متاح" : "In stock") : (Lang.IsAr ? "غير متاح" : "Out of stock"))
+                        </strong>
+                    </li>
+                </ul>
+
+                @if (p.ShowPrice && p.Price.HasValue)
+                {
+                    <div class="sv-pdp__price">@p.Price.Value.ToString("N0") <small>@p.Currency</small></div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(sum))
+                {
+                    <p class="sv-lead">@sum</p>
+                }
+
+                <div class="sv-pdp__actions">
+                    <a class="sv-btn sv-btn--primary sv-btn--lg" href="@Lang.Url("/quote")">
+                        <i class="fa-regular fa-file-lines"></i> @Cfg.T("nav.quote")
+                    </a>
+                    @if (!string.IsNullOrWhiteSpace(p.ExternalShopUrl))
+                    {
+                        <a class="sv-btn sv-btn--tech sv-btn--lg" href="@p.ExternalShopUrl" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-cart-shopping"></i> @Cfg.T("btn.shop_now")
+                        </a>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(p.DatasheetPath))
+                    {
+                        <a class="sv-btn sv-btn--outline sv-btn--lg" href="@p.DatasheetPath" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-download"></i> @Cfg.T("btn.download")
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(body) || p.Specs.Count > 0)
+        {
+            <div class="sv-grid sv-grid--2 sv-mt-8">
+                @if (!string.IsNullOrWhiteSpace(body))
+                {
+                    <div class="sv-block sv-reveal">
+                        <h2>@(Lang.IsAr ? "الوصف" : "Description")</h2>
+                        <div class="sv-rte">@Html.Raw(body)</div>
+                    </div>
+                }
+                @if (p.Specs.Count > 0)
+                {
+                    <div class="sv-block sv-reveal">
+                        <h2>@(Lang.IsAr ? "المواصفات" : "Specifications")</h2>
+                        <table class="sv-table">
+                            <tbody>
+                            @foreach (var s in p.Specs)
+                            {
+                                <tr>
+                                    <th>@Lang.Pick(s.LabelAr, s.LabelEn)</th>
+                                    <td>@Lang.Pick(s.ValueAr, s.ValueEn)</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@if (Model.Related.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <h2>@Cfg.T("word.related")</h2>
+            </div>
+            <div class="sv-grid sv-grid--4">
+                @foreach (var r in Model.Related)
+                {
+                    @await Html.PartialAsync("_ProductCard", r)
+                }
+            </div>
+        </div>
+    </section>
+}

@@ -1,0 +1,114 @@
+@model EventsVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)> { (Cfg.T("nav.events"), null) };
+
+    var basePath = Lang.Url("/events");
+    var q = Model.Paged.Query;
+
+    string FilterUrl(string? status, string? type)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(status) && status != "all") parts.Add("status=" + Uri.EscapeDataString(status));
+        if (!string.IsNullOrWhiteSpace(type)) parts.Add("type=" + Uri.EscapeDataString(type));
+        if (!string.IsNullOrWhiteSpace(q)) parts.Add("q=" + Uri.EscapeDataString(q));
+        return parts.Count == 0 ? basePath : basePath + "?" + string.Join("&", parts);
+    }
+
+    var statuses = new[]
+    {
+        ("all",      Lang.IsAr ? "الكل"   : "All"),
+        ("upcoming", Cfg.T("word.upcoming")),
+        ("ongoing",  Cfg.T("word.ongoing")),
+        ("past",     Cfg.T("word.past"))
+    };
+}
+
+@await Html.PartialAsync("_PageHero", Sec("hero"))
+
+@* ── Featured upcoming strip ─────────────────────────────────────────────── *@
+@if (Model.Upcoming.Count > 0)
+{
+    <section class="sv-section sv-section--tight">
+        <div class="sv-container">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <span class="sv-eyebrow">@(Lang.IsAr ? "لا تفوّتها" : "Don't miss")</span>
+                <h2>@(Lang.IsAr ? "الفعاليات القادمة" : "Upcoming events")</h2>
+            </div>
+            <div class="sv-grid sv-grid--3">
+                @foreach (var ev in Model.Upcoming)
+                {
+                    @await Html.PartialAsync("_EventCard", ev)
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── All events + filters ────────────────────────────────────────────────── *@
+<section class="sv-section sv-section--alt">
+    <div class="sv-container">
+
+        <div class="sv-toolbar sv-reveal">
+            <div class="sv-filters">
+                @foreach (var (key, label) in statuses)
+                {
+                    var active = (Model.Status ?? "all") == key ? "sv-filter is-active" : "sv-filter";
+                    <a class="@active" href="@FilterUrl(key, Model.EventType)">@label</a>
+                }
+            </div>
+
+            <form class="sv-search" method="get" action="@basePath">
+                @if (!string.IsNullOrWhiteSpace(Model.Status) && Model.Status != "all")
+                {
+                    <input type="hidden" name="status" value="@Model.Status" />
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.EventType))
+                {
+                    <input type="hidden" name="type" value="@Model.EventType" />
+                }
+                <input class="sv-input" type="search" name="q" value="@q"
+                       placeholder="@(Lang.IsAr ? "ابحث في الفعاليات…" : "Search events…")" />
+                <button class="sv-btn sv-btn--primary sv-btn--sm" type="submit">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+        </div>
+
+        @if (Model.Types.Count > 1)
+        {
+            <div class="sv-filters sv-filters--soft sv-reveal">
+                <a class="@(string.IsNullOrWhiteSpace(Model.EventType) ? "sv-filter is-active" : "sv-filter")"
+                   href="@FilterUrl(Model.Status, null)">
+                    <i class="fa-solid fa-layer-group"></i> @(Lang.IsAr ? "كل الأنواع" : "All types")
+                </a>
+                @foreach (var t in Model.Types)
+                {
+                    var active = Model.EventType == t ? "sv-filter is-active" : "sv-filter";
+                    <a class="@active" href="@FilterUrl(Model.Status, t)">
+                        <i class="@EventLabels.Icon(t)"></i> @EventLabels.Type(t, Lang.IsAr)
+                    </a>
+                }
+            </div>
+        }
+
+        @if (Model.Paged.Items.Count == 0)
+        {
+            ViewData["EmptyIcon"] = "fa-regular fa-calendar-xmark";
+            @await Html.PartialAsync("_Empty", Lang.IsAr ? "لا توجد فعاليات مطابقة حالياً." : "No events match your search yet.")
+        }
+        else
+        {
+            <div class="sv-grid sv-grid--3">
+                @foreach (var ev in Model.Paged.Items)
+                {
+                    @await Html.PartialAsync("_EventCard", ev)
+                }
+            </div>
+
+            @await Html.PartialAsync("_Pager", Model.Paged)
+        }
+    </div>
+</section>

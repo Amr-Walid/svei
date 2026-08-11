@@ -1,0 +1,212 @@
+@model QuoteVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)> { (Cfg.T("nav.quote"), null) };
+
+    var arrow = Lang.IsAr ? "fa-arrow-left" : "fa-arrow-right";
+    var email = Cfg.GetRaw("contact.email");
+    var phone = Cfg.GetRaw("contact.phone");
+    var phoneTel = "tel:" + (phone ?? "").Replace(" ", "").Replace("(", "").Replace(")", "").Replace("-", "");
+
+    var timelines = new[]
+    {
+        ("urgent",   Lang.IsAr ? "عاجل (أقل من شهر)"   : "Urgent (under 1 month)"),
+        ("1-3",      Lang.IsAr ? "من ١ إلى ٣ أشهر"     : "1 – 3 months"),
+        ("3-6",      Lang.IsAr ? "من ٣ إلى ٦ أشهر"     : "3 – 6 months"),
+        ("6plus",    Lang.IsAr ? "أكثر من ٦ أشهر"      : "More than 6 months"),
+        ("planning", Lang.IsAr ? "في مرحلة التخطيط"    : "Still planning")
+    };
+}
+
+@await Html.PartialAsync("_PageHero", Sec("hero"))
+
+@* ── How it works ────────────────────────────────────────────────────────── *@
+@if (Model.Steps.Count > 0)
+{
+    <section class="sv-section sv-section--tight">
+        <div class="sv-container">
+            <div class="sv-steps">
+                @{ var n = 0; }
+                @foreach (var card in Model.Steps)
+                {
+                    n++;
+                    <div class="sv-step sv-reveal">
+                        <span class="sv-step__num">@n.ToString("00")</span>
+                        @if (!string.IsNullOrWhiteSpace(card.Icon))
+                        {
+                            <span class="sv-step__icon"><i class="@card.Icon"></i></span>
+                        }
+                        <h3>@Lang.Pick(card.TitleAr, card.TitleEn)</h3>
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(card.TextAr, card.TextEn)))
+                        {
+                            <p>@Lang.Pick(card.TextAr, card.TextEn)</p>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<section class="sv-section @(Model.Steps.Count > 0 ? "sv-section--alt" : null)">
+    <div class="sv-container">
+        <div class="sv-contact">
+
+            <div class="sv-contact__form sv-reveal">
+                <h2>@(Lang.IsAr ? "نموذج طلب عرض سعر" : "Request for quotation")</h2>
+                <p class="sv-muted">
+                    @(Lang.IsAr
+                        ? "كلما زادت تفاصيلك، كان عرض السعر أدق وأسرع. جميع البيانات سرية تماماً."
+                        : "The more detail you give us, the faster and more accurate your quotation. All data is confidential.")
+                </p>
+
+                <form method="post" action="@Lang.Url("/quote/send")" enctype="multipart/form-data" class="sv-form sv-mt-4">
+                    @Html.AntiForgeryToken()
+                    <input type="text" name="Website" class="sv-hidden" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+                    <div class="sv-grid sv-grid--2">
+                        <div class="sv-field">
+                            <label class="sv-label" for="qf-name">@Cfg.T("label.name") <span class="sv-req">*</span></label>
+                            <input class="sv-input" id="qf-name" name="FullName" required maxlength="150" />
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="qf-email">@Cfg.T("label.email") <span class="sv-req">*</span></label>
+                            <input class="sv-input" id="qf-email" name="Email" type="email" required maxlength="200" />
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="qf-phone">@Cfg.T("label.phone") <span class="sv-req">*</span></label>
+                            <input class="sv-input" id="qf-phone" name="Phone" type="tel" required maxlength="30" />
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="qf-company">@Cfg.T("label.company")</label>
+                            <input class="sv-input" id="qf-company" name="Company" maxlength="200" />
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="qf-country">@Cfg.T("label.country")</label>
+                            <input class="sv-input" id="qf-country" name="Country" maxlength="120" />
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="qf-line">@Cfg.T("nav.production_lines")</label>
+                            <select class="sv-select" id="qf-line" name="ProductionLineId">
+                                <option value="">@(Lang.IsAr ? "— اختر خط الإنتاج —" : "— Select a production line —")</option>
+                                @foreach (var l in Model.Lines)
+                                {
+                                    if (Model.Form.ProductionLineId == l.Id)
+                                    {
+                                        <option value="@l.Id" selected>@Lang.Pick(l.NameAr, l.NameEn)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@l.Id">@Lang.Pick(l.NameAr, l.NameEn)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="qf-type">@(Lang.IsAr ? "نوع المنتج" : "Product type")</label>
+                            <input class="sv-input" id="qf-type" name="ProductType" maxlength="200"
+                                   placeholder="@(Lang.IsAr ? "مثال: باور بانك ٢٠٠٠٠ مللي أمبير" : "e.g. 20,000 mAh power bank")" />
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="qf-qty">@Cfg.T("label.quantity")</label>
+                            <input class="sv-input" id="qf-qty" name="Quantity" type="number" min="1" />
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="qf-budget">
+                                @(Lang.IsAr ? "الميزانية التقديرية" : "Target budget")
+                                <span class="sv-opt">@Cfg.T("label.optional")</span>
+                            </label>
+                            <input class="sv-input" id="qf-budget" name="TargetBudget" maxlength="120" />
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="qf-timeline">@(Lang.IsAr ? "الجدول الزمني" : "Timeline")</label>
+                            <select class="sv-select" id="qf-timeline" name="Timeline">
+                                <option value="">@(Lang.IsAr ? "— اختر —" : "— Select —")</option>
+                                @foreach (var (val, label) in timelines)
+                                {
+                                    <option value="@val">@label</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="sv-field">
+                        <label class="sv-label" for="qf-details">@Cfg.T("label.details")</label>
+                        <textarea class="sv-textarea" id="qf-details" name="Details" rows="6"
+                                  placeholder="@(Lang.IsAr ? "المواصفات، التغليف، الشهادات المطلوبة…" : "Specifications, packaging, required certifications…")"></textarea>
+                    </div>
+
+                    <div class="sv-field">
+                        <label class="sv-label" for="qf-file">
+                            @(Lang.IsAr ? "مرفق (رسومات / كتالوج)" : "Attachment (drawings / catalogue)")
+                            <span class="sv-opt">@Cfg.T("label.optional")</span>
+                        </label>
+                        <input class="sv-input" id="qf-file" name="Attachment" type="file"
+                               accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.png,.jpg,.jpeg" />
+                        <span class="sv-help">PDF / DOC / XLS / ZIP / @(Lang.IsAr ? "صور" : "images")</span>
+                    </div>
+
+                    <button class="sv-btn sv-btn--primary sv-btn--lg" type="submit">
+                        @Cfg.T("btn.submit") <i class="fa-solid @arrow"></i>
+                    </button>
+                </form>
+            </div>
+
+            <aside class="sv-contact__info sv-reveal" data-delay="1">
+                <div class="sv-sidecard">
+                    <h3>@(Lang.IsAr ? "تفضّل التحدث مباشرة؟" : "Prefer to talk directly?")</h3>
+                    <ul class="sv-facts">
+                        @if (!string.IsNullOrWhiteSpace(phone))
+                        {
+                            <li>
+                                <i class="fa-solid fa-phone"></i>
+                                <div><span>@Cfg.T("label.phone")</span><strong><a href="@phoneTel" dir="ltr">@phone</a></strong></div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(email))
+                        {
+                            <li>
+                                <i class="fa-regular fa-envelope"></i>
+                                <div><span>@Cfg.T("label.email")</span><strong><a href="mailto:@email">@email</a></strong></div>
+                            </li>
+                        }
+                        <li>
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <div>
+                                <span>@(Lang.IsAr ? "السرية" : "Confidentiality")</span>
+                                <strong>@(Lang.IsAr ? "نلتزم باتفاقية عدم إفصاح" : "NDA on request")</strong>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-stopwatch"></i>
+                            <div>
+                                <span>@(Lang.IsAr ? "زمن الرد" : "Response time")</span>
+                                <strong>@(Lang.IsAr ? "خلال ٤٨ ساعة عمل" : "Within 48 working hours")</strong>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                @if (Model.Lines.Count > 0)
+                {
+                    <div class="sv-sidecard">
+                        <h3>@Cfg.T("nav.production_lines")</h3>
+                        <ul class="sv-linklist">
+                            @foreach (var l in Model.Lines)
+                            {
+                                <li>
+                                    <a href="@Lang.Url($"/production-lines/{l.Slug}")">
+                                        <i class="@(l.Icon ?? "fa-solid fa-industry")"></i>
+                                        @Lang.Pick(l.NameAr, l.NameEn)
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </aside>
+        </div>
+    </div>
+</section>

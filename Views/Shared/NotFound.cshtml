@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] ??= Lang.IsAr ? "الصفحة غير موجودة" : "Page not found";
+}
+
+<section class="sv-section">
+    <div class="sv-container sv-container--narrow">
+        <div class="sv-empty sv-404">
+            <div class="sv-404__code">404</div>
+            <h1>@(Lang.IsAr ? "الصفحة غير موجودة" : "Page not found")</h1>
+            <p>
+                @(Lang.IsAr
+                    ? "الرابط الذي تبحث عنه غير متاح أو تم نقله."
+                    : "The page you're looking for doesn't exist or has been moved.")
+            </p>
+            <div class="sv-split__actions" style="justify-content:center">
+                <a class="sv-btn sv-btn--primary" href="@Lang.Url("/")">@Cfg.T("nav.home")</a>
+                <a class="sv-btn sv-btn--outline" href="@Lang.Url("/contact")">@Cfg.T("nav.contact")</a>
+            </div>
+        </div>
+    </div>
+</section>

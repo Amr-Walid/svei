@@ -1,0 +1,47 @@
+@model GalleryVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)> { (Cfg.T("nav.gallery"), null) };
+}
+
+@await Html.PartialAsync("_PageHero", Sec("hero"))
+
+<section class="sv-section">
+    <div class="sv-container">
+        @if (Model.Albums.Count == 0)
+        {
+            ViewData["EmptyIcon"] = "fa-regular fa-images";
+            @await Html.PartialAsync("_Empty", Cfg.T("msg.coming_soon"))
+        }
+        else
+        {
+            <div class="sv-grid sv-grid--3">
+                @foreach (var a in Model.Albums)
+                {
+                    var url   = Lang.Url($"/gallery/{a.Slug}");
+                    var title = Lang.Pick(a.TitleAr, a.TitleEn);
+                    var text  = Lang.Pick(a.DescAr, a.DescEn);
+                    var cover = a.CoverImagePath
+                                ?? a.Images.FirstOrDefault()?.ImagePath
+                                ?? "/img/sections/feature2.webp";
+
+                    <article class="sv-album sv-reveal">
+                        <a class="sv-album__media" href="@url">
+                            <img src="@cover" alt="@title" loading="lazy" />
+                            <span class="sv-album__count"><i class="fa-regular fa-images"></i> @a.Images.Count</span>
+                        </a>
+                        <div class="sv-album__body">
+                            <h3><a href="@url">@title</a></h3>
+                            @if (!string.IsNullOrWhiteSpace(text))
+                            {
+                                <p>@text</p>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </div>
+</section>

@@ -1,0 +1,117 @@
+@model ServiceDetailsVm
+@{
+    var svc   = Model.Service;
+    var title = Lang.Pick(svc.TitleAr, svc.TitleEn);
+    var sum   = Lang.Pick(svc.ShortDescAr, svc.ShortDescEn);
+    var body  = Lang.Pick(svc.DescAr, svc.DescEn);
+    var cover = svc.ImagePath ?? "/img/sections/feature1.webp";
+    var arrow = Lang.IsAr ? "fa-arrow-left" : "fa-arrow-right";
+}
+
+<section class="sv-pagehero">
+    <div class="sv-pagehero__bg"><img src="@cover" alt="@title" loading="eager" /></div>
+    <div class="sv-container">
+        <ul class="sv-crumbs">
+            <li><a href="@Lang.Url("/")">@Cfg.T("nav.home")</a></li>
+            <li><a href="@Lang.Url("/services")">@Cfg.T("nav.services")</a></li>
+            <li><span>@title</span></li>
+        </ul>
+        <h1>@title</h1>
+        @if (!string.IsNullOrWhiteSpace(sum))
+        {
+            <p>@sum</p>
+        }
+    </div>
+</section>
+
+<section class="sv-section">
+    <div class="sv-container">
+        <div class="sv-detail">
+            <div class="sv-detail__main">
+                <figure class="sv-detail__cover sv-reveal">
+                    <img src="@cover" alt="@title" />
+                </figure>
+
+                @if (!string.IsNullOrWhiteSpace(body))
+                {
+                    <div class="sv-rte sv-reveal">@Html.Raw(body)</div>
+                }
+
+                @if (svc.Features.Count > 0)
+                {
+                    <div class="sv-block sv-reveal">
+                        <h2>@(Lang.IsAr ? "ماذا يشمل؟" : "What's included")</h2>
+                        <ul class="sv-ticks sv-ticks--grid">
+                            @foreach (var f in svc.Features)
+                            {
+                                <li><i class="@(f.Icon ?? "fa-solid fa-check")"></i> @Lang.Pick(f.TextAr, f.TextEn)</li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+
+            <aside class="sv-detail__side">
+                <div class="sv-sidecard sv-reveal">
+                    <h3>@(Lang.IsAr ? "مهتم بهذه الخدمة؟" : "Interested in this service?")</h3>
+                    <p class="sv-muted">
+                        @(Lang.IsAr
+                            ? "أرسل لنا تفاصيل مشروعك وسنعود إليك بعرض سعر مفصّل."
+                            : "Send us your project details and we'll come back with a detailed quotation.")
+                    </p>
+                    <div class="sv-sidecard__actions">
+                        <a class="sv-btn sv-btn--primary sv-btn--block" href="@Lang.Url("/quote")">@Cfg.T("nav.quote")</a>
+                        <a class="sv-btn sv-btn--outline sv-btn--block" href="@Lang.Url("/contact")">@Cfg.T("nav.contact")</a>
+                    </div>
+                </div>
+
+                @if (Model.Others.Count > 0)
+                {
+                    <div class="sv-sidecard sv-reveal">
+                        <h3>@(Lang.IsAr ? "خدمات أخرى" : "Other services")</h3>
+                        <ul class="sv-linklist">
+                            @foreach (var o in Model.Others)
+                            {
+                                <li>
+                                    <a href="@Lang.Url($"/services/{o.Slug}")">
+                                        <i class="@(o.Icon ?? "fa-solid fa-angle-" + (Lang.IsAr ? "left" : "right"))"></i>
+                                        @Lang.Pick(o.TitleAr, o.TitleEn)
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <a class="sv-btn sv-btn--ghost sv-btn--block" href="@Lang.Url("/services")">
+                    <i class="fa-solid @(Lang.IsAr ? "fa-arrow-right" : "fa-arrow-left")"></i> @Cfg.T("btn.back")
+                </a>
+            </aside>
+        </div>
+    </div>
+</section>
+
+@if (Model.Faqs.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container sv-container--narrow">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <h2>@(Lang.IsAr ? "أسئلة شائعة" : "FAQ")</h2>
+            </div>
+            <div class="sv-acc sv-reveal">
+                @foreach (var faq in Model.Faqs)
+                {
+                    <div class="sv-acc__item">
+                        <button class="sv-acc__head" type="button" aria-expanded="false">
+                            <span>@Lang.Pick(faq.QuestionAr, faq.QuestionEn)</span>
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <div class="sv-acc__body">
+                            <div class="sv-rte">@Html.Raw(Lang.Pick(faq.AnswerAr, faq.AnswerEn))</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}

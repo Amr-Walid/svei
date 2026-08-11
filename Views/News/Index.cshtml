@@ -1,0 +1,132 @@
+@model NewsVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)> { (Cfg.T("nav.news"), null) };
+
+    var basePath = Lang.Url("/news");
+    var q = Model.Paged.Query;
+    var ci = System.Globalization.CultureInfo.GetCultureInfo(Lang.IsAr ? "ar-EG" : "en-GB");
+
+    string CatUrl(string? slug)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(slug)) parts.Add("category=" + Uri.EscapeDataString(slug));
+        if (!string.IsNullOrWhiteSpace(q)) parts.Add("q=" + Uri.EscapeDataString(q));
+        return parts.Count == 0 ? basePath : basePath + "?" + string.Join("&", parts);
+    }
+}
+
+@await Html.PartialAsync("_PageHero", Sec("hero"))
+
+@* ── Featured ────────────────────────────────────────────────────────────── *@
+@if (Model.Featured.Count > 0)
+{
+    var lead = Model.Featured.First();
+    var rest = Model.Featured.Skip(1).ToList();
+    var leadUrl = Lang.Url($"/news/{lead.Slug}");
+    var leadImg = lead.CoverImagePath ?? "/img/sections/feature1.webp";
+    var leadTitle = Lang.Pick(lead.TitleAr, lead.TitleEn);
+    var leadText = Lang.Pick(lead.ExcerptAr, lead.ExcerptEn);
+
+    <section class="sv-section sv-section--tight">
+        <div class="sv-container">
+            <div class="sv-featured">
+                <article class="sv-featured__lead sv-reveal">
+                    <a class="sv-featured__media" href="@leadUrl">
+                        <img src="@leadImg" alt="@leadTitle" loading="lazy" />
+                    </a>
+                    <div class="sv-featured__body">
+                        <div class="sv-card__meta">
+                            @if (lead.Category is not null)
+                            {
+                                <span class="sv-badge">@Lang.Pick(lead.Category.NameAr, lead.Category.NameEn)</span>
+                            }
+                            <span><i class="fa-regular fa-calendar"></i> @lead.PublishedAt.ToString("dd MMM yyyy", ci)</span>
+                        </div>
+                        <h2><a href="@leadUrl">@leadTitle</a></h2>
+                        @if (!string.IsNullOrWhiteSpace(leadText))
+                        {
+                            <p>@leadText</p>
+                        }
+                        <a class="sv-btn sv-btn--primary" href="@leadUrl">@Cfg.T("btn.read_more")</a>
+                    </div>
+                </article>
+
+                @if (rest.Count > 0)
+                {
+                    <div class="sv-featured__side">
+                        @foreach (var p in rest)
+                        {
+                            var u = Lang.Url($"/news/{p.Slug}");
+                            var t = Lang.Pick(p.TitleAr, p.TitleEn);
+                            <article class="sv-mini sv-reveal">
+                                <a class="sv-mini__media" href="@u">
+                                    <img src="@(p.CoverImagePath ?? "/img/sections/feature2.webp")" alt="@t" loading="lazy" />
+                                </a>
+                                <div class="sv-mini__body">
+                                    <span class="sv-mini__date">@p.PublishedAt.ToString("dd MMM yyyy", ci)</span>
+                                    <h3><a href="@u">@t</a></h3>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── All news ────────────────────────────────────────────────────────────── *@
+<section class="sv-section sv-section--alt">
+    <div class="sv-container">
+
+        <div class="sv-toolbar sv-reveal">
+            <div class="sv-filters">
+                <a class="@(string.IsNullOrWhiteSpace(Model.CategorySlug) ? "sv-filter is-active" : "sv-filter")"
+                   href="@CatUrl(null)">@(Lang.IsAr ? "كل الأخبار" : "All news")</a>
+                @foreach (var c in Model.Categories)
+                {
+                    var active = Model.CategorySlug == c.Slug ? "sv-filter is-active" : "sv-filter";
+                    <a class="@active" href="@CatUrl(c.Slug)">
+                        @if (!string.IsNullOrWhiteSpace(c.Icon))
+                        {
+                            <i class="@c.Icon"></i>
+                        }
+                        @Lang.Pick(c.NameAr, c.NameEn)
+                    </a>
+                }
+            </div>
+
+            <form class="sv-search" method="get" action="@basePath">
+                @if (!string.IsNullOrWhiteSpace(Model.CategorySlug))
+                {
+                    <input type="hidden" name="category" value="@Model.CategorySlug" />
+                }
+                <input class="sv-input" type="search" name="q" value="@q"
+                       placeholder="@(Lang.IsAr ? "ابحث في الأخبار…" : "Search news…")" />
+                <button class="sv-btn sv-btn--primary sv-btn--sm" type="submit" aria-label="@(Lang.IsAr ? "بحث" : "Search")">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+        </div>
+
+        @if (Model.Paged.Items.Count == 0)
+        {
+            ViewData["EmptyIcon"] = "fa-regular fa-newspaper";
+            @await Html.PartialAsync("_Empty", Lang.IsAr ? "لا توجد أخبار مطابقة." : "No news matches your search.")
+        }
+        else
+        {
+            <div class="sv-grid sv-grid--3">
+                @foreach (var p in Model.Paged.Items)
+                {
+                    @await Html.PartialAsync("_NewsCard", p)
+                }
+            </div>
+
+            @await Html.PartialAsync("_Pager", Model.Paged)
+        }
+    </div>
+</section>

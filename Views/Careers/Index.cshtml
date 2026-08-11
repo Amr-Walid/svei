@@ -1,0 +1,135 @@
+@model CareersVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)> { (Cfg.T("nav.careers"), null) };
+
+    var basePath = Lang.Url("/careers");
+    var q = Model.Paged.Query;
+
+    string JobsUrl(string? category, string? type)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(category)) parts.Add("category=" + Uri.EscapeDataString(category));
+        if (!string.IsNullOrWhiteSpace(type)) parts.Add("type=" + Uri.EscapeDataString(type));
+        if (!string.IsNullOrWhiteSpace(q)) parts.Add("q=" + Uri.EscapeDataString(q));
+        return parts.Count == 0 ? basePath : basePath + "?" + string.Join("&", parts);
+    }
+}
+
+@await Html.PartialAsync("_PageHero", Sec("hero"))
+
+@* ── Why work with us ────────────────────────────────────────────────────── *@
+@if (Model.WhyUs.Count > 0)
+{
+    <section class="sv-section">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("why_us"))
+            <div class="sv-grid sv-grid--4">
+                @foreach (var card in Model.WhyUs)
+                {
+                    @await Html.PartialAsync("_InfoCard", card)
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── Openings ────────────────────────────────────────────────────────────── *@
+<section class="sv-section sv-section--alt" id="openings">
+    <div class="sv-container">
+        <div class="sv-heading sv-reveal">
+            <span class="sv-eyebrow">@(Lang.IsAr ? "انضم إلينا" : "Join us")</span>
+            <h2>@(Lang.IsAr ? "الوظائف المتاحة" : "Open positions")</h2>
+            <p>
+                @(Lang.IsAr
+                    ? $"{Model.Paged.TotalItems} وظيفة متاحة حالياً في مصنعنا بالعين السخنة."
+                    : $"{Model.Paged.TotalItems} open roles at our Ain Sokhna facility.")
+            </p>
+        </div>
+
+        <div class="sv-toolbar sv-reveal">
+            <div class="sv-filters">
+                <a class="@(string.IsNullOrWhiteSpace(Model.CategorySlug) ? "sv-filter is-active" : "sv-filter")"
+                   href="@JobsUrl(null, Model.JobType)">@(Lang.IsAr ? "كل الأقسام" : "All departments")</a>
+                @foreach (var c in Model.Categories)
+                {
+                    var active = Model.CategorySlug == c.Slug ? "sv-filter is-active" : "sv-filter";
+                    <a class="@active" href="@JobsUrl(c.Slug, Model.JobType)">
+                        <i class="@c.IconClass"></i> @Lang.Pick(c.NameAr, c.NameEn)
+                    </a>
+                }
+            </div>
+
+            <form class="sv-search" method="get" action="@basePath">
+                @if (!string.IsNullOrWhiteSpace(Model.CategorySlug))
+                {
+                    <input type="hidden" name="category" value="@Model.CategorySlug" />
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.JobType))
+                {
+                    <input type="hidden" name="type" value="@Model.JobType" />
+                }
+                <input class="sv-input" type="search" name="q" value="@q"
+                       placeholder="@(Lang.IsAr ? "ابحث عن وظيفة…" : "Search jobs…")" />
+                <button class="sv-btn sv-btn--primary sv-btn--sm" type="submit" aria-label="@(Lang.IsAr ? "بحث" : "Search")">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="sv-filters sv-filters--soft sv-reveal">
+            <a class="@(string.IsNullOrWhiteSpace(Model.JobType) ? "sv-filter is-active" : "sv-filter")"
+               href="@JobsUrl(Model.CategorySlug, null)">@(Lang.IsAr ? "كل الأنواع" : "All types")</a>
+            @foreach (var t in JobLabels.Types)
+            {
+                var active = Model.JobType == t ? "sv-filter is-active" : "sv-filter";
+                <a class="@active" href="@JobsUrl(Model.CategorySlug, t)">
+                    <i class="@JobLabels.Icon(t)"></i> @JobLabels.Type(t, Lang.IsAr)
+                </a>
+            }
+        </div>
+
+        @if (Model.Paged.Items.Count == 0)
+        {
+            ViewData["EmptyIcon"] = "fa-regular fa-face-smile";
+            @await Html.PartialAsync("_Empty", Lang.IsAr
+                ? "لا توجد وظائف متاحة تطابق بحثك حالياً — تابعنا قريباً."
+                : "No openings match your search right now — check back soon.")
+        }
+        else
+        {
+            <div class="sv-jobs">
+                @foreach (var job in Model.Paged.Items)
+                {
+                    @await Html.PartialAsync("_JobCard", job)
+                }
+            </div>
+
+            @await Html.PartialAsync("_Pager", Model.Paged)
+        }
+    </div>
+</section>
+
+@* ── Spontaneous application CTA ─────────────────────────────────────────── *@
+<section class="sv-cta">
+    <div class="sv-container">
+        <div class="sv-cta__inner sv-reveal">
+            <div>
+                <span class="sv-eyebrow">@(Lang.IsAr ? "لم تجد وظيفتك؟" : "Didn't find your role?")</span>
+                <h2>@(Lang.IsAr ? "أرسل لنا سيرتك الذاتية" : "Send us your CV")</h2>
+                <p>
+                    @(Lang.IsAr
+                        ? "نحتفظ بسيرتك الذاتية في قاعدة بياناتنا ونتواصل معك فور توفر فرصة تناسب خبرتك."
+                        : "We keep your CV on file and get in touch as soon as a matching opportunity opens up.")
+                </p>
+            </div>
+            <div class="sv-cta__actions">
+                <a class="sv-btn sv-btn--primary sv-btn--lg" href="@Lang.Url("/contact")">
+                    <i class="fa-regular fa-paper-plane"></i> @Cfg.T("btn.send")
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,38 @@
+@model NewsPost
+@{
+    var url   = Lang.Url($"/news/{Model.Slug}");
+    var title = Lang.Pick(Model.TitleAr, Model.TitleEn);
+    var text  = Lang.Pick(Model.ExcerptAr, Model.ExcerptEn);
+    var cat   = Lang.Pick(Model.Category?.NameAr, Model.Category?.NameEn);
+    var img   = Model.CoverImagePath ?? "/img/sections/feature1.webp";
+    var alt   = Lang.Pick(Model.CoverAltAr, Model.CoverAltEn) ?? title;
+    var date  = Model.PublishedAt.ToString("dd MMM yyyy",
+                    System.Globalization.CultureInfo.GetCultureInfo(Lang.IsAr ? "ar-EG" : "en-GB"));
+}
+
+<article class="sv-card sv-reveal">
+    <a class="sv-card__media" href="@url">
+        <img src="@img" alt="@alt" loading="lazy" />
+        @if (!string.IsNullOrWhiteSpace(cat))
+        {
+            <span class="sv-badge sv-badge--solid">@cat</span>
+        }
+    </a>
+    <div class="sv-card__body">
+        <div class="sv-card__meta">
+            <span><i class="fa-regular fa-calendar"></i> @date</span>
+            @if (Model.ViewCount > 0)
+            {
+                <span><i class="fa-regular fa-eye"></i> @Model.ViewCount</span>
+            }
+        </div>
+        <h3 class="sv-card__title"><a href="@url">@title</a></h3>
+        @if (!string.IsNullOrWhiteSpace(text))
+        {
+            <p class="sv-card__text">@text</p>
+        }
+    </div>
+    <div class="sv-card__foot">
+        <a class="sv-btn sv-btn--ghost sv-btn--sm" href="@url">@Cfg.T("btn.read_more")</a>
+    </div>
+</article>

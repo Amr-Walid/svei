@@ -1,0 +1,113 @@
+@model ProductsVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)> { (Cfg.T("nav.products"), null) };
+
+    var basePath = Lang.Url("/products");
+    var q = Model.Paged.Query;
+
+    string FilterUrl(string? category, string? brand, string? line)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(category)) parts.Add("category=" + Uri.EscapeDataString(category));
+        if (!string.IsNullOrWhiteSpace(brand)) parts.Add("brand=" + Uri.EscapeDataString(brand));
+        if (!string.IsNullOrWhiteSpace(line)) parts.Add("line=" + Uri.EscapeDataString(line));
+        if (!string.IsNullOrWhiteSpace(q)) parts.Add("q=" + Uri.EscapeDataString(q));
+        return parts.Count == 0 ? basePath : basePath + "?" + string.Join("&", parts);
+    }
+}
+
+@await Html.PartialAsync("_PageHero", Sec("hero"))
+
+<section class="sv-section">
+    <div class="sv-container">
+
+        <div class="sv-toolbar sv-reveal">
+            <div class="sv-filters">
+                <a class="@(string.IsNullOrWhiteSpace(Model.CategorySlug) ? "sv-filter is-active" : "sv-filter")"
+                   href="@FilterUrl(null, Model.BrandSlug, Model.LineSlug)">@(Lang.IsAr ? "كل الفئات" : "All categories")</a>
+                @foreach (var c in Model.Categories)
+                {
+                    var active = Model.CategorySlug == c.Slug ? "sv-filter is-active" : "sv-filter";
+                    <a class="@active" href="@FilterUrl(c.Slug, Model.BrandSlug, Model.LineSlug)">
+                        @if (!string.IsNullOrWhiteSpace(c.Icon))
+                        {
+                            <i class="@c.Icon"></i>
+                        }
+                        @Lang.Pick(c.NameAr, c.NameEn)
+                    </a>
+                }
+            </div>
+
+            <form class="sv-search" method="get" action="@basePath">
+                @if (!string.IsNullOrWhiteSpace(Model.CategorySlug))
+                {
+                    <input type="hidden" name="category" value="@Model.CategorySlug" />
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.BrandSlug))
+                {
+                    <input type="hidden" name="brand" value="@Model.BrandSlug" />
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.LineSlug))
+                {
+                    <input type="hidden" name="line" value="@Model.LineSlug" />
+                }
+                <input class="sv-input" type="search" name="q" value="@q"
+                       placeholder="@(Lang.IsAr ? "ابحث عن منتج…" : "Search products…")" />
+                <button class="sv-btn sv-btn--primary sv-btn--sm" type="submit" aria-label="@(Lang.IsAr ? "بحث" : "Search")">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+        </div>
+
+        @if (Model.Lines.Count > 0 || Model.Brands.Count > 0)
+        {
+            <div class="sv-filters sv-filters--soft sv-reveal">
+                @if (Model.Lines.Count > 0)
+                {
+                    <a class="@(string.IsNullOrWhiteSpace(Model.LineSlug) ? "sv-filter is-active" : "sv-filter")"
+                       href="@FilterUrl(Model.CategorySlug, Model.BrandSlug, null)">
+                        <i class="fa-solid fa-industry"></i> @(Lang.IsAr ? "كل الخطوط" : "All lines")
+                    </a>
+                    foreach (var l in Model.Lines)
+                    {
+                        var active = Model.LineSlug == l.Slug ? "sv-filter is-active" : "sv-filter";
+                        <a class="@active" href="@FilterUrl(Model.CategorySlug, Model.BrandSlug, l.Slug)">
+                            @Lang.Pick(l.NameAr, l.NameEn)
+                        </a>
+                    }
+                }
+                @if (Model.Brands.Count > 0)
+                {
+                    foreach (var b in Model.Brands)
+                    {
+                        var active = Model.BrandSlug == b.Slug ? "sv-filter is-active" : "sv-filter";
+                        var target = Model.BrandSlug == b.Slug ? null : b.Slug;
+                        <a class="@active" href="@FilterUrl(Model.CategorySlug, target, Model.LineSlug)">
+                            @Lang.Pick(b.NameAr, b.NameEn)
+                        </a>
+                    }
+                }
+            </div>
+        }
+
+        @if (Model.Paged.Items.Count == 0)
+        {
+            ViewData["EmptyIcon"] = "fa-solid fa-box-open";
+            @await Html.PartialAsync("_Empty", Lang.IsAr ? "لا توجد منتجات مطابقة." : "No products match your filters.")
+        }
+        else
+        {
+            <div class="sv-grid sv-grid--4">
+                @foreach (var p in Model.Paged.Items)
+                {
+                    @await Html.PartialAsync("_ProductCard", p)
+                }
+            </div>
+
+            @await Html.PartialAsync("_Pager", Model.Paged)
+        }
+    </div>
+</section>

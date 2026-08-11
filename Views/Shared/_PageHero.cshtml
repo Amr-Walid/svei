@@ -1,0 +1,37 @@
+@model PageSection
+@{
+    var title    = Lang.Pick(Model?.TitleAr, Model?.TitleEn) ?? ViewData["Title"] as string;
+    var subtitle = Lang.Pick(Model?.SubtitleAr, Model?.SubtitleEn);
+    var image    = Model?.ImagePath ?? "/img/hero/hero-factory.webp";
+    var crumbs   = ViewData["Crumbs"] as List<(string Label, string? Url)> ?? new();
+}
+
+<section class="sv-pagehero" style="--hero-img:url('@image')">
+    <div class="sv-pagehero__bg"><img src="@image" alt="" loading="eager" /></div>
+    <div class="sv-container">
+        @if (crumbs.Count > 0)
+        {
+            <ul class="sv-crumbs">
+                <li><a href="@Lang.Url("/")">@Cfg.T("nav.home")</a></li>
+                @foreach (var c in crumbs)
+                {
+                    <li>
+                        @if (!string.IsNullOrWhiteSpace(c.Url))
+                        {
+                            <a href="@c.Url">@c.Label</a>
+                        }
+                        else
+                        {
+                            <span>@c.Label</span>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+        <h1>@title</h1>
+        @if (!string.IsNullOrWhiteSpace(subtitle))
+        {
+            <p>@subtitle</p>
+        }
+    </div>
+</section>

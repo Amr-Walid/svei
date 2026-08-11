@@ -74,6 +74,10 @@ else
 app.UseStatusCodePagesWithReExecute("/Home/NotFoundPage");
 app.UseStaticFiles();
 app.UseRouting();
+
+// Legacy redirects + culture prefix ("/" → "/ar", "/index.html" → "/ar")
+app.UseSveiCulture();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -114,6 +118,17 @@ app.MapControllerRoute(
     name: "services-detail",
     pattern: "{culture:regex(^ar|en$)}/services/{slug}",
     defaults: new { controller = "Services", action = "Details" });
+
+app.MapControllerRoute(
+    name: "lines-detail",
+    pattern: "{culture:regex(^ar|en$)}/production-lines/{slug}",
+    defaults: new { controller = "ProductionLines", action = "Details" });
+
+// Friendly aliases so URLs read naturally in both languages
+app.MapControllerRoute(
+    name: "production-lines",
+    pattern: "{culture:regex(^ar|en$)}/production-lines",
+    defaults: new { controller = "ProductionLines", action = "Index" });
 
 app.MapControllerRoute(
     name: "localized-default",

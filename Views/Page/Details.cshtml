@@ -1,0 +1,33 @@
+@model StaticPage
+@{
+    var title = Lang.Pick(Model.TitleAr, Model.TitleEn);
+    var body  = Lang.Pick(Model.BodyAr, Model.BodyEn);
+    var cover = Model.HeroImagePath;
+}
+
+<section class="sv-pagehero">
+    @if (!string.IsNullOrWhiteSpace(cover))
+    {
+        <div class="sv-pagehero__bg"><img src="@cover" alt="@title" loading="eager" /></div>
+    }
+    <div class="sv-container">
+        <ul class="sv-crumbs">
+            <li><a href="@Lang.Url("/")">@Cfg.T("nav.home")</a></li>
+            <li><span>@title</span></li>
+        </ul>
+        <h1>@title</h1>
+    </div>
+</section>
+
+<section class="sv-section">
+    <div class="sv-container sv-container--narrow">
+        @if (string.IsNullOrWhiteSpace(body))
+        {
+            @await Html.PartialAsync("_Empty", Cfg.T("msg.coming_soon"))
+        }
+        else
+        {
+            <div class="sv-rte sv-reveal">@Html.Raw(body)</div>
+        }
+    </div>
+</section>

@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] ??= Lang.IsAr ? "حدث خطأ" : "Something went wrong";
+}
+
+<section class="sv-section">
+    <div class="sv-container sv-container--narrow">
+        <div class="sv-empty">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <h1>@(Lang.IsAr ? "حدث خطأ غير متوقع" : "An unexpected error occurred")</h1>
+            <p>
+                @(Lang.IsAr
+                    ? "نأسف لهذا الخلل. حاول تحديث الصفحة، وإذا استمرت المشكلة تواصل معنا."
+                    : "Sorry about that. Try refreshing the page — if the problem persists, please contact us.")
+            </p>
+            <div class="sv-split__actions" style="justify-content:center">
+                <a class="sv-btn sv-btn--primary" href="@Lang.Url("/")">@Cfg.T("nav.home")</a>
+                <a class="sv-btn sv-btn--outline" href="@Lang.Url("/contact")">@Cfg.T("nav.contact")</a>
+            </div>
+        </div>
+    </div>
+</section>

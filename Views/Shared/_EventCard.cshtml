@@ -1,0 +1,71 @@
+@model Event
+@{
+    var url   = Lang.Url($"/events/{Model.Slug}");
+    var title = Lang.Pick(Model.TitleAr, Model.TitleEn);
+    var text  = Lang.Pick(Model.SummaryAr, Model.SummaryEn);
+    var place = Lang.Pick(Model.LocationAr, Model.LocationEn);
+    var img   = Model.CoverImagePath ?? "/img/sections/feature2.webp";
+    var ci    = System.Globalization.CultureInfo.GetCultureInfo(Lang.IsAr ? "ar-EG" : "en-GB");
+
+    var statusLabel = Model.Status switch
+    {
+        "upcoming" => Cfg.T("word.upcoming"),
+        "ongoing"  => Cfg.T("word.ongoing"),
+        _          => Cfg.T("word.past")
+    };
+    var statusClass = Model.Status switch
+    {
+        "upcoming" => "sv-badge--cyan",
+        "ongoing"  => "sv-badge--green",
+        _          => "sv-badge--amber"
+    };
+
+    var typeLabel = EventLabels.Type(Model.EventType, Lang.IsAr);
+    var typeIcon  = EventLabels.Icon(Model.EventType);
+}
+
+<article class="sv-card sv-event-card sv-reveal">
+    <a class="sv-card__media" href="@url">
+        <img src="@img" alt="@title" loading="lazy" />
+        <span class="sv-badge sv-badge--solid @statusClass">@statusLabel</span>
+        @if (Model.StartDate.HasValue)
+        {
+            <span class="sv-event-card__date">
+                <strong>@Model.StartDate.Value.ToString("dd", ci)</strong>
+                <small>@Model.StartDate.Value.ToString("MMM", ci)</small>
+            </span>
+        }
+    </a>
+    <div class="sv-card__body">
+        <div class="sv-card__meta">
+            <span><i class="@typeIcon"></i> @typeLabel</span>
+            @if (Model.StartDate.HasValue)
+            {
+                <span>
+                    <i class="fa-regular fa-calendar"></i>
+                    @Model.StartDate.Value.ToString("dd MMM yyyy", ci)
+                    @if (Model.EndDate.HasValue && Model.EndDate.Value.Date != Model.StartDate.Value.Date)
+                    {
+                        <text> — @Model.EndDate.Value.ToString("dd MMM yyyy", ci)</text>
+                    }
+                </span>
+            }
+        </div>
+        <h3 class="sv-card__title"><a href="@url">@title</a></h3>
+        @if (!string.IsNullOrWhiteSpace(place))
+        {
+            <p class="sv-card__place"><i class="fa-solid fa-location-dot"></i> @place</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(text))
+        {
+            <p class="sv-card__text">@text</p>
+        }
+    </div>
+    <div class="sv-card__foot">
+        <a class="sv-btn sv-btn--ghost sv-btn--sm" href="@url">@Cfg.T("btn.read_more")</a>
+        @if (Model.AllowRegistration && Model.Status != "past")
+        {
+            <a class="sv-btn sv-btn--primary sv-btn--sm" href="@url#register">@Cfg.T("btn.register")</a>
+        }
+    </div>
+</article>

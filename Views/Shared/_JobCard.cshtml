@@ -1,0 +1,57 @@
+@model JobPosting
+@{
+    var url   = Lang.Url($"/careers/{Model.Slug}");
+    var title = Lang.Pick(Model.TitleAr, Model.TitleEn);
+    var text  = Lang.Pick(Model.SummaryAr, Model.SummaryEn);
+    var place = Lang.Pick(Model.LocationAr, Model.LocationEn);
+    var cat   = Lang.Pick(Model.Category?.NameAr, Model.Category?.NameEn);
+    var ci    = System.Globalization.CultureInfo.GetCultureInfo(Lang.IsAr ? "ar-EG" : "en-GB");
+}
+
+<article class="sv-job sv-reveal">
+    <div class="sv-job__main">
+        <div class="sv-job__top">
+            <span class="sv-job__icon"><i class="@(Model.Category?.IconClass ?? "fa-solid fa-briefcase")"></i></span>
+            <div>
+                <h3 class="sv-job__title"><a href="@url">@title</a></h3>
+                @if (!string.IsNullOrWhiteSpace(cat))
+                {
+                    <span class="sv-job__cat">@cat</span>
+                }
+            </div>
+            @if (Model.IsUrgent)
+            {
+                <span class="sv-badge sv-badge--red">@Cfg.T("word.urgent")</span>
+            }
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(text))
+        {
+            <p class="sv-job__text">@text</p>
+        }
+
+        <ul class="sv-job__meta">
+            <li><i class="@JobLabels.Icon(Model.JobType)"></i> @JobLabels.Type(Model.JobType, Lang.IsAr)</li>
+            @if (!string.IsNullOrWhiteSpace(place))
+            {
+                <li><i class="fa-solid fa-location-dot"></i> @place</li>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.ExperienceLevel))
+            {
+                <li><i class="fa-solid fa-layer-group"></i> @JobLabels.Level(Model.ExperienceLevel, Lang.IsAr)</li>
+            }
+            @if (Model.Vacancies > 1)
+            {
+                <li><i class="fa-solid fa-users"></i> @Model.Vacancies @Cfg.T("word.vacancies")</li>
+            }
+            @if (Model.ClosingDate.HasValue)
+            {
+                <li><i class="fa-regular fa-hourglass-half"></i> @Cfg.T("word.deadline"): @Model.ClosingDate.Value.ToString("dd MMM yyyy", ci)</li>
+            }
+        </ul>
+    </div>
+
+    <div class="sv-job__action">
+        <a class="sv-btn sv-btn--primary sv-btn--sm" href="@url">@Cfg.T("btn.apply_now")</a>
+    </div>
+</article>

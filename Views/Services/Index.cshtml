@@ -1,0 +1,137 @@
+@model ServicesVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)> { (Cfg.T("nav.services"), null) };
+    var arrow = Lang.IsAr ? "fa-arrow-left" : "fa-arrow-right";
+}
+
+@await Html.PartialAsync("_PageHero", Sec("hero"))
+
+@if (Model.Services.Count == 0)
+{
+    <section class="sv-section">
+        <div class="sv-container">
+            @{ ViewData["EmptyIcon"] = "fa-solid fa-gears"; }
+            @await Html.PartialAsync("_Empty", Cfg.T("msg.coming_soon"))
+        </div>
+    </section>
+}
+else
+{
+    <section class="sv-section">
+        <div class="sv-container">
+            <div class="sv-grid sv-grid--2">
+                @{ var i = 0; }
+                @foreach (var svc in Model.Services)
+                {
+                    i++;
+                    var url    = Lang.Url($"/services/{svc.Slug}");
+                    var title  = Lang.Pick(svc.TitleAr, svc.TitleEn);
+                    var text   = Lang.Pick(svc.ShortDescAr, svc.ShortDescEn);
+                    var accent = string.IsNullOrWhiteSpace(svc.AccentColor) ? null : $"--sv-accent:{svc.AccentColor}";
+
+                    <article class="sv-svc sv-reveal" style="@accent">
+                        <a class="sv-svc__media" href="@url">
+                            <img src="@(svc.ImagePath ?? "/img/sections/feature" + ((i % 3) + 1) + ".webp")"
+                                 alt="@title" loading="lazy" />
+                            @if (!string.IsNullOrWhiteSpace(svc.Icon))
+                            {
+                                <span class="sv-svc__icon"><i class="@svc.Icon"></i></span>
+                            }
+                        </a>
+                        <div class="sv-svc__body">
+                            <h3><a href="@url">@title</a></h3>
+                            @if (!string.IsNullOrWhiteSpace(text))
+                            {
+                                <p>@text</p>
+                            }
+                            @if (svc.Features.Count > 0)
+                            {
+                                <ul class="sv-ticks">
+                                    @foreach (var f in svc.Features.OrderBy(x => x.SortOrder).Take(4))
+                                    {
+                                        <li><i class="@(f.Icon ?? "fa-solid fa-check")"></i> @Lang.Pick(f.TextAr, f.TextEn)</li>
+                                    }
+                                </ul>
+                            }
+                            <a class="sv-btn sv-btn--ghost sv-btn--sm" href="@url">
+                                @Cfg.T("btn.learn_more") <i class="fa-solid @arrow"></i>
+                            </a>
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── Process ─────────────────────────────────────────────────────────────── *@
+@if (Model.Process.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("process"))
+            <div class="sv-steps">
+                @{ var step = 0; }
+                @foreach (var card in Model.Process)
+                {
+                    step++;
+                    <div class="sv-step sv-reveal">
+                        <span class="sv-step__num">@step.ToString("00")</span>
+                        @if (!string.IsNullOrWhiteSpace(card.Icon))
+                        {
+                            <span class="sv-step__icon"><i class="@card.Icon"></i></span>
+                        }
+                        <h3>@Lang.Pick(card.TitleAr, card.TitleEn)</h3>
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(card.TextAr, card.TextEn)))
+                        {
+                            <p>@Lang.Pick(card.TextAr, card.TextEn)</p>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── FAQ ─────────────────────────────────────────────────────────────────── *@
+@if (Model.Faqs.Count > 0)
+{
+    <section class="sv-section">
+        <div class="sv-container sv-container--narrow">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <h2>@(Lang.IsAr ? "أسئلة شائعة" : "Frequently asked questions")</h2>
+            </div>
+            <div class="sv-acc sv-reveal">
+                @foreach (var faq in Model.Faqs)
+                {
+                    <div class="sv-acc__item">
+                        <button class="sv-acc__head" type="button" aria-expanded="false">
+                            <span>@Lang.Pick(faq.QuestionAr, faq.QuestionEn)</span>
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <div class="sv-acc__body">
+                            <div class="sv-rte">@Html.Raw(Lang.Pick(faq.AnswerAr, faq.AnswerEn))</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<section class="sv-cta">
+    <div class="sv-container">
+        <div class="sv-cta__inner sv-reveal">
+            <div>
+                <h2>@(Lang.IsAr ? "ابدأ مشروعك معنا" : "Start your project with us")</h2>
+                <p>@(Lang.IsAr ? "أرسل متطلباتك واحصل على عرض سعر خلال ٤٨ ساعة." : "Send your requirements and get a quotation within 48 hours.")</p>
+            </div>
+            <div class="sv-cta__actions">
+                <a class="sv-btn sv-btn--primary sv-btn--lg" href="@Lang.Url("/quote")">@Cfg.T("nav.quote")</a>
+            </div>
+        </div>
+    </div>
+</section>

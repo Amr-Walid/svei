@@ -1,0 +1,135 @@
+@model ProductionLineDetailsVm
+@{
+    var line  = Model.Line;
+    var name  = Lang.Pick(line.NameAr, line.NameEn);
+    var sum   = Lang.Pick(line.ShortDescAr, line.ShortDescEn);
+    var body  = Lang.Pick(line.DescAr, line.DescEn);
+    var cover = line.ImagePath ?? "/img/sections/feature1.webp";
+    var ci    = System.Globalization.CultureInfo.GetCultureInfo(Lang.IsAr ? "ar-EG" : "en-GB");
+    var accent = string.IsNullOrWhiteSpace(line.AccentColor) ? null : $"--sv-accent:{line.AccentColor}";
+}
+
+<section class="sv-pagehero" style="@accent">
+    <div class="sv-pagehero__bg"><img src="@cover" alt="@name" loading="eager" /></div>
+    <div class="sv-container">
+        <ul class="sv-crumbs">
+            <li><a href="@Lang.Url("/")">@Cfg.T("nav.home")</a></li>
+            <li><a href="@Lang.Url("/production-lines")">@Cfg.T("nav.production_lines")</a></li>
+            <li><span>@name</span></li>
+        </ul>
+        <h1>@name</h1>
+        @if (!string.IsNullOrWhiteSpace(sum))
+        {
+            <p>@sum</p>
+        }
+    </div>
+</section>
+
+<section class="sv-section">
+    <div class="sv-container">
+        <div class="sv-detail">
+            <div class="sv-detail__main">
+                <figure class="sv-detail__cover sv-reveal">
+                    <img src="@cover" alt="@name" />
+                </figure>
+
+                @if (!string.IsNullOrWhiteSpace(body))
+                {
+                    <div class="sv-rte sv-reveal">@Html.Raw(body)</div>
+                }
+
+                @if (line.Specs.Count > 0)
+                {
+                    <div class="sv-block sv-reveal">
+                        <h2>@(Lang.IsAr ? "المواصفات الفنية" : "Technical specifications")</h2>
+                        <table class="sv-table">
+                            <tbody>
+                            @foreach (var sp in line.Specs)
+                            {
+                                <tr>
+                                    <th>@Lang.Pick(sp.LabelAr, sp.LabelEn)</th>
+                                    <td>@Lang.Pick(sp.ValueAr, sp.ValueEn)</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <aside class="sv-detail__side">
+                <div class="sv-sidecard sv-reveal" style="@accent">
+                    <h3>@(Lang.IsAr ? "بيانات الخط" : "Line at a glance")</h3>
+                    <ul class="sv-facts">
+                        @if (line.CapacityPerDay.HasValue)
+                        {
+                            <li>
+                                <i class="fa-solid fa-gauge-high"></i>
+                                <div>
+                                    <span>@(Lang.IsAr ? "الطاقة الإنتاجية" : "Daily capacity")</span>
+                                    <strong>
+                                        @line.CapacityPerDay.Value.ToString("N0", ci)
+                                        @(Lang.Pick(line.CapacityUnitAr, line.CapacityUnitEn) ?? Cfg.T("word.units_per_day"))
+                                    </strong>
+                                </div>
+                            </li>
+                        }
+                        <li>
+                            <i class="@(line.Icon ?? "fa-solid fa-industry")"></i>
+                            <div><span>@(Lang.IsAr ? "نوع الخط" : "Line")</span><strong>@name</strong></div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-location-dot"></i>
+                            <div><span>@Cfg.T("word.location")</span><strong>@Cfg.Get("contact.address")</strong></div>
+                        </li>
+                    </ul>
+                    <div class="sv-sidecard__actions">
+                        <a class="sv-btn sv-btn--primary sv-btn--block" href="@(Lang.Url("/quote") + "?line=" + line.Id)">
+                            @Cfg.T("nav.quote")
+                        </a>
+                        <a class="sv-btn sv-btn--outline sv-btn--block" href="@Lang.Url("/contact")">@Cfg.T("nav.contact")</a>
+                    </div>
+                </div>
+
+                @if (Model.Others.Count > 0)
+                {
+                    <div class="sv-sidecard sv-reveal">
+                        <h3>@(Lang.IsAr ? "خطوط أخرى" : "Other lines")</h3>
+                        <ul class="sv-linklist">
+                            @foreach (var o in Model.Others)
+                            {
+                                <li>
+                                    <a href="@Lang.Url($"/production-lines/{o.Slug}")">
+                                        <i class="@(o.Icon ?? "fa-solid fa-industry")"></i>
+                                        @Lang.Pick(o.NameAr, o.NameEn)
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <a class="sv-btn sv-btn--ghost sv-btn--block" href="@Lang.Url("/production-lines")">
+                    <i class="fa-solid @(Lang.IsAr ? "fa-arrow-right" : "fa-arrow-left")"></i> @Cfg.T("btn.back")
+                </a>
+            </aside>
+        </div>
+    </div>
+</section>
+
+@if (Model.Products.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <h2>@(Lang.IsAr ? "منتجات من هذا الخط" : "Products from this line")</h2>
+            </div>
+            <div class="sv-grid sv-grid--4">
+                @foreach (var p in Model.Products)
+                {
+                    @await Html.PartialAsync("_ProductCard", p)
+                }
+            </div>
+        </div>
+    </section>
+}

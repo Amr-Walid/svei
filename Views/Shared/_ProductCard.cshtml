@@ -1,0 +1,42 @@
+@model Product
+@{
+    var url   = Lang.Url($"/products/{Model.Slug}");
+    var name  = Lang.Pick(Model.NameAr, Model.NameEn);
+    var text  = Lang.Pick(Model.ShortDescAr, Model.ShortDescEn);
+    var brand = Lang.Pick(Model.Brand?.NameAr, Model.Brand?.NameEn);
+    var img   = Model.MainImagePath ?? "/img/sections/feature3.webp";
+}
+
+<article class="sv-card sv-product sv-reveal">
+    <a class="sv-card__media" href="@url">
+        <img src="@img" alt="@name" loading="lazy" />
+        @if (Model.IsFeatured)
+        {
+            <span class="sv-badge sv-badge--solid">@(Lang.IsAr ? "مميز" : "Featured")</span>
+        }
+    </a>
+    <div class="sv-card__body">
+        @if (!string.IsNullOrWhiteSpace(brand))
+        {
+            <span class="sv-product__brand">@brand</span>
+        }
+        <h3 class="sv-card__title"><a href="@url">@name</a></h3>
+        @if (!string.IsNullOrWhiteSpace(text))
+        {
+            <p class="sv-card__text">@text</p>
+        }
+        @if (Model.ShowPrice && Model.Price.HasValue)
+        {
+            <div class="sv-product__price">@Model.Price.Value.ToString("N0") @Model.Currency</div>
+        }
+    </div>
+    <div class="sv-card__foot">
+        <a class="sv-btn sv-btn--ghost sv-btn--sm" href="@url">@Cfg.T("btn.learn_more")</a>
+        @if (!string.IsNullOrWhiteSpace(Model.ExternalShopUrl))
+        {
+            <a class="sv-btn sv-btn--tech sv-btn--sm" href="@Model.ExternalShopUrl" target="_blank" rel="noopener">
+                <i class="fa-solid fa-cart-shopping"></i> @Cfg.T("btn.shop_now")
+            </a>
+        }
+    </div>
+</article>

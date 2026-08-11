@@ -1,0 +1,91 @@
+@model BrandsVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)> { (Cfg.T("nav.brands"), null) };
+}
+
+@await Html.PartialAsync("_PageHero", Sec("hero"))
+
+@{
+    var groups = new List<(string TitleAr, string TitleEn, string Icon, List<Brand> Items)>
+    {
+        ("عملاؤنا",        "Our clients",   "fa-solid fa-handshake",   Model.Clients),
+        ("شركاء النجاح",   "Our partners",  "fa-solid fa-people-group", Model.Partners),
+        ("الموردون",       "Our suppliers", "fa-solid fa-truck-ramp-box", Model.Suppliers)
+    };
+    var anyItems = groups.Any(g => g.Items.Count > 0);
+    var alt = false;
+}
+
+@if (!anyItems)
+{
+    <section class="sv-section">
+        <div class="sv-container">
+            @{ ViewData["EmptyIcon"] = "fa-regular fa-handshake"; }
+            @await Html.PartialAsync("_Empty", Cfg.T("msg.coming_soon"))
+        </div>
+    </section>
+}
+else
+{
+    foreach (var g in groups)
+    {
+        if (g.Items.Count == 0) { continue; }
+        alt = !alt;
+        var sectionCls = alt ? "sv-section" : "sv-section sv-section--alt";
+
+        <section class="@sectionCls">
+            <div class="sv-container">
+                <div class="sv-heading sv-heading--center sv-reveal">
+                    <span class="sv-eyebrow"><i class="@g.Icon"></i></span>
+                    <h2>@(Lang.IsAr ? g.TitleAr : g.TitleEn)</h2>
+                </div>
+
+                <div class="sv-brandgrid">
+                    @foreach (var b in g.Items)
+                    {
+                        var name = Lang.Pick(b.NameAr, b.NameEn);
+                        var desc = Lang.Pick(b.DescAr, b.DescEn);
+                        var logo = b.LogoPath ?? "/img/brand/favicon.svg";
+
+                        <article class="sv-brandcard sv-reveal">
+                            <div class="sv-brandcard__logo">
+                                <img src="@logo" alt="@name" loading="lazy" />
+                            </div>
+                            <h3>@name</h3>
+                            @if (!string.IsNullOrWhiteSpace(desc))
+                            {
+                                <p>@desc</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(b.WebsiteUrl))
+                            {
+                                <a class="sv-brandcard__link" href="@b.WebsiteUrl" target="_blank" rel="noopener">
+                                    <i class="fa-solid fa-up-right-from-square"></i>
+                                    @(Lang.IsAr ? "زيارة الموقع" : "Visit website")
+                                </a>
+                            }
+                        </article>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+}
+
+<section class="sv-cta">
+    <div class="sv-container">
+        <div class="sv-cta__inner sv-reveal">
+            <div>
+                <h2>@(Lang.IsAr ? "كن شريكنا القادم" : "Become our next partner")</h2>
+                <p>@(Lang.IsAr
+                        ? "نصنّع لكبرى العلامات التجارية في مصر والمنطقة — لنبدأ الحديث."
+                        : "We manufacture for leading brands across Egypt and the region — let's talk.")</p>
+            </div>
+            <div class="sv-cta__actions">
+                <a class="sv-btn sv-btn--primary sv-btn--lg" href="@Lang.Url("/contact")">@Cfg.T("nav.contact")</a>
+            </div>
+        </div>
+    </div>
+</section>

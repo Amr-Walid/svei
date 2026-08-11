@@ -1,0 +1,80 @@
+@model dynamic
+@{
+    int page       = Model.Page;
+    int totalPages = Model.TotalPages;
+    bool hasPrev   = Model.HasPrev;
+    bool hasNext   = Model.HasNext;
+
+    // Preserve every existing query-string value except "page"
+    var qs = Context.Request.Query
+        .Where(kv => kv.Key != "page")
+        .SelectMany(kv => kv.Value.Select(v => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(v ?? "")}"))
+        .ToList();
+
+    string Url(int p)
+    {
+        var parts = new List<string>(qs) { "page=" + p };
+        return Context.Request.Path + "?" + string.Join("&", parts);
+    }
+
+    // Sliding window of page numbers
+    var from = Math.Max(1, page - 2);
+    var to   = Math.Min(totalPages, from + 4);
+    from     = Math.Max(1, to - 4);
+
+    var prevIcon = Lang.IsAr ? "fa-angle-right" : "fa-angle-left";
+    var nextIcon = Lang.IsAr ? "fa-angle-left"  : "fa-angle-right";
+}
+
+@if (totalPages > 1)
+{
+    <nav class="sv-pager" aria-label="@(Lang.IsAr ? "ترقيم الصفحات" : "Pagination")">
+        @if (hasPrev)
+        {
+            <a href="@Url(page - 1)" rel="prev" aria-label="@Cfg.T("btn.back")"><i class="fa-solid @prevIcon"></i></a>
+        }
+        else
+        {
+            <span class="is-disabled"><i class="fa-solid @prevIcon"></i></span>
+        }
+
+        @if (from > 1)
+        {
+            <a href="@Url(1)">1</a>
+            @if (from > 2)
+            {
+                <span class="is-disabled">…</span>
+            }
+        }
+
+        @for (var p = from; p <= to; p++)
+        {
+            if (p == page)
+            {
+                <span class="is-current" aria-current="page">@p</span>
+            }
+            else
+            {
+                <a href="@Url(p)">@p</a>
+            }
+        }
+
+        @if (to < totalPages)
+        {
+            @if (to < totalPages - 1)
+            {
+                <span class="is-disabled">…</span>
+            }
+            <a href="@Url(totalPages)">@totalPages</a>
+        }
+
+        @if (hasNext)
+        {
+            <a href="@Url(page + 1)" rel="next"><i class="fa-solid @nextIcon"></i></a>
+        }
+        else
+        {
+            <span class="is-disabled"><i class="fa-solid @nextIcon"></i></span>
+        }
+    </nav>
+}

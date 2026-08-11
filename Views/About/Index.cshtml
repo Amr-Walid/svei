@@ -1,0 +1,299 @@
+@model AboutVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)> { (Cfg.T("nav.about"), null) };
+
+    var ci = System.Globalization.CultureInfo.GetCultureInfo(Lang.IsAr ? "ar-EG" : "en-GB");
+    var arrow = Lang.IsAr ? "fa-arrow-left" : "fa-arrow-right";
+}
+
+@await Html.PartialAsync("_PageHero", Sec("hero"))
+
+@* ── Story ───────────────────────────────────────────────────────────────── *@
+@{ var story = Sec("story"); }
+@if (story is not null)
+{
+    <section class="sv-section">
+        <div class="sv-container">
+            <div class="sv-split">
+                <div class="sv-split__media sv-reveal">
+                    <img src="@(story.ImagePath ?? "/img/hero/hero-factory.webp")"
+                         alt="@Lang.Pick(story.TitleAr, story.TitleEn)" loading="lazy" />
+                    @if (!string.IsNullOrWhiteSpace(Cfg.GetRaw("site.founded_year")))
+                    {
+                        <div class="sv-split__badge">
+                            <strong>@Cfg.GetRaw("site.founded_year")</strong>
+                            <span>@(Lang.IsAr ? "سنة التأسيس" : "Established")</span>
+                        </div>
+                    }
+                </div>
+                <div class="sv-split__body sv-reveal" data-delay="1">
+                    @if (!string.IsNullOrWhiteSpace(Lang.Pick(story.EyebrowAr, story.EyebrowEn)))
+                    {
+                        <span class="sv-eyebrow">@Lang.Pick(story.EyebrowAr, story.EyebrowEn)</span>
+                    }
+                    <h2>@Lang.Pick(story.TitleAr, story.TitleEn)</h2>
+                    @if (!string.IsNullOrWhiteSpace(Lang.Pick(story.SubtitleAr, story.SubtitleEn)))
+                    {
+                        <p class="sv-lead">@Lang.Pick(story.SubtitleAr, story.SubtitleEn)</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Lang.Pick(story.BodyAr, story.BodyEn)))
+                    {
+                        <div class="sv-rte">@Html.Raw(Lang.Pick(story.BodyAr, story.BodyEn))</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@* ── Stats ───────────────────────────────────────────────────────────────── *@
+@if (Model.Stats.Count > 0)
+{
+    <section class="sv-section sv-section--tight sv-section--ink">
+        <div class="sv-container">
+            <div class="sv-grid sv-grid--4">
+                @foreach (var stat in Model.Stats)
+                {
+                    <div class="sv-stat sv-reveal">
+                        @if (!string.IsNullOrWhiteSpace(stat.Icon))
+                        {
+                            <span class="sv-stat__icon"><i class="@stat.Icon"></i></span>
+                        }
+                        <span class="sv-stat__value"
+                              data-count="@stat.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                              data-decimals="@stat.Decimals"
+                              data-prefix="@stat.Prefix"
+                              data-suffix="@stat.Suffix">0</span>
+                        <span class="sv-stat__label">@Lang.Pick(stat.LabelAr, stat.LabelEn)</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── Mission / Vision ────────────────────────────────────────────────────── *@
+@{
+    var mission = Sec("mission");
+    var vision  = Sec("vision");
+}
+@if (mission is not null || vision is not null)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            <div class="sv-grid sv-grid--2">
+                @if (mission is not null)
+                {
+                    <div class="sv-mv sv-reveal">
+                        <span class="sv-mv__icon"><i class="@(mission.Icon ?? "fa-solid fa-bullseye")"></i></span>
+                        <h2>@Lang.Pick(mission.TitleAr, mission.TitleEn)</h2>
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(mission.SubtitleAr, mission.SubtitleEn)))
+                        {
+                            <p class="sv-lead">@Lang.Pick(mission.SubtitleAr, mission.SubtitleEn)</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(mission.BodyAr, mission.BodyEn)))
+                        {
+                            <div class="sv-rte">@Html.Raw(Lang.Pick(mission.BodyAr, mission.BodyEn))</div>
+                        }
+                    </div>
+                }
+                @if (vision is not null)
+                {
+                    <div class="sv-mv sv-mv--accent sv-reveal" data-delay="1">
+                        <span class="sv-mv__icon"><i class="@(vision.Icon ?? "fa-solid fa-eye")"></i></span>
+                        <h2>@Lang.Pick(vision.TitleAr, vision.TitleEn)</h2>
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(vision.SubtitleAr, vision.SubtitleEn)))
+                        {
+                            <p class="sv-lead">@Lang.Pick(vision.SubtitleAr, vision.SubtitleEn)</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(vision.BodyAr, vision.BodyEn)))
+                        {
+                            <div class="sv-rte">@Html.Raw(Lang.Pick(vision.BodyAr, vision.BodyEn))</div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── Values ──────────────────────────────────────────────────────────────── *@
+@if (Model.Values.Count > 0)
+{
+    <section class="sv-section">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("values"))
+            <div class="sv-grid sv-grid--3">
+                @foreach (var card in Model.Values)
+                {
+                    @await Html.PartialAsync("_InfoCard", card)
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── Production lines ────────────────────────────────────────────────────── *@
+@if (Model.Lines.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <span class="sv-eyebrow">@(Lang.IsAr ? "قدراتنا" : "Our capabilities")</span>
+                <h2>@Cfg.T("nav.production_lines")</h2>
+            </div>
+            <div class="sv-grid sv-grid--4">
+                @foreach (var line in Model.Lines)
+                {
+                    var url    = Lang.Url($"/production-lines/{line.Slug}");
+                    var name   = Lang.Pick(line.NameAr, line.NameEn);
+                    var accent = string.IsNullOrWhiteSpace(line.AccentColor) ? null : $"--sv-accent:{line.AccentColor}";
+
+                    <article class="sv-line sv-reveal" style="@accent">
+                        <a class="sv-line__media" href="@url">
+                            <img src="@(line.ImagePath ?? "/img/sections/feature1.webp")" alt="@name" loading="lazy" />
+                        </a>
+                        <div class="sv-line__body">
+                            @if (!string.IsNullOrWhiteSpace(line.Icon))
+                            {
+                                <span class="sv-line__icon"><i class="@line.Icon"></i></span>
+                            }
+                            <h3><a href="@url">@name</a></h3>
+                            @if (line.CapacityPerDay.HasValue)
+                            {
+                                <div class="sv-line__cap">
+                                    <strong>@line.CapacityPerDay.Value.ToString("N0", ci)</strong>
+                                    <span>@(Lang.Pick(line.CapacityUnitAr, line.CapacityUnitEn) ?? Cfg.T("word.units_per_day"))</span>
+                                </div>
+                            }
+                            <a class="sv-line__link" href="@url">@Cfg.T("btn.learn_more") <i class="fa-solid @arrow"></i></a>
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── Timeline ────────────────────────────────────────────────────────────── *@
+@if (Model.Milestones.Count > 0)
+{
+    <section class="sv-section">
+        <div class="sv-container sv-container--narrow">
+            @await Html.PartialAsync("_SectionHeading", Sec("timeline"))
+            <div class="sv-timeline">
+                @foreach (var m in Model.Milestones)
+                {
+                    <div class="sv-timeline__item sv-reveal">
+                        <span class="sv-timeline__year">@m.Year</span>
+                        <div>
+                            @if (!string.IsNullOrWhiteSpace(Lang.Pick(m.MonthAr, m.MonthEn)))
+                            {
+                                <span class="sv-eyebrow">@Lang.Pick(m.MonthAr, m.MonthEn)</span>
+                            }
+                            <h3>@Lang.Pick(m.TitleAr, m.TitleEn)</h3>
+                            @if (!string.IsNullOrWhiteSpace(Lang.Pick(m.TextAr, m.TextEn)))
+                            {
+                                <p>@Lang.Pick(m.TextAr, m.TextEn)</p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── Team ────────────────────────────────────────────────────────────────── *@
+@if (Model.Team.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("team"))
+            <div class="sv-grid sv-grid--4">
+                @foreach (var t in Model.Team)
+                {
+                    var name = Lang.Pick(t.NameAr, t.NameEn);
+                    <article class="sv-person sv-reveal">
+                        <div class="sv-person__photo">
+                            <img src="@(t.PhotoPath ?? "/img/brand/favicon.svg")" alt="@name" loading="lazy" />
+                        </div>
+                        <h3>@name</h3>
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(t.RoleAr, t.RoleEn)))
+                        {
+                            <span class="sv-person__role">@Lang.Pick(t.RoleAr, t.RoleEn)</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(t.BioAr, t.BioEn)))
+                        {
+                            <p>@Lang.Pick(t.BioAr, t.BioEn)</p>
+                        }
+                        <div class="sv-person__links">
+                            @if (!string.IsNullOrWhiteSpace(t.LinkedInUrl))
+                            {
+                                <a href="@t.LinkedInUrl" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(t.Email))
+                            {
+                                <a href="mailto:@t.Email" aria-label="Email"><i class="fa-regular fa-envelope"></i></a>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── Certifications ──────────────────────────────────────────────────────── *@
+@if (Model.Certifications.Count > 0)
+{
+    <section class="sv-section">
+        <div class="sv-container">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <span class="sv-eyebrow">@(Lang.IsAr ? "الجودة" : "Quality")</span>
+                <h2>@(Lang.IsAr ? "الشهادات والاعتمادات" : "Certifications & accreditations")</h2>
+            </div>
+            <div class="sv-grid sv-grid--4">
+                @foreach (var c in Model.Certifications)
+                {
+                    var cname = Lang.Pick(c.NameAr, c.NameEn);
+                    <div class="sv-cert sv-reveal">
+                        <img src="@(c.LogoPath ?? "/img/brand/favicon.svg")" alt="@cname" loading="lazy" />
+                        <h3>@cname</h3>
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(c.DescAr, c.DescEn)))
+                        {
+                            <p>@Lang.Pick(c.DescAr, c.DescEn)</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(c.DocumentPath))
+                        {
+                            <a class="sv-btn sv-btn--ghost sv-btn--sm" href="@c.DocumentPath" target="_blank" rel="noopener">
+                                <i class="fa-solid fa-download"></i> @Cfg.T("btn.download")
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── CTA ─────────────────────────────────────────────────────────────────── *@
+<section class="sv-cta">
+    <div class="sv-container">
+        <div class="sv-cta__inner sv-reveal">
+            <div>
+                <h2>@(Lang.IsAr ? "هل تبحث عن شريك تصنيع موثوق؟" : "Looking for a trusted manufacturing partner?")</h2>
+                <p>@(Lang.IsAr
+                        ? "تحدّث مع فريقنا اليوم واحصل على عرض سعر مخصص لمنتجك."
+                        : "Talk to our team today and get a tailored quotation for your product.")</p>
+            </div>
+            <div class="sv-cta__actions">
+                <a class="sv-btn sv-btn--primary sv-btn--lg" href="@Lang.Url("/quote")">@Cfg.T("nav.quote")</a>
+                <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@Lang.Url("/contact")">@Cfg.T("nav.contact")</a>
+            </div>
+        </div>
+    </div>
+</section>

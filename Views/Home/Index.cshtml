@@ -1,0 +1,446 @@
+@model HomeVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    var ci = System.Globalization.CultureInfo.GetCultureInfo(Lang.IsAr ? "ar-EG" : "en-GB");
+    var arrow = Lang.IsAr ? "fa-arrow-left" : "fa-arrow-right";
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   HERO
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (Model.Slides.Count > 0)
+{
+    <section class="sv-hero">
+        <div class="swiper">
+            <div class="swiper-wrapper">
+                @foreach (var slide in Model.Slides)
+                {
+                    var img     = slide.ImagePath ?? "/img/hero/hero-factory.webp";
+                    var eyebrow = Lang.Pick(slide.EyebrowAr, slide.EyebrowEn);
+                    var title   = Lang.Pick(slide.TitleAr, slide.TitleEn);
+                    var sub     = Lang.Pick(slide.SubtitleAr, slide.SubtitleEn);
+                    var b1      = Lang.Pick(slide.ButtonTextAr, slide.ButtonTextEn);
+                    var b2      = Lang.Pick(slide.Button2TextAr, slide.Button2TextEn);
+
+                    <div class="swiper-slide">
+                        <div class="sv-hero__slide" data-align="@slide.Align"
+                             style="--sv-overlay:@((slide.OverlayOpacity / 100.0).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))">
+                            <div class="sv-hero__bg"><img src="@img" alt="@title" /></div>
+                            <div class="sv-hero__pattern"></div>
+                            <div class="sv-container">
+                                <div class="sv-hero__content">
+                                    @if (!string.IsNullOrWhiteSpace(eyebrow))
+                                    {
+                                        <span class="sv-hero__eyebrow"><i class="fa-solid fa-microchip"></i> @eyebrow</span>
+                                    }
+                                    <h1 class="sv-hero__title">@title</h1>
+                                    @if (!string.IsNullOrWhiteSpace(sub))
+                                    {
+                                        <p class="sv-hero__sub">@sub</p>
+                                    }
+                                    <div class="sv-hero__actions">
+                                        @if (!string.IsNullOrWhiteSpace(b1))
+                                        {
+                                            <a class="sv-btn sv-btn--primary sv-btn--lg" href="@(slide.ButtonUrl ?? "#")">
+                                                @b1 <i class="fa-solid @arrow"></i>
+                                            </a>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(b2))
+                                        {
+                                            <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@(slide.Button2Url ?? "#")">@b2</a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+        <a class="sv-hero__cue" href="#sv-intro" aria-label="@(Lang.IsAr ? "المزيد" : "Scroll")">
+            <i class="fa-solid fa-angle-down"></i>
+        </a>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   INTRO / ABOUT SPLIT
+   ══════════════════════════════════════════════════════════════════════════ *@
+@{ var intro = Sec("intro"); }
+@if (intro is not null)
+{
+    <section class="sv-section" id="sv-intro">
+        <div class="sv-container">
+            <div class="sv-split">
+                <div class="sv-split__media sv-reveal">
+                    <img src="@(intro.ImagePath ?? "/img/hero/hero-factory.webp")"
+                         alt="@Lang.Pick(intro.TitleAr, intro.TitleEn)" loading="lazy" />
+                    @if (!string.IsNullOrWhiteSpace(Cfg.GetRaw("site.founded_year")))
+                    {
+                        <div class="sv-split__badge">
+                            <strong>@Cfg.GetRaw("site.founded_year")</strong>
+                            <span>@(Lang.IsAr ? "سنة التأسيس" : "Established")</span>
+                        </div>
+                    }
+                </div>
+                <div class="sv-split__body sv-reveal" data-delay="1">
+                    @if (!string.IsNullOrWhiteSpace(Lang.Pick(intro.EyebrowAr, intro.EyebrowEn)))
+                    {
+                        <span class="sv-eyebrow">@Lang.Pick(intro.EyebrowAr, intro.EyebrowEn)</span>
+                    }
+                    <h2>@Lang.Pick(intro.TitleAr, intro.TitleEn)</h2>
+                    @if (!string.IsNullOrWhiteSpace(Lang.Pick(intro.SubtitleAr, intro.SubtitleEn)))
+                    {
+                        <p class="sv-lead">@Lang.Pick(intro.SubtitleAr, intro.SubtitleEn)</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Lang.Pick(intro.BodyAr, intro.BodyEn)))
+                    {
+                        <div class="sv-rte">@Html.Raw(Lang.Pick(intro.BodyAr, intro.BodyEn))</div>
+                    }
+                    <div class="sv-split__actions">
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(intro.ButtonTextAr, intro.ButtonTextEn)))
+                        {
+                            <a class="sv-btn sv-btn--primary" href="@(intro.ButtonUrl ?? Lang.Url("/about"))">
+                                @Lang.Pick(intro.ButtonTextAr, intro.ButtonTextEn) <i class="fa-solid @arrow"></i>
+                            </a>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(intro.Button2TextAr, intro.Button2TextEn)))
+                        {
+                            <a class="sv-btn sv-btn--outline" href="@(intro.Button2Url ?? Lang.Url("/contact"))">
+                                @Lang.Pick(intro.Button2TextAr, intro.Button2TextEn)
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   STATS
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (Model.Stats.Count > 0)
+{
+    <section class="sv-section sv-section--tight sv-section--ink">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("stats"))
+            <div class="sv-grid sv-grid--4">
+                @foreach (var stat in Model.Stats)
+                {
+                    <div class="sv-stat sv-reveal">
+                        @if (!string.IsNullOrWhiteSpace(stat.Icon))
+                        {
+                            <span class="sv-stat__icon"><i class="@stat.Icon"></i></span>
+                        }
+                        <span class="sv-stat__value"
+                              data-count="@stat.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                              data-decimals="@stat.Decimals"
+                              data-prefix="@stat.Prefix"
+                              data-suffix="@stat.Suffix">0</span>
+                        <span class="sv-stat__label">@Lang.Pick(stat.LabelAr, stat.LabelEn)</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   PRODUCTION LINES
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (Model.Lines.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("production_lines"))
+            <div class="sv-grid sv-grid--4">
+                @foreach (var line in Model.Lines)
+                {
+                    var url  = Lang.Url($"/production-lines/{line.Slug}");
+                    var name = Lang.Pick(line.NameAr, line.NameEn);
+                    var accent = string.IsNullOrWhiteSpace(line.AccentColor) ? null : $"--sv-accent:{line.AccentColor}";
+
+                    <article class="sv-line sv-reveal" style="@accent">
+                        <a class="sv-line__media" href="@url">
+                            <img src="@(line.ImagePath ?? "/img/sections/feature1.webp")" alt="@name" loading="lazy" />
+                        </a>
+                        <div class="sv-line__body">
+                            @if (!string.IsNullOrWhiteSpace(line.Icon))
+                            {
+                                <span class="sv-line__icon"><i class="@line.Icon"></i></span>
+                            }
+                            <h3><a href="@url">@name</a></h3>
+                            @if (line.CapacityPerDay.HasValue)
+                            {
+                                <div class="sv-line__cap">
+                                    <strong>@line.CapacityPerDay.Value.ToString("N0", ci)</strong>
+                                    <span>@(Lang.Pick(line.CapacityUnitAr, line.CapacityUnitEn) ?? Cfg.T("word.units_per_day"))</span>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Lang.Pick(line.ShortDescAr, line.ShortDescEn)))
+                            {
+                                <p>@Lang.Pick(line.ShortDescAr, line.ShortDescEn)</p>
+                            }
+                            <a class="sv-line__link" href="@url">@Cfg.T("btn.learn_more") <i class="fa-solid @arrow"></i></a>
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   FEATURES / WHY US
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (Model.Features.Count > 0)
+{
+    <section class="sv-section">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("features"))
+            <div class="sv-grid sv-grid--3">
+                @foreach (var card in Model.Features)
+                {
+                    @await Html.PartialAsync("_InfoCard", card)
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   VIDEO
+   ══════════════════════════════════════════════════════════════════════════ *@
+@{ var video = Sec("video"); }
+@if (video is not null && !string.IsNullOrWhiteSpace(video.VideoUrl))
+{
+    <section class="sv-section sv-section--ink">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", video)
+            <div class="sv-video sv-reveal" data-video="@video.VideoUrl">
+                <img src="@(video.ImagePath ?? "/img/hero/hero-chip.webp")"
+                     alt="@Lang.Pick(video.TitleAr, video.TitleEn)" loading="lazy" />
+                <button class="sv-video__play" type="button" aria-label="@(Lang.IsAr ? "تشغيل الفيديو" : "Play video")">
+                    <i class="fa-solid fa-play"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   SERVICES
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (Model.Services.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("services"))
+            <div class="sv-grid sv-grid--3">
+                @foreach (var svc in Model.Services)
+                {
+                    var url = Lang.Url($"/services/{svc.Slug}");
+                    <article class="sv-icard sv-reveal">
+                        @if (!string.IsNullOrWhiteSpace(svc.Icon))
+                        {
+                            <span class="sv-icard__icon"><i class="@svc.Icon"></i></span>
+                        }
+                        <h3><a href="@url">@Lang.Pick(svc.TitleAr, svc.TitleEn)</a></h3>
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(svc.ShortDescAr, svc.ShortDescEn)))
+                        {
+                            <p>@Lang.Pick(svc.ShortDescAr, svc.ShortDescEn)</p>
+                        }
+                        <a class="sv-icard__link" href="@url">@Cfg.T("btn.learn_more") <i class="fa-solid @arrow"></i></a>
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   PRODUCTS
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (Model.FeaturedProducts.Count > 0)
+{
+    <section class="sv-section">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("products"))
+            <div class="sv-grid sv-grid--4">
+                @foreach (var p in Model.FeaturedProducts)
+                {
+                    @await Html.PartialAsync("_ProductCard", p)
+                }
+            </div>
+            <div class="sv-section__more">
+                <a class="sv-btn sv-btn--outline" href="@Lang.Url("/products")">@Cfg.T("btn.view_all")</a>
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   BRANDS
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (Model.Brands.Count > 0)
+{
+    <section class="sv-section sv-section--tight sv-section--alt">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("brands"))
+            <div class="sv-brands">
+                <div class="swiper">
+                    <div class="swiper-wrapper sv-brands__track">
+                        @foreach (var b in Model.Brands)
+                        {
+                            var name = Lang.Pick(b.NameAr, b.NameEn);
+                            <div class="swiper-slide sv-brands__item">
+                                @if (!string.IsNullOrWhiteSpace(b.WebsiteUrl))
+                                {
+                                    <a href="@b.WebsiteUrl" target="_blank" rel="noopener" title="@name">
+                                        <img src="@(b.LogoPath ?? "/img/brand/favicon.svg")" alt="@name" loading="lazy" />
+                                    </a>
+                                }
+                                else
+                                {
+                                    <img src="@(b.LogoPath ?? "/img/brand/favicon.svg")" alt="@name" title="@name" loading="lazy" />
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   NEWS
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (Model.LatestNews.Count > 0)
+{
+    <section class="sv-section">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("news"))
+            <div class="sv-grid sv-grid--3">
+                @foreach (var post in Model.LatestNews)
+                {
+                    @await Html.PartialAsync("_NewsCard", post)
+                }
+            </div>
+            <div class="sv-section__more">
+                <a class="sv-btn sv-btn--outline" href="@Lang.Url("/news")">@Cfg.T("btn.view_all")</a>
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   EVENTS
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (Model.UpcomingEvents.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("events"))
+            <div class="sv-grid sv-grid--3">
+                @foreach (var ev in Model.UpcomingEvents)
+                {
+                    @await Html.PartialAsync("_EventCard", ev)
+                }
+            </div>
+            <div class="sv-section__more">
+                <a class="sv-btn sv-btn--outline" href="@Lang.Url("/events")">@Cfg.T("btn.view_all")</a>
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   CAREERS
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (Model.OpenJobs.Count > 0)
+{
+    <section class="sv-section">
+        <div class="sv-container">
+            @await Html.PartialAsync("_SectionHeading", Sec("careers"))
+            <div class="sv-jobs">
+                @foreach (var job in Model.OpenJobs)
+                {
+                    @await Html.PartialAsync("_JobCard", job)
+                }
+            </div>
+            <div class="sv-section__more">
+                <a class="sv-btn sv-btn--outline" href="@Lang.Url("/careers")">@Cfg.T("btn.view_all")</a>
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   FAQ
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (Model.Faqs.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container sv-container--narrow">
+            @await Html.PartialAsync("_SectionHeading", Sec("faq"))
+            <div class="sv-acc sv-reveal">
+                @foreach (var faq in Model.Faqs)
+                {
+                    <div class="sv-acc__item">
+                        <button class="sv-acc__head" type="button" aria-expanded="false">
+                            <span>@Lang.Pick(faq.QuestionAr, faq.QuestionEn)</span>
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <div class="sv-acc__body">
+                            <div class="sv-rte">@Html.Raw(Lang.Pick(faq.AnswerAr, faq.AnswerEn))</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ══════════════════════════════════════════════════════════════════════════
+   CTA
+   ══════════════════════════════════════════════════════════════════════════ *@
+@{ var cta = Sec("cta"); }
+@if (cta is not null)
+{
+    <section class="sv-cta">
+        <div class="sv-container">
+            <div class="sv-cta__inner sv-reveal">
+                <div>
+                    @if (!string.IsNullOrWhiteSpace(Lang.Pick(cta.EyebrowAr, cta.EyebrowEn)))
+                    {
+                        <span class="sv-eyebrow">@Lang.Pick(cta.EyebrowAr, cta.EyebrowEn)</span>
+                    }
+                    <h2>@Lang.Pick(cta.TitleAr, cta.TitleEn)</h2>
+                    @if (!string.IsNullOrWhiteSpace(Lang.Pick(cta.SubtitleAr, cta.SubtitleEn)))
+                    {
+                        <p>@Lang.Pick(cta.SubtitleAr, cta.SubtitleEn)</p>
+                    }
+                </div>
+                <div class="sv-cta__actions">
+                    @if (!string.IsNullOrWhiteSpace(Lang.Pick(cta.ButtonTextAr, cta.ButtonTextEn)))
+                    {
+                        <a class="sv-btn sv-btn--light sv-btn--lg" href="@(cta.ButtonUrl ?? Lang.Url("/quote"))">
+                            @Lang.Pick(cta.ButtonTextAr, cta.ButtonTextEn) <i class="fa-solid @arrow"></i>
+                        </a>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Lang.Pick(cta.Button2TextAr, cta.Button2TextEn)))
+                    {
+                        <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@(cta.Button2Url ?? Lang.Url("/contact"))">
+                            @Lang.Pick(cta.Button2TextAr, cta.Button2TextEn)
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+}

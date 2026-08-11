@@ -1,0 +1,137 @@
+@model NewsDetailsVm
+@{
+    var p     = Model.Post;
+    var title = Lang.Pick(p.TitleAr, p.TitleEn);
+    var body  = Lang.Pick(p.BodyAr, p.BodyEn);
+    var sum   = Lang.Pick(p.ExcerptAr, p.ExcerptEn);
+    var cover = p.CoverImagePath ?? "/img/sections/feature1.webp";
+    var alt   = Lang.Pick(p.CoverAltAr, p.CoverAltEn) ?? title;
+    var cat   = Lang.Pick(p.Category?.NameAr, p.Category?.NameEn);
+    var ci    = System.Globalization.CultureInfo.GetCultureInfo(Lang.IsAr ? "ar-EG" : "en-GB");
+
+    var shareUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
+    var shareEnc = Uri.EscapeDataString(shareUrl);
+    var titleEnc = Uri.EscapeDataString(title ?? "");
+    var fbShare  = "https://www.facebook.com/sharer/sharer.php?u=" + shareEnc;
+    var twShare  = "https://twitter.com/intent/tweet?url=" + shareEnc + "&text=" + titleEnc;
+    var liShare  = "https://www.linkedin.com/sharing/share-offsite/?url=" + shareEnc;
+    var waShare  = "https://wa.me/?text=" + titleEnc + "%20" + shareEnc;
+
+    var prevUrl = Model.Prev is null ? null : Lang.Url($"/news/{Model.Prev.Slug}");
+    var nextUrl = Model.Next is null ? null : Lang.Url($"/news/{Model.Next.Slug}");
+}
+
+<section class="sv-pagehero">
+    <div class="sv-pagehero__bg"><img src="@cover" alt="@alt" loading="eager" /></div>
+    <div class="sv-container">
+        <ul class="sv-crumbs">
+            <li><a href="@Lang.Url("/")">@Cfg.T("nav.home")</a></li>
+            <li><a href="@Lang.Url("/news")">@Cfg.T("nav.news")</a></li>
+            <li><span>@title</span></li>
+        </ul>
+        @if (!string.IsNullOrWhiteSpace(cat))
+        {
+            <div style="margin-bottom:1rem"><span class="sv-badge sv-badge--solid">@cat</span></div>
+        }
+        <h1>@title</h1>
+        <div class="sv-postmeta">
+            <span><i class="fa-regular fa-calendar"></i> @Cfg.T("word.published_on") @p.PublishedAt.ToString("dd MMMM yyyy", ci)</span>
+            @if (!string.IsNullOrWhiteSpace(p.AuthorName))
+            {
+                <span><i class="fa-regular fa-user"></i> @p.AuthorName</span>
+            }
+            @if (p.ViewCount > 0)
+            {
+                <span><i class="fa-regular fa-eye"></i> @p.ViewCount</span>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="sv-section">
+    <div class="sv-container">
+        <div class="sv-detail">
+            <article class="sv-detail__main">
+                <figure class="sv-detail__cover sv-reveal">
+                    <img src="@cover" alt="@alt" />
+                </figure>
+
+                @if (!string.IsNullOrWhiteSpace(sum))
+                {
+                    <p class="sv-lead sv-reveal">@sum</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(body))
+                {
+                    <div class="sv-rte sv-reveal">@Html.Raw(body)</div>
+                }
+
+                @if (p.TagList.Length > 0)
+                {
+                    <div class="sv-tags sv-mt-6">
+                        @foreach (var tag in p.TagList)
+                        {
+                            <a class="sv-tag" href="@(Lang.Url("/news") + "?q=" + Uri.EscapeDataString(tag))">#@tag</a>
+                        }
+                    </div>
+                }
+
+                <div class="sv-postnav sv-mt-8">
+                    @if (Model.Prev is not null)
+                    {
+                        <a class="sv-postnav__item" href="@prevUrl">
+                            <span><i class="fa-solid @(Lang.IsAr ? "fa-angle-right" : "fa-angle-left")"></i> @(Lang.IsAr ? "السابق" : "Previous")</span>
+                            <strong>@Lang.Pick(Model.Prev.TitleAr, Model.Prev.TitleEn)</strong>
+                        </a>
+                    }
+                    @if (Model.Next is not null)
+                    {
+                        <a class="sv-postnav__item sv-postnav__item--next" href="@nextUrl">
+                            <span>@(Lang.IsAr ? "التالي" : "Next") <i class="fa-solid @(Lang.IsAr ? "fa-angle-left" : "fa-angle-right")"></i></span>
+                            <strong>@Lang.Pick(Model.Next.TitleAr, Model.Next.TitleEn)</strong>
+                        </a>
+                    }
+                </div>
+            </article>
+
+            <aside class="sv-detail__side">
+                <div class="sv-sidecard sv-reveal">
+                    <h3>@Cfg.T("word.share")</h3>
+                    <div class="sv-share">
+                        <a href="@fbShare" target="_blank" rel="noopener" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="@twShare" target="_blank" rel="noopener" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+                        <a href="@liShare" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a href="@waShare" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                    </div>
+                </div>
+
+                @if (Model.Related.Count > 0)
+                {
+                    <div class="sv-sidecard sv-reveal">
+                        <h3>@Cfg.T("word.related")</h3>
+                        <div class="sv-minilist">
+                            @foreach (var r in Model.Related)
+                            {
+                                var u = Lang.Url($"/news/{r.Slug}");
+                                var t = Lang.Pick(r.TitleAr, r.TitleEn);
+                                <article class="sv-mini">
+                                    <a class="sv-mini__media" href="@u">
+                                        <img src="@(r.CoverImagePath ?? "/img/sections/feature2.webp")" alt="@t" loading="lazy" />
+                                    </a>
+                                    <div class="sv-mini__body">
+                                        <span class="sv-mini__date">@r.PublishedAt.ToString("dd MMM yyyy", ci)</span>
+                                        <h3><a href="@u">@t</a></h3>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <a class="sv-btn sv-btn--ghost sv-btn--block" href="@Lang.Url("/news")">
+                    <i class="fa-solid @(Lang.IsAr ? "fa-arrow-right" : "fa-arrow-left")"></i> @Cfg.T("btn.back")
+                </a>
+            </aside>
+        </div>
+    </div>
+</section>

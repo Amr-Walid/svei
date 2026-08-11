@@ -1,0 +1,31 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "غير مصرح";
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>غير مصرح</title>
+    <link rel="stylesheet" href="~/fonts/plexar.local.css" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/tokens.css" />
+    <link rel="stylesheet" href="~/css/base.css" />
+    <link rel="stylesheet" href="~/css/components.css" />
+</head>
+<body>
+    <div class="sv-container sv-container--narrow" style="padding-block:6rem">
+        <div class="sv-empty">
+            <i class="fa-solid fa-lock"></i>
+            <h1>غير مصرح لك بالدخول</h1>
+            <p>حسابك لا يملك الصلاحية اللازمة لعرض هذه الصفحة.</p>
+            <div class="sv-flex sv-flex--center sv-mt-6" style="gap:.75rem">
+                <a class="sv-btn sv-btn--primary" href="/Account/Login">تسجيل الدخول بحساب آخر</a>
+                <a class="sv-btn sv-btn--ghost" href="/ar">العودة إلى الموقع</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

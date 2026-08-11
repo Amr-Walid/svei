@@ -1,0 +1,116 @@
+@model ProductionLinesVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)> { (Cfg.T("nav.production_lines"), null) };
+
+    var ci = System.Globalization.CultureInfo.GetCultureInfo(Lang.IsAr ? "ar-EG" : "en-GB");
+    var arrow = Lang.IsAr ? "fa-arrow-left" : "fa-arrow-right";
+}
+
+@await Html.PartialAsync("_PageHero", Sec("hero"))
+
+@if (Model.Stats.Count > 0)
+{
+    <section class="sv-section sv-section--tight sv-section--ink">
+        <div class="sv-container">
+            <div class="sv-grid sv-grid--4">
+                @foreach (var stat in Model.Stats.Take(4))
+                {
+                    <div class="sv-stat sv-reveal">
+                        @if (!string.IsNullOrWhiteSpace(stat.Icon))
+                        {
+                            <span class="sv-stat__icon"><i class="@stat.Icon"></i></span>
+                        }
+                        <span class="sv-stat__value"
+                              data-count="@stat.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                              data-decimals="@stat.Decimals"
+                              data-prefix="@stat.Prefix"
+                              data-suffix="@stat.Suffix">0</span>
+                        <span class="sv-stat__label">@Lang.Pick(stat.LabelAr, stat.LabelEn)</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<section class="sv-section">
+    <div class="sv-container">
+        @if (Model.Lines.Count == 0)
+        {
+            ViewData["EmptyIcon"] = "fa-solid fa-industry";
+            @await Html.PartialAsync("_Empty", Cfg.T("msg.coming_soon"))
+        }
+        else
+        {
+            var idx = 0;
+            foreach (var line in Model.Lines)
+            {
+                idx++;
+                var url    = Lang.Url($"/production-lines/{line.Slug}");
+                var name   = Lang.Pick(line.NameAr, line.NameEn);
+                var text   = Lang.Pick(line.ShortDescAr, line.ShortDescEn);
+                var accent = string.IsNullOrWhiteSpace(line.AccentColor) ? null : $"--sv-accent:{line.AccentColor}";
+                var reverse = idx % 2 == 0 ? "sv-split sv-split--reverse" : "sv-split";
+
+                <div class="@reverse sv-mt-8" style="@accent">
+                    <div class="sv-split__media sv-reveal">
+                        <img src="@(line.ImagePath ?? "/img/sections/feature1.webp")" alt="@name" loading="lazy" />
+                        @if (line.CapacityPerDay.HasValue)
+                        {
+                            <div class="sv-split__badge">
+                                <strong>@line.CapacityPerDay.Value.ToString("N0", ci)</strong>
+                                <span>@(Lang.Pick(line.CapacityUnitAr, line.CapacityUnitEn) ?? Cfg.T("word.units_per_day"))</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="sv-split__body sv-reveal" data-delay="1">
+                        @if (!string.IsNullOrWhiteSpace(line.Icon))
+                        {
+                            <span class="sv-line__icon"><i class="@line.Icon"></i></span>
+                        }
+                        <h2>@name</h2>
+                        @if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            <p class="sv-lead">@text</p>
+                        }
+                        @if (line.Specs.Count > 0)
+                        {
+                            <ul class="sv-specs">
+                                @foreach (var sp in line.Specs.Take(6))
+                                {
+                                    <li>
+                                        <i class="@(sp.Icon ?? "fa-solid fa-circle-check")"></i>
+                                        <span>@Lang.Pick(sp.LabelAr, sp.LabelEn)</span>
+                                        <strong>@Lang.Pick(sp.ValueAr, sp.ValueEn)</strong>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        <div class="sv-split__actions">
+                            <a class="sv-btn sv-btn--primary" href="@url">@Cfg.T("btn.learn_more") <i class="fa-solid @arrow"></i></a>
+                            <a class="sv-btn sv-btn--outline" href="@Lang.Url("/quote")">@Cfg.T("nav.quote")</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</section>
+
+<section class="sv-cta">
+    <div class="sv-container">
+        <div class="sv-cta__inner sv-reveal">
+            <div>
+                <h2>@(Lang.IsAr ? "خطوط إنتاج جاهزة لمنتجك" : "Production lines ready for your product")</h2>
+                <p>@(Lang.IsAr ? "احجز جولة في المصنع أو اطلب عرض سعر الآن." : "Book a factory tour or request a quotation now.")</p>
+            </div>
+            <div class="sv-cta__actions">
+                <a class="sv-btn sv-btn--primary sv-btn--lg" href="@Lang.Url("/quote")">@Cfg.T("nav.quote")</a>
+                <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@Lang.Url("/contact")">@Cfg.T("nav.contact")</a>
+            </div>
+        </div>
+    </div>
+</section>

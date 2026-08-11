@@ -1,0 +1,263 @@
+@model EventDetailsVm
+@{
+    var ev    = Model.Event;
+    var title = Lang.Pick(ev.TitleAr, ev.TitleEn);
+    var body  = Lang.Pick(ev.DescAr, ev.DescEn);
+    var sum   = Lang.Pick(ev.SummaryAr, ev.SummaryEn);
+    var place = Lang.Pick(ev.LocationAr, ev.LocationEn);
+    var cover = ev.CoverImagePath ?? "/img/sections/feature2.webp";
+    var ci    = System.Globalization.CultureInfo.GetCultureInfo(Lang.IsAr ? "ar-EG" : "en-GB");
+
+    var typeLabel  = EventLabels.Type(ev.EventType, Lang.IsAr);
+    var typeIcon   = EventLabels.Icon(ev.EventType);
+    var statusText = EventLabels.Status(ev.Status, Lang.IsAr);
+    var statusCls  = ev.Status switch { "upcoming" => "sv-badge--cyan", "ongoing" => "sv-badge--green", _ => "sv-badge--amber" };
+
+    var dateText = ev.StartDate.HasValue ? ev.StartDate.Value.ToString("dd MMMM yyyy", ci) : null;
+    if (ev.StartDate.HasValue && ev.EndDate.HasValue && ev.EndDate.Value.Date != ev.StartDate.Value.Date)
+        dateText += " — " + ev.EndDate.Value.ToString("dd MMMM yyyy", ci);
+    var timeText = ev.StartDate.HasValue && ev.StartDate.Value.TimeOfDay > TimeSpan.Zero
+        ? ev.StartDate.Value.ToString("HH:mm", ci) : null;
+
+    var canRegister = ev.AllowRegistration && ev.Status != "past" && !Model.IsFull;
+    var seatsLeft   = ev.Capacity.HasValue ? Math.Max(0, ev.Capacity.Value - Model.RegisteredCount) : (int?)null;
+
+    var shareUrl   = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
+    var shareEnc   = Uri.EscapeDataString(shareUrl);
+    var titleEnc   = Uri.EscapeDataString(title ?? "");
+    var fbShare    = "https://www.facebook.com/sharer/sharer.php?u=" + shareEnc;
+    var twShare    = "https://twitter.com/intent/tweet?url=" + shareEnc + "&text=" + titleEnc;
+    var liShare    = "https://www.linkedin.com/sharing/share-offsite/?url=" + shareEnc;
+    var waShare    = "https://wa.me/?text=" + titleEnc + "%20" + shareEnc;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)>
+    {
+        (Cfg.T("nav.events"), Lang.Url("/events")),
+        (title ?? "", null)
+    };
+    var arrow = Lang.IsAr ? "fa-arrow-left" : "fa-arrow-right";
+}
+
+<section class="sv-pagehero">
+    <div class="sv-pagehero__bg"><img src="@cover" alt="@title" loading="eager" /></div>
+    <div class="sv-container">
+        <ul class="sv-crumbs">
+            <li><a href="@Lang.Url("/")">@Cfg.T("nav.home")</a></li>
+            <li><a href="@Lang.Url("/events")">@Cfg.T("nav.events")</a></li>
+            <li><span>@title</span></li>
+        </ul>
+        <div class="sv-flex sv-flex--wrap sv-mt-0" style="gap:.5rem;margin-bottom:1rem">
+            <span class="sv-badge sv-badge--solid @statusCls">@statusText</span>
+            <span class="sv-badge"><i class="@typeIcon"></i> @typeLabel</span>
+        </div>
+        <h1>@title</h1>
+        @if (!string.IsNullOrWhiteSpace(sum))
+        {
+            <p>@sum</p>
+        }
+    </div>
+</section>
+
+<section class="sv-section">
+    <div class="sv-container">
+        <div class="sv-detail">
+
+            @* ── Main column ─────────────────────────────────────────────── *@
+            <div class="sv-detail__main">
+                <figure class="sv-detail__cover sv-reveal">
+                    <img src="@cover" alt="@title" />
+                </figure>
+
+                @if (!string.IsNullOrWhiteSpace(body))
+                {
+                    <div class="sv-rte sv-reveal">@Html.Raw(body)</div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(ev.VideoUrl))
+                {
+                    <div class="sv-video sv-reveal sv-mt-6" data-video="@ev.VideoUrl">
+                        <img src="@cover" alt="@title" loading="lazy" />
+                        <button class="sv-video__play" type="button" aria-label="@(Lang.IsAr ? "تشغيل الفيديو" : "Play video")">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                    </div>
+                }
+
+                @if (ev.Images.Count > 0)
+                {
+                    <div class="sv-gallery sv-mt-8" data-lightbox>
+                        @foreach (var im in ev.Images)
+                        {
+                            var cap = Lang.Pick(im.CaptionAr, im.CaptionEn);
+                            <a class="sv-gallery__item sv-reveal glightbox" href="@im.ImagePath" data-gallery="event" data-title="@cap">
+                                <img src="@im.ImagePath" alt="@cap" loading="lazy" />
+                            </a>
+                        }
+                    </div>
+                }
+
+                @* ── Registration form ───────────────────────────────────── *@
+                @if (ev.AllowRegistration && ev.Status != "past")
+                {
+                    <div class="sv-formbox sv-reveal sv-mt-8" id="register">
+                        <h2>@(Lang.IsAr ? "سجّل حضورك" : "Register your attendance")</h2>
+                        <p class="sv-muted">
+                            @(Lang.IsAr
+                                ? "املأ البيانات التالية وسيتواصل معك فريقنا لتأكيد الحجز."
+                                : "Fill in the form below and our team will confirm your seat.")
+                        </p>
+
+                        @if (Model.IsFull)
+                        {
+                            <div class="sv-alert sv-alert--warning">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <span>@(Lang.IsAr ? "اكتمل العدد لهذه الفعالية." : "This event is fully booked.")</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <form method="post" action="@Lang.Url("/events/register")" class="sv-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="EventId" value="@ev.Id" />
+                                <input type="text" name="website" class="sv-hidden" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+                                <div class="sv-grid sv-grid--2">
+                                    <div class="sv-field">
+                                        <label class="sv-label" for="rf-name">@Cfg.T("label.name") <span class="sv-req">*</span></label>
+                                        <input class="sv-input" id="rf-name" name="FullName" required maxlength="150" />
+                                    </div>
+                                    <div class="sv-field">
+                                        <label class="sv-label" for="rf-email">@Cfg.T("label.email") <span class="sv-req">*</span></label>
+                                        <input class="sv-input" id="rf-email" name="Email" type="email" required maxlength="200" />
+                                    </div>
+                                    <div class="sv-field">
+                                        <label class="sv-label" for="rf-phone">@Cfg.T("label.phone")</label>
+                                        <input class="sv-input" id="rf-phone" name="Phone" type="tel" maxlength="30" />
+                                    </div>
+                                    <div class="sv-field">
+                                        <label class="sv-label" for="rf-company">@Cfg.T("label.company")</label>
+                                        <input class="sv-input" id="rf-company" name="Company" maxlength="200" />
+                                    </div>
+                                </div>
+
+                                <div class="sv-field">
+                                    <label class="sv-label" for="rf-notes">@Cfg.T("label.message") <span class="sv-opt">@Cfg.T("label.optional")</span></label>
+                                    <textarea class="sv-textarea" id="rf-notes" name="Notes" maxlength="1000" rows="4"></textarea>
+                                </div>
+
+                                <button class="sv-btn sv-btn--primary sv-btn--lg" type="submit">
+                                    @Cfg.T("btn.register") <i class="fa-solid @arrow"></i>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                }
+            </div>
+
+            @* ── Sidebar ─────────────────────────────────────────────────── *@
+            <aside class="sv-detail__side">
+                <div class="sv-sidecard sv-reveal">
+                    <h3>@(Lang.IsAr ? "تفاصيل الفعالية" : "Event details")</h3>
+                    <ul class="sv-facts">
+                        @if (!string.IsNullOrWhiteSpace(dateText))
+                        {
+                            <li>
+                                <i class="fa-regular fa-calendar"></i>
+                                <div><span>@Cfg.T("word.date")</span><strong>@dateText</strong></div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(timeText))
+                        {
+                            <li>
+                                <i class="fa-regular fa-clock"></i>
+                                <div><span>@(Lang.IsAr ? "الوقت" : "Time")</span><strong>@timeText</strong></div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(place))
+                        {
+                            <li>
+                                <i class="fa-solid fa-location-dot"></i>
+                                <div><span>@Cfg.T("word.location")</span><strong>@place</strong></div>
+                            </li>
+                        }
+                        <li>
+                            <i class="@typeIcon"></i>
+                            <div><span>@Cfg.T("word.category")</span><strong>@typeLabel</strong></div>
+                        </li>
+                        @if (seatsLeft.HasValue)
+                        {
+                            <li>
+                                <i class="fa-solid fa-chair"></i>
+                                <div>
+                                    <span>@(Lang.IsAr ? "الأماكن المتبقية" : "Seats left")</span>
+                                    <strong>@seatsLeft.Value / @ev.Capacity</strong>
+                                </div>
+                            </li>
+                        }
+                        @if (Model.RegisteredCount > 0)
+                        {
+                            <li>
+                                <i class="fa-solid fa-user-check"></i>
+                                <div>
+                                    <span>@(Lang.IsAr ? "عدد المسجلين" : "Registered")</span>
+                                    <strong>@Model.RegisteredCount</strong>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+
+                    <div class="sv-sidecard__actions">
+                        @if (canRegister)
+                        {
+                            <a class="sv-btn sv-btn--primary sv-btn--block" href="#register">@Cfg.T("btn.register")</a>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(ev.RegistrationUrl))
+                        {
+                            <a class="sv-btn sv-btn--tech sv-btn--block" href="@ev.RegistrationUrl" target="_blank" rel="noopener">
+                                <i class="fa-solid fa-up-right-from-square"></i>
+                                @(Lang.IsAr ? "التسجيل الخارجي" : "External registration")
+                            </a>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(ev.MapUrl))
+                        {
+                            <a class="sv-btn sv-btn--outline sv-btn--block" href="@ev.MapUrl" target="_blank" rel="noopener">
+                                <i class="fa-solid fa-map-location-dot"></i> @Cfg.T("btn.get_directions")
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <div class="sv-sidecard sv-reveal">
+                    <h3>@Cfg.T("word.share")</h3>
+                    <div class="sv-share">
+                        <a href="@fbShare" target="_blank" rel="noopener" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="@twShare" target="_blank" rel="noopener" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+                        <a href="@liShare" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a href="@waShare" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                    </div>
+                </div>
+
+                <a class="sv-btn sv-btn--ghost sv-btn--block" href="@Lang.Url("/events")">
+                    <i class="fa-solid @(Lang.IsAr ? "fa-arrow-right" : "fa-arrow-left")"></i> @Cfg.T("btn.back")
+                </a>
+            </aside>
+        </div>
+    </div>
+</section>
+
+@if (Model.Related.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <h2>@Cfg.T("word.related")</h2>
+            </div>
+            <div class="sv-grid sv-grid--3">
+                @foreach (var r in Model.Related)
+                {
+                    @await Html.PartialAsync("_EventCard", r)
+                }
+            </div>
+        </div>
+    </section>
+}

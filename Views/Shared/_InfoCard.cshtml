@@ -1,0 +1,33 @@
+@model InfoCard
+@{
+    var title = Lang.Pick(Model.TitleAr, Model.TitleEn);
+    var text  = Lang.Pick(Model.TextAr, Model.TextEn);
+    var link  = Lang.Pick(Model.LinkTextAr, Model.LinkTextEn);
+    var index = ViewData["Index"] as int?;
+    var style = string.IsNullOrWhiteSpace(Model.AccentColor) ? null : $"--sv-accent:{Model.AccentColor}";
+}
+
+<div class="sv-icard sv-reveal" style="@style">
+    @if (!string.IsNullOrWhiteSpace(Model.ImagePath))
+    {
+        <img class="sv-icard__img" src="@Model.ImagePath" alt="@title" loading="lazy" />
+    }
+    else if (!string.IsNullOrWhiteSpace(Model.Icon))
+    {
+        <span class="sv-icard__icon"><i class="@Model.Icon"></i></span>
+    }
+    else if (index.HasValue)
+    {
+        <span class="sv-icard__num">@index.Value.ToString("00")</span>
+    }
+
+    <h3>@title</h3>
+    @if (!string.IsNullOrWhiteSpace(text))
+    {
+        <p>@text</p>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.LinkUrl) && !string.IsNullOrWhiteSpace(link))
+    {
+        <a class="sv-icard__link" href="@Model.LinkUrl">@link <i class="fa-solid fa-arrow-@(Lang.IsAr ? "left" : "right")"></i></a>
+    }
+</div>

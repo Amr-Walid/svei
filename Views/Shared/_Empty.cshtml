@@ -1,0 +1,9 @@
+@model string
+@{
+    var icon = ViewData["EmptyIcon"] as string ?? "fa-regular fa-folder-open";
+}
+
+<div class="sv-empty">
+    <i class="@icon"></i>
+    <p>@(string.IsNullOrWhiteSpace(Model) ? Cfg.T("msg.no_results") : Model)</p>
+</div>

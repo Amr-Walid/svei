@@ -1,0 +1,257 @@
+@model ContactVm
+@{
+    var S = ViewData["Sections"] as Dictionary<string, PageSection> ?? new();
+    PageSection? Sec(string key) => S.TryGetValue(key, out var s) ? s : null;
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)> { (Cfg.T("nav.contact"), null) };
+
+    var address  = Cfg.Get("contact.address");
+    var phone    = Cfg.GetRaw("contact.phone");
+    var whatsapp = Cfg.GetRaw("contact.whatsapp");
+    var email    = Cfg.GetRaw("contact.email");
+    var email2   = Cfg.GetRaw("contact.email2");
+    var hours    = Cfg.Get("contact.hours");
+    var note     = Cfg.Get("contact.support_note");
+
+    string Tel(string? p) => "tel:" + (p ?? "").Replace(" ", "").Replace("(", "").Replace(")", "").Replace("-", "");
+    var phoneTel = Tel(phone);
+    var waUrl    = "https://wa.me/" + (whatsapp ?? "").Replace("+", "").Replace(" ", "");
+
+    var primary = Model.Locations.FirstOrDefault(x => x.IsPrimary) ?? Model.Locations.FirstOrDefault();
+    var lat = primary?.Latitude?.ToString(System.Globalization.CultureInfo.InvariantCulture)
+              ?? Cfg.GetRaw("contact.lat") ?? "29.6725549";
+    var lng = primary?.Longitude?.ToString(System.Globalization.CultureInfo.InvariantCulture)
+              ?? Cfg.GetRaw("contact.lng") ?? "32.30928";
+    var zoom = (primary?.MapZoom ?? 0) > 0 ? primary!.MapZoom.ToString() : (Cfg.GetRaw("contact.map_zoom") ?? "13");
+    var mapLabel = Lang.Pick(primary?.NameAr, primary?.NameEn) ?? Cfg.Get("site.name", "SVEI");
+    var directions = $"https://www.google.com/maps/search/?api=1&query={lat},{lng}";
+    var arrow = Lang.IsAr ? "fa-arrow-left" : "fa-arrow-right";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+}
+
+@await Html.PartialAsync("_PageHero", Sec("hero"))
+
+<section class="sv-section">
+    <div class="sv-container">
+        <div class="sv-contact">
+
+            @* ── Form ────────────────────────────────────────────────────── *@
+            <div class="sv-contact__form sv-reveal">
+                @{ var formSec = Sec("form"); }
+                @if (formSec is not null)
+                {
+                    <span class="sv-eyebrow">@Lang.Pick(formSec.EyebrowAr, formSec.EyebrowEn)</span>
+                    <h2>@Lang.Pick(formSec.TitleAr, formSec.TitleEn)</h2>
+                    @if (!string.IsNullOrWhiteSpace(Lang.Pick(formSec.SubtitleAr, formSec.SubtitleEn)))
+                    {
+                        <p class="sv-muted">@Lang.Pick(formSec.SubtitleAr, formSec.SubtitleEn)</p>
+                    }
+                }
+                else
+                {
+                    <h2>@(Lang.IsAr ? "أرسل لنا رسالة" : "Send us a message")</h2>
+                }
+
+                <form method="post" action="@Lang.Url("/contact/send")" class="sv-form sv-mt-4">
+                    @Html.AntiForgeryToken()
+                    <input type="text" name="Website" class="sv-hidden" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+                    <div class="sv-grid sv-grid--2">
+                        <div class="sv-field">
+                            <label class="sv-label" for="cf-name">@Cfg.T("label.name") <span class="sv-req">*</span></label>
+                            <input class="sv-input" id="cf-name" name="FullName" required maxlength="150" />
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="cf-email">@Cfg.T("label.email") <span class="sv-req">*</span></label>
+                            <input class="sv-input" id="cf-email" name="Email" type="email" required maxlength="200" />
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="cf-phone">@Cfg.T("label.phone")</label>
+                            <input class="sv-input" id="cf-phone" name="Phone" type="tel" maxlength="30" />
+                        </div>
+                        <div class="sv-field">
+                            <label class="sv-label" for="cf-company">@Cfg.T("label.company")</label>
+                            <input class="sv-input" id="cf-company" name="Company" maxlength="200" />
+                        </div>
+                    </div>
+
+                    <div class="sv-field">
+                        <label class="sv-label" for="cf-subject">@Cfg.T("label.subject")</label>
+                        <input class="sv-input" id="cf-subject" name="Subject" maxlength="250" />
+                    </div>
+
+                    <div class="sv-field">
+                        <label class="sv-label" for="cf-msg">@Cfg.T("label.message") <span class="sv-req">*</span></label>
+                        <textarea class="sv-textarea" id="cf-msg" name="Message" required rows="6"></textarea>
+                    </div>
+
+                    <button class="sv-btn sv-btn--primary sv-btn--lg" type="submit">
+                        @Cfg.T("btn.send") <i class="fa-solid @arrow"></i>
+                    </button>
+                </form>
+            </div>
+
+            @* ── Info column ─────────────────────────────────────────────── *@
+            <aside class="sv-contact__info sv-reveal" data-delay="1">
+                <div class="sv-sidecard">
+                    <h3>@(Lang.IsAr ? "بيانات التواصل" : "Get in touch")</h3>
+                    <ul class="sv-facts">
+                        @if (!string.IsNullOrWhiteSpace(address))
+                        {
+                            <li>
+                                <i class="fa-solid fa-location-dot"></i>
+                                <div><span>@(Lang.IsAr ? "العنوان" : "Address")</span><strong>@address</strong></div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(phone))
+                        {
+                            <li>
+                                <i class="fa-solid fa-phone"></i>
+                                <div>
+                                    <span>@Cfg.T("label.phone")</span>
+                                    <strong><a href="@phoneTel" dir="ltr">@phone</a></strong>
+                                </div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(email))
+                        {
+                            <li>
+                                <i class="fa-regular fa-envelope"></i>
+                                <div>
+                                    <span>@Cfg.T("label.email")</span>
+                                    <strong><a href="mailto:@email">@email</a></strong>
+                                </div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(email2))
+                        {
+                            <li>
+                                <i class="fa-regular fa-envelope-open"></i>
+                                <div>
+                                    <span>@(Lang.IsAr ? "بريد آخر" : "Alt. email")</span>
+                                    <strong><a href="mailto:@email2">@email2</a></strong>
+                                </div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(hours))
+                        {
+                            <li>
+                                <i class="fa-regular fa-clock"></i>
+                                <div><span>@(Lang.IsAr ? "ساعات العمل" : "Working hours")</span><strong>@hours</strong></div>
+                            </li>
+                        }
+                    </ul>
+
+                    @if (!string.IsNullOrWhiteSpace(note))
+                    {
+                        <p class="sv-help sv-mt-4">@note</p>
+                    }
+
+                    <div class="sv-sidecard__actions">
+                        @if (!string.IsNullOrWhiteSpace(whatsapp))
+                        {
+                            <a class="sv-btn sv-btn--tech sv-btn--block" href="@waUrl" target="_blank" rel="noopener">
+                                <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                            </a>
+                        }
+                        <a class="sv-btn sv-btn--outline sv-btn--block" href="@directions" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-map-location-dot"></i> @Cfg.T("btn.get_directions")
+                        </a>
+                    </div>
+                </div>
+
+                @if (Model.Social.Count > 0)
+                {
+                    <div class="sv-sidecard">
+                        <h3>@(Lang.IsAr ? "تابعنا" : "Follow us")</h3>
+                        <div class="sv-social">
+                            @foreach (var s in Model.Social)
+                            {
+                                <a href="@s.Url" target="_blank" rel="noopener"
+                                   aria-label="@(Lang.Pick(s.LabelAr, s.LabelEn) ?? s.Platform)">
+                                    <i class="@(s.Icon ?? "fa-brands fa-" + s.Platform)"></i>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+            </aside>
+        </div>
+    </div>
+</section>
+
+@* ── Locations ───────────────────────────────────────────────────────────── *@
+@if (Model.Locations.Count > 1)
+{
+    <section class="sv-section sv-section--alt sv-section--tight">
+        <div class="sv-container">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <h2>@(Lang.IsAr ? "مواقعنا" : "Our locations")</h2>
+            </div>
+            <div class="sv-grid sv-grid--3">
+                @foreach (var loc in Model.Locations)
+                {
+                    var lname = Lang.Pick(loc.NameAr, loc.NameEn);
+                    <div class="sv-icard sv-reveal">
+                        <span class="sv-icard__icon"><i class="fa-solid fa-location-dot"></i></span>
+                        <h3>@lname</h3>
+                        @if (!string.IsNullOrWhiteSpace(Lang.Pick(loc.AddressAr, loc.AddressEn)))
+                        {
+                            <p>@Lang.Pick(loc.AddressAr, loc.AddressEn)</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(loc.Phone))
+                        {
+                            <a class="sv-icard__link" href="@Tel(loc.Phone)" dir="ltr">@loc.Phone</a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ── Map ─────────────────────────────────────────────────────────────────── *@
+<section class="sv-section sv-section--tight">
+    <div class="sv-container">
+        @{ var mapSec = Sec("map"); }
+        @if (mapSec is not null)
+        {
+            @await Html.PartialAsync("_SectionHeading", mapSec)
+        }
+        <div id="sv-map" class="sv-map sv-reveal"
+             data-lat="@lat" data-lng="@lng" data-zoom="@zoom" data-label="@mapLabel"></div>
+    </div>
+</section>
+
+@* ── FAQ ─────────────────────────────────────────────────────────────────── *@
+@if (Model.Faqs.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container sv-container--narrow">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <h2>@(Lang.IsAr ? "أسئلة شائعة" : "Frequently asked questions")</h2>
+            </div>
+            <div class="sv-acc sv-reveal">
+                @foreach (var faq in Model.Faqs)
+                {
+                    <div class="sv-acc__item">
+                        <button class="sv-acc__head" type="button" aria-expanded="false">
+                            <span>@Lang.Pick(faq.QuestionAr, faq.QuestionEn)</span>
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <div class="sv-acc__body">
+                            <div class="sv-rte">@Html.Raw(Lang.Pick(faq.AnswerAr, faq.AnswerEn))</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
+}

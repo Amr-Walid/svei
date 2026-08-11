@@ -1,0 +1,110 @@
+@{
+    Layout = null;
+    var siteName = Cfg.Get("site.name", "SVEI");
+    var logo = Cfg.GetRaw("site.logo_light") ?? "/img/brand/logo-light.svg";
+    var returnUrl = ViewData["ReturnUrl"] as string;
+    var email = ViewData["Email"] as string;
+    ViewData["Title"] = "تسجيل الدخول";
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>تسجيل الدخول — @siteName</title>
+    <link rel="icon" href="/img/brand/favicon.svg" />
+    <link rel="stylesheet" href="~/fonts/plexar.local.css" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/tokens.css" />
+    <link rel="stylesheet" href="~/css/base.css" />
+    <link rel="stylesheet" href="~/css/components.css" />
+    <style>
+        body {
+            min-height: 100dvh;
+            display: grid;
+            place-items: center;
+            background: var(--sv-grad-ink, #0B0C0E);
+            padding: var(--sv-6, 1.5rem);
+        }
+        body::before {
+            content: "";
+            position: fixed; inset: 0;
+            background-image: url("/img/patterns/circuit.svg");
+            background-size: 520px;
+            opacity: .06;
+            pointer-events: none;
+        }
+        .sv-login {
+            position: relative;
+            width: min(440px, 100%);
+            background: #fff;
+            border-radius: var(--sv-r-lg, 16px);
+            padding: clamp(1.75rem, 4vw, 2.75rem);
+            box-shadow: 0 30px 80px rgba(0,0,0,.45);
+        }
+        .sv-login__brand { text-align: center; margin-bottom: 1.75rem; }
+        .sv-login__brand img { height: 52px; width: auto; }
+        .sv-login__brand h1 { font-size: 1.35rem; margin: 1rem 0 .35rem; }
+        .sv-login__brand p { color: var(--sv-text-muted, #5A5C5E); font-size: .875rem; margin: 0; }
+        .sv-login__foot { text-align: center; margin-top: 1.5rem; font-size: .8rem; }
+        .sv-login__foot a { color: var(--sv-text-muted, #5A5C5E); }
+        .sv-login__foot a:hover { color: var(--sv-red, #E31B23); }
+    </style>
+</head>
+<body>
+    <main class="sv-login">
+        <div class="sv-login__brand">
+            <img src="@logo" alt="@siteName" onerror="this.style.display='none'" />
+            <h1>لوحة تحكم @siteName</h1>
+            <p>سجّل الدخول لإدارة محتوى الموقع</p>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="sv-alert sv-alert--error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <div>
+                    @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <div>@err.ErrorMessage</div>
+                    }
+                </div>
+            </div>
+        }
+
+        <form method="post" action="/Account/Login">
+            @Html.AntiForgeryToken()
+            @if (!string.IsNullOrWhiteSpace(returnUrl))
+            {
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+            }
+
+            <div class="sv-field">
+                <label class="sv-label" for="lg-email">البريد الإلكتروني</label>
+                <input class="sv-input" id="lg-email" name="email" type="email" value="@email"
+                       required autocomplete="username" dir="ltr" autofocus />
+            </div>
+
+            <div class="sv-field">
+                <label class="sv-label" for="lg-pass">كلمة المرور</label>
+                <input class="sv-input" id="lg-pass" name="password" type="password"
+                       required autocomplete="current-password" dir="ltr" />
+            </div>
+
+            <label class="sv-check" style="margin-bottom:1.25rem">
+                <input type="checkbox" name="rememberMe" value="true" />
+                <span>تذكّرني على هذا الجهاز</span>
+            </label>
+
+            <button class="sv-btn sv-btn--primary sv-btn--lg sv-btn--block" type="submit">
+                <i class="fa-solid fa-right-to-bracket"></i> دخول
+            </button>
+        </form>
+
+        <div class="sv-login__foot">
+            <a href="/ar"><i class="fa-solid fa-arrow-right"></i> العودة إلى الموقع</a>
+        </div>
+    </main>
+</body>
+</html>

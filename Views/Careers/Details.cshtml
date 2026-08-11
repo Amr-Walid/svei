@@ -1,0 +1,234 @@
+@model JobDetailsVm
+@{
+    var job   = Model.Job;
+    var title = Lang.Pick(job.TitleAr, job.TitleEn);
+    var sum   = Lang.Pick(job.SummaryAr, job.SummaryEn);
+    var desc  = Lang.Pick(job.DescAr, job.DescEn);
+    var reqs  = Lang.Pick(job.RequirementsAr, job.RequirementsEn);
+    var bens  = Lang.Pick(job.BenefitsAr, job.BenefitsEn);
+    var place = Lang.Pick(job.LocationAr, job.LocationEn);
+    var cat   = Lang.Pick(job.Category?.NameAr, job.Category?.NameEn);
+    var ci    = System.Globalization.CultureInfo.GetCultureInfo(Lang.IsAr ? "ar-EG" : "en-GB");
+    var arrow = Lang.IsAr ? "fa-arrow-left" : "fa-arrow-right";
+
+    ViewData["Crumbs"] = new List<(string Label, string? Url)>
+    {
+        (Cfg.T("nav.careers"), Lang.Url("/careers")),
+        (title ?? "", null)
+    };
+}
+
+<section class="sv-pagehero">
+    <div class="sv-container">
+        <ul class="sv-crumbs">
+            <li><a href="@Lang.Url("/")">@Cfg.T("nav.home")</a></li>
+            <li><a href="@Lang.Url("/careers")">@Cfg.T("nav.careers")</a></li>
+            <li><span>@title</span></li>
+        </ul>
+        <div class="sv-flex sv-flex--wrap" style="gap:.5rem;margin-bottom:1rem">
+            @if (!string.IsNullOrWhiteSpace(cat))
+            {
+                <span class="sv-badge sv-badge--solid">@cat</span>
+            }
+            @if (job.IsUrgent)
+            {
+                <span class="sv-badge sv-badge--red">@Cfg.T("word.urgent")</span>
+            }
+            @if (job.IsClosed)
+            {
+                <span class="sv-badge sv-badge--amber">@(Lang.IsAr ? "مُغلقة" : "Closed")</span>
+            }
+        </div>
+        <h1>@title</h1>
+        @if (!string.IsNullOrWhiteSpace(sum))
+        {
+            <p>@sum</p>
+        }
+    </div>
+</section>
+
+<section class="sv-section">
+    <div class="sv-container">
+        <div class="sv-detail">
+
+            <div class="sv-detail__main">
+                @if (!string.IsNullOrWhiteSpace(desc))
+                {
+                    <div class="sv-block sv-reveal">
+                        <h2>@(Lang.IsAr ? "عن الوظيفة" : "About the role")</h2>
+                        <div class="sv-rte">@Html.Raw(desc)</div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(reqs))
+                {
+                    <div class="sv-block sv-reveal">
+                        <h2>@(Lang.IsAr ? "المتطلبات والمؤهلات" : "Requirements & qualifications")</h2>
+                        <div class="sv-rte">@Html.Raw(reqs)</div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(bens))
+                {
+                    <div class="sv-block sv-reveal">
+                        <h2>@(Lang.IsAr ? "المزايا" : "What we offer")</h2>
+                        <div class="sv-rte">@Html.Raw(bens)</div>
+                    </div>
+                }
+
+                @* ── Application form ────────────────────────────────────── *@
+                <div class="sv-formbox sv-reveal" id="apply">
+                    <h2>@Cfg.T("btn.apply_now")</h2>
+
+                    @if (job.IsClosed)
+                    {
+                        <div class="sv-alert sv-alert--warning">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>@(Lang.IsAr ? "انتهى موعد التقديم لهذه الوظيفة." : "Applications for this position are closed.")</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="sv-muted">
+                            @(Lang.IsAr
+                                ? "املأ النموذج وأرفق سيرتك الذاتية؛ سيراجعها فريق الموارد البشرية ويتواصل معك."
+                                : "Fill in the form and attach your CV; our HR team will review it and get back to you.")
+                        </p>
+
+                        <form method="post" action="@Lang.Url("/careers/apply")" enctype="multipart/form-data" class="sv-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="JobId" value="@job.Id" />
+                            <input type="text" name="website" class="sv-hidden" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+                            <div class="sv-grid sv-grid--2">
+                                <div class="sv-field">
+                                    <label class="sv-label" for="af-name">@Cfg.T("label.name") <span class="sv-req">*</span></label>
+                                    <input class="sv-input" id="af-name" name="FullName" required maxlength="150" />
+                                </div>
+                                <div class="sv-field">
+                                    <label class="sv-label" for="af-email">@Cfg.T("label.email") <span class="sv-req">*</span></label>
+                                    <input class="sv-input" id="af-email" name="Email" type="email" required maxlength="200" />
+                                </div>
+                                <div class="sv-field">
+                                    <label class="sv-label" for="af-phone">@Cfg.T("label.phone") <span class="sv-req">*</span></label>
+                                    <input class="sv-input" id="af-phone" name="Phone" type="tel" required maxlength="30" />
+                                </div>
+                                <div class="sv-field">
+                                    <label class="sv-label" for="af-city">@Cfg.T("label.city")</label>
+                                    <input class="sv-input" id="af-city" name="City" maxlength="200" />
+                                </div>
+                                <div class="sv-field">
+                                    <label class="sv-label" for="af-exp">@Cfg.T("label.experience_years")</label>
+                                    <input class="sv-input" id="af-exp" name="YearsOfExperience" type="number" min="0" max="60" />
+                                </div>
+                                <div class="sv-field">
+                                    <label class="sv-label" for="af-li">LinkedIn <span class="sv-opt">@Cfg.T("label.optional")</span></label>
+                                    <input class="sv-input" id="af-li" name="LinkedInUrl" type="url" maxlength="300" placeholder="https://linkedin.com/in/…" />
+                                </div>
+                            </div>
+
+                            <div class="sv-field">
+                                <label class="sv-label" for="af-cv">@Cfg.T("label.cv") <span class="sv-req">*</span></label>
+                                <input class="sv-input" id="af-cv" name="Cv" type="file" required
+                                       accept=".pdf,.doc,.docx" />
+                                <span class="sv-help">PDF / DOC / DOCX — @(Lang.IsAr ? "حتى ١٠ ميجابايت" : "up to 10 MB")</span>
+                            </div>
+
+                            <div class="sv-field">
+                                <label class="sv-label" for="af-cover">@Cfg.T("label.cover_letter") <span class="sv-opt">@Cfg.T("label.optional")</span></label>
+                                <textarea class="sv-textarea" id="af-cover" name="CoverLetter" rows="5"></textarea>
+                            </div>
+
+                            <button class="sv-btn sv-btn--primary sv-btn--lg" type="submit">
+                                @Cfg.T("btn.submit") <i class="fa-solid @arrow"></i>
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            @* ── Sidebar ─────────────────────────────────────────────────── *@
+            <aside class="sv-detail__side">
+                <div class="sv-sidecard sv-reveal">
+                    <h3>@(Lang.IsAr ? "ملخص الوظيفة" : "Job summary")</h3>
+                    <ul class="sv-facts">
+                        <li>
+                            <i class="@JobLabels.Icon(job.JobType)"></i>
+                            <div><span>@Cfg.T("word.job_type")</span><strong>@JobLabels.Type(job.JobType, Lang.IsAr)</strong></div>
+                        </li>
+                        @if (!string.IsNullOrWhiteSpace(job.ExperienceLevel))
+                        {
+                            <li>
+                                <i class="fa-solid fa-layer-group"></i>
+                                <div><span>@(Lang.IsAr ? "المستوى" : "Level")</span><strong>@JobLabels.Level(job.ExperienceLevel, Lang.IsAr)</strong></div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(place))
+                        {
+                            <li>
+                                <i class="fa-solid fa-location-dot"></i>
+                                <div><span>@Cfg.T("word.location")</span><strong>@place</strong></div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(cat))
+                        {
+                            <li>
+                                <i class="@(job.Category?.IconClass ?? "fa-solid fa-briefcase")"></i>
+                                <div><span>@Cfg.T("word.category")</span><strong>@cat</strong></div>
+                            </li>
+                        }
+                        <li>
+                            <i class="fa-solid fa-users"></i>
+                            <div><span>@Cfg.T("word.vacancies")</span><strong>@job.Vacancies</strong></div>
+                        </li>
+                        @if (!string.IsNullOrWhiteSpace(job.SalaryRange))
+                        {
+                            <li>
+                                <i class="fa-solid fa-money-bill-wave"></i>
+                                <div><span>@(Lang.IsAr ? "الراتب" : "Salary")</span><strong>@job.SalaryRange</strong></div>
+                            </li>
+                        }
+                        <li>
+                            <i class="fa-regular fa-calendar-plus"></i>
+                            <div><span>@(Lang.IsAr ? "تاريخ النشر" : "Posted")</span><strong>@job.PostedAt.ToString("dd MMM yyyy", ci)</strong></div>
+                        </li>
+                        @if (job.ClosingDate.HasValue)
+                        {
+                            <li>
+                                <i class="fa-regular fa-hourglass-half"></i>
+                                <div><span>@Cfg.T("word.deadline")</span><strong>@job.ClosingDate.Value.ToString("dd MMM yyyy", ci)</strong></div>
+                            </li>
+                        }
+                    </ul>
+
+                    <div class="sv-sidecard__actions">
+                        @if (!job.IsClosed)
+                        {
+                            <a class="sv-btn sv-btn--primary sv-btn--block" href="#apply">@Cfg.T("btn.apply_now")</a>
+                        }
+                        <a class="sv-btn sv-btn--ghost sv-btn--block" href="@Lang.Url("/careers")">
+                            <i class="fa-solid @(Lang.IsAr ? "fa-arrow-right" : "fa-arrow-left")"></i> @Cfg.T("btn.back")
+                        </a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+
+@if (Model.Similar.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <h2>@(Lang.IsAr ? "وظائف مشابهة" : "Similar openings")</h2>
+            </div>
+            <div class="sv-jobs">
+                @foreach (var j in Model.Similar)
+                {
+                    @await Html.PartialAsync("_JobCard", j)
+                }
+            </div>
+        </div>
+    </section>
+}

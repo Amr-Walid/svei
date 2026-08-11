@@ -1,0 +1,25 @@
+@model PageSection
+@{
+    var eyebrow  = Lang.Pick(Model?.EyebrowAr, Model?.EyebrowEn);
+    var title    = Lang.Pick(Model?.TitleAr, Model?.TitleEn);
+    var subtitle = Lang.Pick(Model?.SubtitleAr, Model?.SubtitleEn);
+    var center   = (ViewData["Center"] as bool?) ?? true;
+}
+
+@if (!string.IsNullOrWhiteSpace(title) || !string.IsNullOrWhiteSpace(eyebrow))
+{
+    <div class="sv-heading @(center ? "sv-heading--center" : null) sv-reveal">
+        @if (!string.IsNullOrWhiteSpace(eyebrow))
+        {
+            <span class="sv-eyebrow">@eyebrow</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(title))
+        {
+            <h2>@title</h2>
+        }
+        @if (!string.IsNullOrWhiteSpace(subtitle))
+        {
+            <p>@subtitle</p>
+        }
+    </div>
+}

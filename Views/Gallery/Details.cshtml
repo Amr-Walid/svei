@@ -1,0 +1,81 @@
+@model GalleryDetailsVm
+@{
+    var a     = Model.Album;
+    var title = Lang.Pick(a.TitleAr, a.TitleEn);
+    var text  = Lang.Pick(a.DescAr, a.DescEn);
+    var cover = a.CoverImagePath ?? a.Images.FirstOrDefault()?.ImagePath ?? "/img/sections/feature2.webp";
+}
+
+<section class="sv-pagehero">
+    <div class="sv-pagehero__bg"><img src="@cover" alt="@title" loading="eager" /></div>
+    <div class="sv-container">
+        <ul class="sv-crumbs">
+            <li><a href="@Lang.Url("/")">@Cfg.T("nav.home")</a></li>
+            <li><a href="@Lang.Url("/gallery")">@Cfg.T("nav.gallery")</a></li>
+            <li><span>@title</span></li>
+        </ul>
+        <h1>@title</h1>
+        @if (!string.IsNullOrWhiteSpace(text))
+        {
+            <p>@text</p>
+        }
+    </div>
+</section>
+
+<section class="sv-section">
+    <div class="sv-container">
+        @if (a.Images.Count == 0)
+        {
+            ViewData["EmptyIcon"] = "fa-regular fa-images";
+            @await Html.PartialAsync("_Empty", Cfg.T("msg.no_results"))
+        }
+        else
+        {
+            <div class="sv-gallery" data-lightbox>
+                @foreach (var im in a.Images)
+                {
+                    var cap = Lang.Pick(im.CaptionAr, im.CaptionEn);
+                    <a class="sv-gallery__item sv-reveal glightbox" href="@im.ImagePath" data-gallery="album" data-title="@cap">
+                        <img src="@im.ImagePath" alt="@(cap ?? title)" loading="lazy" />
+                        @if (!string.IsNullOrWhiteSpace(cap))
+                        {
+                            <span class="sv-gallery__cap">@cap</span>
+                        }
+                    </a>
+                }
+            </div>
+        }
+
+        <div class="sv-section__more">
+            <a class="sv-btn sv-btn--ghost" href="@Lang.Url("/gallery")">
+                <i class="fa-solid @(Lang.IsAr ? "fa-arrow-right" : "fa-arrow-left")"></i> @Cfg.T("btn.back")
+            </a>
+        </div>
+    </div>
+</section>
+
+@if (Model.Others.Count > 0)
+{
+    <section class="sv-section sv-section--alt">
+        <div class="sv-container">
+            <div class="sv-heading sv-heading--center sv-reveal">
+                <h2>@(Lang.IsAr ? "ألبومات أخرى" : "More albums")</h2>
+            </div>
+            <div class="sv-grid sv-grid--4">
+                @foreach (var o in Model.Others)
+                {
+                    var u = Lang.Url($"/gallery/{o.Slug}");
+                    var t = Lang.Pick(o.TitleAr, o.TitleEn);
+                    <article class="sv-album sv-reveal">
+                        <a class="sv-album__media" href="@u">
+                            <img src="@(o.CoverImagePath ?? "/img/sections/feature1.webp")" alt="@t" loading="lazy" />
+                        </a>
+                        <div class="sv-album__body">
+                            <h3><a href="@u">@t</a></h3>
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+}
