@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 372 100" width="372" height="100" role="img" aria-label="SVEI — Silicon Valley Electronic Industries">
+  <title>Silicon Valley for Electronic Industries</title>
+
+  <!-- Monogram mark -->
+  <rect width="100" height="100" fill="#E31B23"/>
+  <g fill="#FFFFFF" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-weight="800">
+    <text x="27" y="46" font-size="42" text-anchor="middle" letter-spacing="-1">S</text>
+    <text x="72" y="46" font-size="42" text-anchor="middle" letter-spacing="-1">V</text>
+    <text x="27" y="88" font-size="42" text-anchor="middle" letter-spacing="-1">E</text>
+    <text x="72" y="88" font-size="42" text-anchor="middle" letter-spacing="-1">i</text>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="120" y="47" fill="#26292E"
+        font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
+        font-weight="800" font-size="38" letter-spacing="-1.2">Silicon Valley</text>
+  <text x="121" y="83" fill="#5A5C5E"
+        font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
+        font-weight="400" font-size="22" letter-spacing="0.2">Electronic Industries</text>
+</svg>

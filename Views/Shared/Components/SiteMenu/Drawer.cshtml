@@ -1,0 +1,32 @@
+@model MenuVm
+@* Mobile drawer navigation — children rendered as an indented sub-list. *@
+@{
+    var caret = Lang.IsAr ? "fa-solid fa-angle-left" : "fa-solid fa-angle-right";
+}
+
+@foreach (var item in Model.Items)
+{
+    var target = item.OpenInNewTab ? "_blank" : null;
+    var rel    = item.OpenInNewTab ? "noopener" : null;
+
+    <a href="@item.Url" class="@(item.IsActive ? "is-active" : null)" target="@target" rel="@rel">
+        @if (!string.IsNullOrWhiteSpace(item.Icon))
+        {
+            <i class="@item.Icon"></i>
+        }
+        @item.Label
+        @if (!string.IsNullOrWhiteSpace(item.Badge))
+        {
+            <span class="sv-badge sv-badge--red">@item.Badge</span>
+        }
+    </a>
+
+    foreach (var kid in item.Children)
+    {
+        var kTarget = kid.OpenInNewTab ? "_blank" : null;
+        var kRel    = kid.OpenInNewTab ? "noopener" : null;
+        <a href="@kid.Url" class="sv-drawer__sub @(kid.IsActive ? "is-active" : null)" target="@kTarget" rel="@kRel">
+            <i class="@caret"></i> @kid.Label
+        </a>
+    }
+}

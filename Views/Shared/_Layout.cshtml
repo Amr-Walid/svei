@@ -1,0 +1,235 @@
+@using System.Text.Json
+@{
+    var lang        = Lang.HtmlLang;
+    var dir         = Lang.Dir;
+    var otherLang   = Lang.IsAr ? "en" : "ar";
+
+    var siteName    = Cfg.Get("site.name", "SVEI");
+    var shortName   = Cfg.Get("site.short_name", "SVEI");
+    var tagline     = Cfg.Get("site.tagline");
+    var logoDark    = Cfg.GetRaw("site.logo_dark", "/img/brand/logo-dark.svg");
+    var favicon     = Cfg.GetRaw("site.favicon", "/img/brand/favicon.svg");
+    var themeColor  = Cfg.GetRaw("theme.primary", "#E31B23");
+
+    var pageTitle   = ViewData["Title"] as string;
+    var metaTitle   = string.IsNullOrWhiteSpace(pageTitle)
+                        ? Cfg.Get("seo.title", siteName)
+                        : pageTitle + " | " + shortName;
+    var metaDesc    = ViewData["MetaDescription"] as string ?? Cfg.Get("seo.description");
+    var metaKeys    = ViewData["MetaKeywords"] as string ?? Cfg.Get("seo.keywords");
+    var ogImage     = ViewData["OgImage"] as string ?? Cfg.GetRaw("seo.og_image", "/img/hero/hero-factory.webp");
+    var bodyClass   = ViewData["BodyClass"] as string ?? "";
+
+    var req         = Context.Request;
+    var baseUrl     = Cfg.GetRaw("site.base_url", req.Scheme + "://" + req.Host).TrimEnd('/');
+    var pathQuery   = req.Path + req.QueryString;
+    var canonical   = baseUrl + pathQuery;
+    var switchUrl   = Lang.SwitchUrl(pathQuery);
+    var altUrl      = baseUrl + switchUrl;
+    var ogImageAbs  = ogImage.StartsWith("http") ? ogImage : baseUrl + ogImage;
+
+    var phone       = Cfg.GetRaw("contact.phone");
+    var phoneTel    = "tel:" + phone.Replace(" ", "").Replace("(", "").Replace(")", "");
+    var email       = Cfg.GetRaw("contact.email");
+    var hours       = Cfg.Get("contact.hours");
+    var whatsapp    = Cfg.GetRaw("contact.whatsapp");
+    var waUrl       = "https://wa.me/" + whatsapp;
+    var quoteOn     = Cfg.GetBool("feature.quote", true);
+
+    var tSkip       = Cfg.T("a11y.skip",      Lang.IsAr ? "تخطَّ إلى المحتوى" : "Skip to content");
+    var tMainNav    = Cfg.T("a11y.main_nav",  Lang.IsAr ? "القائمة الرئيسية" : "Main navigation");
+    var tLegalNav   = Cfg.T("a11y.legal_nav", Lang.IsAr ? "روابط قانونية"   : "Legal links");
+    var tOpenMenu   = Cfg.T("a11y.open_menu", Lang.IsAr ? "فتح القائمة"      : "Open menu");
+    var tClose      = Cfg.T("a11y.close",     Lang.IsAr ? "إغلاق"            : "Close");
+    var tTop        = Cfg.T("a11y.top",       Lang.IsAr ? "أعلى الصفحة"      : "Back to top");
+    var tSwitch     = Lang.IsAr ? "English" : "العربية";
+    var tSwitchAbbr = Lang.IsAr ? "EN" : "ع";
+    var ogLocale    = Lang.IsAr ? "ar_EG" : "en_US";
+
+    var jsonLd = JsonSerializer.Serialize(new Dictionary<string, object?>
+    {
+        ["@context"]     = "https://schema.org",
+        ["@type"]        = "Organization",
+        ["name"]         = siteName,
+        ["alternateName"]= shortName,
+        ["slogan"]       = tagline,
+        ["url"]          = baseUrl,
+        ["logo"]         = baseUrl + logoDark,
+        ["image"]        = ogImageAbs,
+        ["email"]        = email,
+        ["telephone"]    = phone,
+        ["foundingDate"] = Cfg.GetRaw("site.founded_year"),
+        ["description"]  = metaDesc,
+        ["address"]      = new Dictionary<string, object?>
+        {
+            ["@type"]          = "PostalAddress",
+            ["addressCountry"] = "EG",
+            ["streetAddress"]  = Cfg.Get("contact.address")
+        }
+    }, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+}
+<!DOCTYPE html>
+<html lang="@lang" dir="@dir">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@metaTitle</title>
+
+    <meta name="description" content="@metaDesc" />
+    @if (!string.IsNullOrWhiteSpace(metaKeys))
+    {
+        <meta name="keywords" content="@metaKeys" />
+    }
+    <meta name="theme-color" content="@themeColor" />
+    <link rel="canonical" href="@canonical" />
+    <link rel="alternate" hreflang="@lang" href="@canonical" />
+    <link rel="alternate" hreflang="@otherLang" href="@altUrl" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="@siteName" />
+    <meta property="og:title" content="@metaTitle" />
+    <meta property="og:description" content="@metaDesc" />
+    <meta property="og:url" content="@canonical" />
+    <meta property="og:image" content="@ogImageAbs" />
+    <meta property="og:locale" content="@ogLocale" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="@favicon" type="image/svg+xml" />
+    <link rel="alternate icon" href="/favicon.ico" />
+
+    <link rel="stylesheet" href="~/fonts/inter.local.css" />
+    <link rel="stylesheet" href="~/fonts/plexar.local.css" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="@bodyClass">
+
+    <a class="sv-skip-link" href="#sv-main">@tSkip</a>
+
+    @* ── Top bar ─────────────────────────────────────────────────────────── *@
+    <div class="sv-topbar">
+        <div class="sv-container">
+            <div class="sv-topbar__info">
+                @if (!string.IsNullOrWhiteSpace(phone))
+                {
+                    <a href="@phoneTel" dir="ltr"><i class="fa-solid fa-phone"></i> @phone</a>
+                }
+                @if (!string.IsNullOrWhiteSpace(email))
+                {
+                    <a href="mailto:@email"><i class="fa-solid fa-envelope"></i> @email</a>
+                }
+                @if (!string.IsNullOrWhiteSpace(hours))
+                {
+                    <span><i class="fa-regular fa-clock"></i> @hours</span>
+                }
+            </div>
+            <div class="sv-topbar__actions">
+                <vc:site-menu menu-key="topbar" view="Topbar"></vc:site-menu>
+                <a class="sv-lang" href="@switchUrl" hreflang="@otherLang" rel="alternate" title="@tSwitch">
+                    <i class="fa-solid fa-globe"></i> @tSwitchAbbr
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @* ── Header ──────────────────────────────────────────────────────────── *@
+    <header class="sv-header">
+        <div class="sv-container sv-header__inner">
+            <a class="sv-logo" href="@Lang.Url("/")" aria-label="@siteName">
+                <img src="@logoDark" alt="@siteName" width="167" height="50" />
+            </a>
+
+            <nav class="sv-nav" aria-label="@tMainNav">
+                <vc:site-menu menu-key="header" view="Default"></vc:site-menu>
+            </nav>
+
+            <div class="sv-header__actions">
+                @if (quoteOn)
+                {
+                    <a class="sv-btn sv-btn--primary sv-btn--sm" href="@Lang.Url("/quote")">
+                        <i class="fa-solid fa-file-invoice"></i> @Cfg.T("nav.quote")
+                    </a>
+                }
+                <button class="sv-burger" type="button" aria-label="@tOpenMenu" aria-expanded="false">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    @* ── Mobile drawer ───────────────────────────────────────────────────── *@
+    <div class="sv-drawer" role="dialog" aria-modal="true" aria-label="@tMainNav">
+        <div class="sv-drawer__overlay"></div>
+        <div class="sv-drawer__panel">
+            <div class="sv-drawer__head">
+                <a class="sv-logo" href="@Lang.Url("/")">
+                    <img src="@logoDark" alt="@siteName" width="150" height="45" />
+                </a>
+                <button class="sv-drawer__close" type="button" aria-label="@tClose">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <nav class="sv-drawer__nav">
+                <vc:site-menu menu-key="header" view="Drawer"></vc:site-menu>
+            </nav>
+            <div class="sv-drawer__foot">
+                @if (quoteOn)
+                {
+                    <a class="sv-btn sv-btn--primary sv-btn--block" href="@Lang.Url("/quote")">@Cfg.T("nav.quote")</a>
+                }
+                <a class="sv-btn sv-btn--outline sv-btn--block" href="@switchUrl">
+                    <i class="fa-solid fa-globe"></i> @tSwitch
+                </a>
+                @if (!string.IsNullOrWhiteSpace(phone))
+                {
+                    <a class="sv-btn sv-btn--ghost sv-btn--block" href="@phoneTel" dir="ltr">
+                        <i class="fa-solid fa-phone"></i> @phone
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* ── Main ────────────────────────────────────────────────────────────── *@
+    <main id="sv-main">
+        @if (TempData["Success"] is string okMsg && !string.IsNullOrWhiteSpace(okMsg))
+        {
+            <div class="sv-container" style="padding-top:1.5rem">
+                <div class="sv-alert sv-alert--success"><i class="fa-solid fa-circle-check"></i><div>@okMsg</div></div>
+            </div>
+        }
+        @if (TempData["Error"] is string errMsg && !string.IsNullOrWhiteSpace(errMsg))
+        {
+            <div class="sv-container" style="padding-top:1.5rem">
+                <div class="sv-alert sv-alert--error"><i class="fa-solid fa-circle-exclamation"></i><div>@errMsg</div></div>
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    @* ── Footer ──────────────────────────────────────────────────────────── *@
+    <vc:site-footer></vc:site-footer>
+
+    @* ── Floating actions ────────────────────────────────────────────────── *@
+    @if (!string.IsNullOrWhiteSpace(whatsapp))
+    {
+        <a class="sv-float-wa" href="@waUrl" target="_blank" rel="noopener" aria-label="WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i>
+        </a>
+    }
+    <button class="sv-totop" type="button" aria-label="@tTop">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
+    <script type="application/ld+json">@Html.Raw(jsonLd)</script>
+
+    <script src="~/lib/swiper/swiper-bundle.min.js" defer></script>
+    <script src="~/lib/glightbox/glightbox.min.js" defer></script>
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

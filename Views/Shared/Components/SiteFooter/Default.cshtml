@@ -1,0 +1,128 @@
+@model FooterVm
+@{
+    var loc      = Model.PrimaryLocation;
+    var address  = Lang.Pick(loc?.AddressAr, loc?.AddressEn) ?? Cfg.Get("contact.address");
+    var phone    = loc?.Phone ?? Cfg.GetRaw("contact.phone");
+    var phone2   = loc?.Phone2;
+    var email    = loc?.Email ?? Cfg.GetRaw("contact.email");
+    var hours    = Lang.Pick(loc?.WorkingHoursAr, loc?.WorkingHoursEn) ?? Cfg.Get("contact.hours");
+
+    string Tel(string? p) => "tel:" + (p ?? "").Replace(" ", "").Replace("(", "").Replace(")", "").Replace("-", "");
+
+    var mapsUrl  = (loc?.Latitude is not null && loc?.Longitude is not null)
+                     ? $"https://www.google.com/maps/search/?api=1&query={loc.Latitude},{loc.Longitude}"
+                     : null;
+
+    var tLegalNav = Cfg.T("a11y.legal_nav", Lang.IsAr ? "روابط قانونية" : "Legal links");
+}
+
+<footer class="sv-footer">
+    <div class="sv-container">
+        <div class="sv-footer__grid">
+
+            @* ── Brand + about + social ─────────────────────────────────── *@
+            <div class="sv-footer__brand">
+                <a href="@Lang.Url("/")">
+                    <img src="@Model.LogoPath" alt="@Cfg.Get("site.name")" width="167" height="50" />
+                </a>
+                @if (!string.IsNullOrWhiteSpace(Model.AboutText))
+                {
+                    <p class="sv-footer__about">@Model.AboutText</p>
+                }
+                @if (Model.Social.Count > 0)
+                {
+                    <div class="sv-social">
+                        @foreach (var s in Model.Social)
+                        {
+                            var label = Lang.Pick(s.LabelAr, s.LabelEn) ?? s.Platform;
+                            var icon  = string.IsNullOrWhiteSpace(s.Icon) ? "fa-brands fa-" + s.Platform : s.Icon;
+                            <a href="@s.Url" target="_blank" rel="noopener" aria-label="@label" title="@label">
+                                <i class="@icon"></i>
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+
+            @* ── Link columns (fully admin-managed) ─────────────────────── *@
+            <vc:site-menu menu-key="footer-company" view="Footer"></vc:site-menu>
+            <vc:site-menu menu-key="footer-services" view="Footer"></vc:site-menu>
+
+            @* ── Contact ─────────────────────────────────────────────────── *@
+            <div>
+                <h4>@Cfg.T("nav.contact")</h4>
+                <ul class="sv-footer__contact">
+                    @if (!string.IsNullOrWhiteSpace(address))
+                    {
+                        <li>
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>
+                                @address
+                                @if (mapsUrl is not null)
+                                {
+                                    <br />
+                                    <a href="@mapsUrl" target="_blank" rel="noopener">@Cfg.T("btn.get_directions")</a>
+                                }
+                            </span>
+                        </li>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(phone))
+                    {
+                        <li>
+                            <i class="fa-solid fa-phone"></i>
+                            <span dir="ltr">
+                                <a href="@Tel(phone)">@phone</a>
+                                @if (!string.IsNullOrWhiteSpace(phone2))
+                                {
+                                    <br />
+                                    <a href="@Tel(phone2)">@phone2</a>
+                                }
+                            </span>
+                        </li>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(email))
+                    {
+                        <li>
+                            <i class="fa-solid fa-envelope"></i>
+                            <span><a href="mailto:@email">@email</a></span>
+                        </li>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(hours))
+                    {
+                        <li><i class="fa-regular fa-clock"></i><span>@hours</span></li>
+                    }
+                </ul>
+
+                @if (Model.ShowNewsletter)
+                {
+                    <div class="sv-footer__nl">
+                        @if (!string.IsNullOrWhiteSpace(Model.NewsletterTitle))
+                        {
+                            <h4>@Model.NewsletterTitle</h4>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.NewsletterText))
+                        {
+                            <p class="sv-footer__nl-text">@Model.NewsletterText</p>
+                        }
+                        <form class="sv-newsletter" method="post" data-newsletter action="@Lang.Url("/newsletter/subscribe")">
+                            @Html.AntiForgeryToken()
+                            <input type="email" name="email" required
+                                   placeholder="@Cfg.T("label.email")"
+                                   aria-label="@Cfg.T("label.email")" />
+                            <button class="sv-btn sv-btn--primary sv-btn--sm" type="submit">@Cfg.T("btn.subscribe")</button>
+                        </form>
+                        <div class="sv-newsletter__note" role="status" aria-live="polite"></div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* ── Bottom bar ─────────────────────────────────────────────────── *@
+        <div class="sv-footer__bottom">
+            <div>@Model.Copyright</div>
+            <nav aria-label="@tLegalNav">
+                <vc:site-menu menu-key="footer-legal" view="Inline"></vc:site-menu>
+            </nav>
+        </div>
+    </div>
+</footer>

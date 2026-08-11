@@ -1,0 +1,16 @@
+@model MenuVm
+@* Small utility links inside the dark top bar (optional menu). *@
+
+@foreach (var item in Model.Items)
+{
+    var target = item.OpenInNewTab ? "_blank" : null;
+    var rel    = item.OpenInNewTab ? "noopener" : null;
+
+    <a href="@item.Url" target="@target" rel="@rel">
+        @if (!string.IsNullOrWhiteSpace(item.Icon))
+        {
+            <i class="@item.Icon"></i>
+        }
+        @item.Label
+    </a>
+}

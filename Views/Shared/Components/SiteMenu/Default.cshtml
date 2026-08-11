@@ -1,0 +1,42 @@
+@model MenuVm
+@* Desktop header navigation — supports one level of dropdown children. *@
+
+@foreach (var item in Model.Items)
+{
+    var hasKids = item.Children.Count > 0;
+    var target  = item.OpenInNewTab ? "_blank" : null;
+    var rel     = item.OpenInNewTab ? "noopener" : null;
+
+    <div class="sv-nav__item @(hasKids ? "sv-nav__item--has-children" : null)">
+        <a class="sv-nav__link @(item.IsActive ? "is-active" : null) @(item.IsHighlighted ? "is-highlighted" : null)"
+           href="@item.Url" target="@target" rel="@rel">
+            @if (!string.IsNullOrWhiteSpace(item.Icon))
+            {
+                <i class="@item.Icon"></i>
+            }
+            @item.Label
+            @if (!string.IsNullOrWhiteSpace(item.Badge))
+            {
+                <span class="sv-badge sv-badge--red">@item.Badge</span>
+            }
+        </a>
+
+        @if (hasKids)
+        {
+            <div class="sv-dropdown">
+                @foreach (var kid in item.Children)
+                {
+                    var kTarget = kid.OpenInNewTab ? "_blank" : null;
+                    var kRel    = kid.OpenInNewTab ? "noopener" : null;
+                    <a href="@kid.Url" class="@(kid.IsActive ? "is-active" : null)" target="@kTarget" rel="@kRel">
+                        @if (!string.IsNullOrWhiteSpace(kid.Icon))
+                        {
+                            <i class="@kid.Icon"></i>
+                        }
+                        @kid.Label
+                    </a>
+                }
+            </div>
+        }
+    </div>
+}

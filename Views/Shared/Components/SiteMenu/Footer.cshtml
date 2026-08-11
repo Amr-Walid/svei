@@ -1,0 +1,28 @@
+@model MenuVm
+@* Footer link column: heading + flat list. *@
+
+@if (Model.Items.Count > 0)
+{
+    <div>
+        @if (!string.IsNullOrWhiteSpace(Model.Title))
+        {
+            <h4>@Model.Title</h4>
+        }
+        <ul>
+            @foreach (var item in Model.Items)
+            {
+                var target = item.OpenInNewTab ? "_blank" : null;
+                var rel    = item.OpenInNewTab ? "noopener" : null;
+                <li>
+                    <a href="@item.Url" target="@target" rel="@rel">
+                        @if (!string.IsNullOrWhiteSpace(item.Icon))
+                        {
+                            <i class="@item.Icon"></i>
+                        }
+                        @item.Label
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+}

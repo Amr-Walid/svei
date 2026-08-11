@@ -1,0 +1,9 @@
+@model MenuVm
+@* Bare inline links — used in the footer bottom bar (legal menu). *@
+
+@foreach (var item in Model.Items)
+{
+    var target = item.OpenInNewTab ? "_blank" : null;
+    var rel    = item.OpenInNewTab ? "noopener" : null;
+    <a href="@item.Url" target="@target" rel="@rel">@item.Label</a>
+}

@@ -1,3 +1,10 @@
-﻿@using SVEI.Web
+@using SVEI.Web
 @using SVEI.Web.Models
+@using SVEI.Web.Data
+@using SVEI.Web.Services
+@using SVEI.Web.ViewModels
+@using SVEI.Web.ViewComponents
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, SVEI.Web
+@inject SVEI.Web.Services.ILang Lang
+@inject SVEI.Web.Services.ISettings Cfg
