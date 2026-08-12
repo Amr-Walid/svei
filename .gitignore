@@ -30,3 +30,7 @@ node_modules/
 core
 core.*
 *.core
+
+# Python bytecode from the tools/ generators
+__pycache__/
+*.py[cod]

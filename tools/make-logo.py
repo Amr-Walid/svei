@@ -15,11 +15,20 @@ Why outlines and not <text>?
     artwork measures the same everywhere, and the viewBox is computed from the
     actual shaped advance so nothing can ever be cut off again.
 
-Outputs (all viewBox="0 0 <fitted> 100"):
-    wwwroot/img/brand/logo-dark.svg      Latin, for light backgrounds
-    wwwroot/img/brand/logo-light.svg     Latin, for dark backgrounds
-    wwwroot/img/brand/logo-dark-ar.svg   Arabic, for light backgrounds
-    wwwroot/img/brand/logo-light-ar.svg  Arabic, for dark backgrounds
+Outputs:
+    wwwroot/img/brand/logo-dark.svg       Latin, for light backgrounds
+    wwwroot/img/brand/logo-light.svg      Latin, for dark backgrounds
+    wwwroot/img/brand/logo-dark-ar.svg    Arabic, for light backgrounds
+    wwwroot/img/brand/logo-light-ar.svg   Arabic, for dark backgrounds
+    wwwroot/img/brand/favicon.svg         100x100 monogram, outlined
+    wwwroot/img/brand/apple-touch-icon.png  180x180, padded for iOS
+    wwwroot/favicon.ico                   16/32/48/64 multi-resolution
+
+The .ico matters: the repository previously shipped the stock ASP.NET template
+favicon.ico (a grey document sheet). Only the public layout referenced it, via
+`<link rel="alternate icon">`, so browsers that prefer ICO over SVG showed a
+blank page icon on the public site while the admin — which links the SVG only —
+showed the real red mark.
 
 Run:  python3 tools/make-logo.py
 """
@@ -27,6 +36,7 @@ from __future__ import annotations
 
 import math
 import pathlib
+import subprocess
 import tempfile
 
 import uharfbuzz as hb
@@ -37,6 +47,10 @@ from fontTools.varLib.instancer import instantiateVariableFont
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FONTS = ROOT / "wwwroot" / "fonts" / "files"
 OUT = ROOT / "wwwroot" / "img" / "brand"
+# Browsers and crawlers probe /favicon.ico at the site root regardless of markup,
+# so the ICO has to live in wwwroot itself.
+ICO_OUT = ROOT / "wwwroot" / "favicon.ico"
+APPLE_OUT = OUT / "apple-touch-icon.png"
 
 # Inter is shipped as a single variable font (wght 100-900) — the same file backs
 # every weight in wwwroot/fonts/inter.local.css.
@@ -125,8 +139,8 @@ def shape(text: str, family: str, weight: int, size: float, rtl: bool,
     return "\n    ".join(pieces), max(0.0, pen_x - track)
 
 
-def monogram(x: float) -> str:
-    """The red square with the outlined S V E i letters."""
+def monogram_letters(indent: str = "      ") -> str:
+    """The outlined S V E i letters, positioned inside a 100x100 box."""
     cells = [("S", 27, 46), ("V", 72, 46), ("E", 27, 88), ("i", 72, 88)]
     glyphs = []
     for ch, cx, cy in cells:
@@ -135,13 +149,35 @@ def monogram(x: float) -> str:
         glyphs.append(
             f'<g transform="translate({cx - w / 2:.2f} {cy:.2f})">{frag}</g>'
         )
-    body = "\n      ".join(glyphs)
+    return ("\n" + indent).join(glyphs)
+
+
+def monogram(x: float) -> str:
+    """The red square with the outlined S V E i letters."""
     return (
         f'<g transform="translate({x:.0f} 0)">\n'
         f'    <rect width="100" height="100" fill="#E31B23"/>\n'
-        f'    <g fill="#FFFFFF">\n      {body}\n    </g>\n'
+        f'    <g fill="#FFFFFF">\n      {monogram_letters()}\n    </g>\n'
         f'  </g>'
     )
+
+
+def build_favicon() -> str:
+    """The standalone favicon: just the monogram, also fully outlined.
+
+    favicon.svg used to carry `<text font-family="Inter, Arial, sans-serif">`,
+    the very same isolated-document trap as the old logo. A favicon is *always*
+    an isolated document, so the letters were at the mercy of whatever the OS
+    substituted. Outlines make the mark identical everywhere.
+    """
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="SVEI">
+  <title>SVEI</title>
+  <rect width="100" height="100" fill="#E31B23"/>
+  <g fill="#FFFFFF">
+    {monogram_letters("    ")}
+  </g>
+</svg>
+'''
 
 
 def build(lang: str, word_fill: str, sub_fill: str) -> str:
@@ -194,6 +230,49 @@ def build(lang: str, word_fill: str, sub_fill: str) -> str:
 '''
 
 
+def rasterise(svg_path: pathlib.Path, size: int) -> "Image.Image":
+    """Render an SVG to a square RGBA bitmap at `size` px via ImageMagick."""
+    from PIL import Image
+
+    tmp = pathlib.Path(tempfile.gettempdir()) / f"svei-raster-{size}.png"
+    subprocess.run(
+        ["convert", "-background", "none", "-density", "1200", str(svg_path),
+         "-resize", f"{size}x{size}", str(tmp)],
+        check=True, capture_output=True,
+    )
+    img = Image.open(tmp).convert("RGBA")
+    img.load()
+    return img
+
+
+def write_rasters(favicon_svg: pathlib.Path) -> None:
+    """Write favicon.ico and apple-touch-icon.png from the outlined favicon.
+
+    The mark is a full-bleed red square, so the ICO frames are edge-to-edge.
+    The Apple touch icon gets padding instead: iOS renders it on a rounded
+    tile, and a full-bleed mark would have its corner letters shaved.
+    """
+    from PIL import Image
+
+    # Multi-resolution ICO. Rasterising each size separately (rather than letting
+    # Pillow downscale one bitmap) keeps the small sizes crisp.
+    sizes = [16, 32, 48, 64]
+    frames = [rasterise(favicon_svg, s) for s in sizes]
+    frames[-1].save(ICO_OUT, format="ICO",
+                    sizes=[(s, s) for s in sizes], append_images=frames[:-1])
+    print(f"wrote {ICO_OUT.name:22s} {'/'.join(map(str, sizes)):16s} "
+          f"{ICO_OUT.stat().st_size:>7,} bytes")
+
+    # Apple touch icon: 180x180 with ~8% padding on the brand red.
+    pad = 14
+    inner = rasterise(favicon_svg, 180 - pad * 2)
+    tile = Image.new("RGBA", (180, 180), (227, 27, 35, 255))
+    tile.paste(inner, (pad, pad), inner)
+    tile.save(APPLE_OUT, format="PNG", optimize=True)
+    print(f"wrote {APPLE_OUT.name:22s} {'180x180':16s} "
+          f"{APPLE_OUT.stat().st_size:>7,} bytes")
+
+
 def main() -> None:
     variants = [
         ("logo-dark.svg", "en", "#26292E", "#5A5C5E"),
@@ -206,6 +285,12 @@ def main() -> None:
         (OUT / name).write_text(svg, encoding="utf-8")
         vb = svg.split('viewBox="', 1)[1].split('"', 1)[0]
         print(f"wrote {name:22s} viewBox={vb:16s} {(OUT / name).stat().st_size:>7,} bytes")
+
+    fav = OUT / "favicon.svg"
+    fav.write_text(build_favicon(), encoding="utf-8")
+    print(f"wrote {fav.name:22s} {'viewBox=0 0 100 100':16s} {fav.stat().st_size:>7,} bytes")
+
+    write_rasters(fav)
 
 
 if __name__ == "__main__":
