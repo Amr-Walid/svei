@@ -120,6 +120,9 @@
     <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    @* Phone-viewport corrections. Must load LAST so its media-query rules win
+       on equal specificity without resorting to !important. *@
+    <link rel="stylesheet" href="~/css/mobile.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="@bodyClass">
@@ -170,6 +173,15 @@
                         <i class="fa-solid fa-file-invoice"></i> @Cfg.T("nav.quote")
                     </a>
                 }
+                @* The only other language switcher lives in the top bar, which is
+                   hidden below 860px — so on a phone there was no visible way to
+                   change language at all. This one is display:none until the
+                   burger breakpoint (see mobile.css section 7). *@
+                <a class="sv-lang sv-lang--compact" href="@switchUrl" hreflang="@otherLang"
+                   rel="alternate" title="@tSwitch" aria-label="@tSwitch">
+                    <i class="fa-solid fa-globe" aria-hidden="true"></i>
+                    <span class="sv-lang__txt">@tSwitchAbbr</span>
+                </a>
                 <button class="sv-burger" type="button" aria-label="@tOpenMenu" aria-expanded="false">
                     <i class="fa-solid fa-bars"></i>
                 </button>

@@ -1,0 +1,358 @@
+/* ============================================================================
+   mobile.css — phone-viewport corrections for the public site.
+
+   Loaded LAST, after base/components/layout, so it wins on equal specificity
+   without needing !important. Every rule sits inside a media query, so the
+   desktop rendering is untouched.
+
+   Breakpoint ladder:
+     <= 1080px  burger appears (top bar already hidden at 860px)
+     <=  900px  tablet / large phone
+     <=  780px  phone
+     <=  480px  small phone
+     <=  380px  iPhone SE class
+
+   WARNING, learned the hard way in this codebase: an UNBOUNDED `max-width`
+   query also applies at every narrower width. Where a rule is only correct for
+   one rung of the ladder it is bounded on BOTH sides with min-width.
+   ========================================================================== */
+
+
+/* ── 1. Overflow safety ──────────────────────────────────────────────────────
+   The grid helpers use fixed `minmax(<px>, 1fr)` minimums (300/280/230px). A
+   track can never shrink below that minimum, so on a 320px screen the 300px
+   one alone overflowed the gutter and made the whole page pan sideways.
+   Nothing is hidden here — only the page-level horizontal scroll is removed. */
+@media (max-width: 900px) {
+  .sv-grid--2,
+  .sv-grid--3,
+  .sv-grid--4 { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 780px) {
+  .sv-postnav,
+  .sv-steps,
+  .sv-ticks--grid,
+  .sv-brandgrid { grid-template-columns: minmax(0, 1fr); }
+
+  /* Image tiles still read well two-up at phone size. */
+  .sv-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .sv-gallery { grid-template-columns: minmax(0, 1fr); }
+}
+
+
+/* ── 2. Buttons ──────────────────────────────────────────────────────────────
+   `.sv-btn` sets `white-space: nowrap` so desktop labels never break mid-phrase.
+   At 320px a long CTA ("Explore our production lines") therefore had a
+   min-content wider than the screen and pushed the hero container out to 345px.
+   Allow wrapping and centre the label instead. */
+@media (max-width: 780px) {
+  .sv-btn {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;               /* keeps wrapped lines off the corners */
+    padding-block: 0.8rem;
+  }
+  /* Oversized padding wastes width that the label needs. */
+  .sv-btn--lg { padding: 0.9rem 1.4rem; font-size: var(--sv-fs-sm); }
+}
+
+@media (max-width: 480px) {
+  /* Two half-width buttons side by side leave neither room for its label. */
+  .sv-hero__actions,
+  .sv-cta__actions { display: grid; gap: var(--sv-3); }
+  .sv-hero__actions > .sv-btn,
+  .sv-cta__actions > .sv-btn { width: 100%; }
+}
+
+
+/* ── 3. Hero ─────────────────────────────────────────────────────────────────
+   The hero reserves `clamp(520px, 78vh, 760px)`. On a phone that is nearly the
+   entire screen, so nothing hinted that the page continued below. */
+@media (max-width: 780px) {
+  .sv-hero .swiper,
+  .sv-hero .swiper-wrapper,
+  .sv-hero__slide { min-height: clamp(420px, 74vh, 580px); }
+
+  .sv-hero__content { padding-block: var(--sv-7); }
+  .sv-hero__sub { font-size: var(--sv-fs-base); }
+
+  /* The eyebrow chip carries the full company name; let it wrap rather than
+     force its container wider than the viewport. */
+  .sv-hero__eyebrow { white-space: normal; line-height: 1.4; text-align: center; }
+}
+
+@media (max-width: 480px) {
+  .sv-hero__title { font-size: clamp(1.65rem, 8.4vw, 2.3rem); }
+  /* Arabic ascenders/descenders collide at Latin leading. */
+  [dir="rtl"] .sv-hero__title { line-height: 1.4; }
+  .sv-hero__cue { display: none; }   /* no room, and it clearly scrolls anyway */
+}
+
+/* The hero pagination bullets are a 28x3px hairline — visually right, but almost
+   impossible to tap. Keep the thin bar visible while giving each bullet a
+   transparent 24px-tall hit area via vertical padding + background-clip. */
+@media (max-width: 900px) {
+  .sv-hero .swiper-pagination-bullet {
+    height: 22px;
+    padding-block: 0;
+    background-color: rgba(255, 255, 255, .4);
+    background-clip: content-box;
+    border-block: 9px solid transparent;   /* 22 - 2*9 = 4px visible bar */
+    box-sizing: border-box;
+  }
+  .sv-hero .swiper-pagination-bullet-active { background-color: var(--sv-red); }
+}
+
+
+/* ── 4. Forms — stop iOS auto-zoom ───────────────────────────────────────────
+   Mobile Safari zooms the viewport in whenever a focused field's font-size is
+   under 16px, and it does NOT zoom back out on blur. Every field on the site
+   was 14px (--sv-fs-sm), so tapping any input left the user stranded on a
+   zoomed, sideways-panning page. 16px is the documented threshold. */
+@media (max-width: 900px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  .sv-input,
+  .sv-newsletter input { font-size: 16px; }
+
+  /* Comfortable touch height without becoming clumsy. */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select { min-height: 46px; }
+
+  /* Default checkboxes/radios are too small to hit accurately. */
+  input[type="checkbox"],
+  input[type="radio"] { width: 20px; height: 20px; }
+
+  /* Form fields are laid out with the shared `.sv-grid` helpers inside
+     `.sv-form`, which §1 already collapses to one column — but `.sv-form
+     .sv-grid` zeroes the row gap for desktop, so stacked fields would touch.
+     Restore vertical rhythm now that every field is on its own row. */
+  .sv-form .sv-grid { gap: 0; }
+}
+
+
+/* ── 5. Tap targets ──────────────────────────────────────────────────────────
+   Inline list links measured only ~21-27px tall. WCAG 2.2 target-size minimum
+   is 24px and platform guidance is ~44px. Padding is added rather than height
+   so the text baseline does not move. */
+@media (max-width: 900px) {
+  .sv-footer a:not(.sv-btn),
+  .sv-crumbs a,
+  .sv-postnav a,
+  .sv-pager a {
+    display: inline-block;
+    padding-block: 0.42rem;          /* ~21px text -> ~34px target */
+    min-height: 24px;
+  }
+  /* The social icons are their own sized boxes — undo the padding above. */
+  .sv-social a { padding-block: 0; width: 44px; height: 44px; }
+
+  /* "Learn more" style card affordances and card-title links measured 21-27px.
+     min-height alone is not enough on an inline-flex box, so the block padding
+     does the work and min-height guarantees the WCAG 2.2 floor. */
+  .sv-icard__link,
+  .sv-line__link,
+  .sv-filter {
+    min-height: 34px;
+    padding-block: 0.35rem;
+  }
+
+  /* Card headline links. Enumerating each card variant proved fragile — the job,
+     album and service cards all nest the anchor differently and were missed on the
+     first pass. Matching "an <a> that is the sole content of a heading" covers
+     every current card and any future one, because that shape only ever occurs on
+     a card/list title. `inline-block` is required: a bare inline <a> ignores block
+     padding for hit-testing purposes. */
+  :is(h2, h3, h4) > a:only-child,
+  .sv-card__title a {
+    display: inline-block;
+    min-height: 32px;
+    padding-block: 0.2rem;
+  }
+  /* These two already carry a top margin; the new padding would double the gap. */
+  .sv-icard__link,
+  .sv-line__link { margin-top: var(--sv-3); }
+
+  /* The compact language switcher is a primary control — keep it thumb-sized
+     even though its label is only two characters. */
+  .sv-lang--compact { min-height: 38px; min-width: 40px; justify-content: center; }
+
+  /* Phone and email rows inside .sv-facts. These are the highest-intent taps on
+     the Contact and Quote pages, yet the anchor inherited the 14px line box of
+     its <strong> parent and measured only 17px tall. .sv-facts strong is inline,
+     so the <a> needs inline-block to accept the padding at all. */
+  .sv-facts strong a {
+    display: inline-block;
+    min-height: 30px;
+    padding-block: 0.3rem;
+  }
+
+  /* The logo is the site's home link and the largest element in the header, but
+     its <a> box collapsed to the 28-32px image height. Stretching it to the full
+     header height costs no layout and makes the whole brand block tappable. */
+  .sv-logo {
+    min-height: 44px;
+    align-items: center;
+  }
+
+  /* A little rhythm so enlarged targets don't merge into one block. */
+  .sv-footer li { margin-bottom: var(--sv-1); }
+
+  /* Leaflet's own zoom buttons are 30px — too small for a thumb. `leaflet.css`
+     is injected by the Contact view's @section Styles, which renders AFTER this
+     file, so it wins every specificity tie. This is the one place !important is
+     genuinely required rather than lazy. */
+  .leaflet-touch .leaflet-bar a {
+    width: 40px !important;
+    height: 40px !important;
+    line-height: 40px !important;
+  }
+}
+
+
+/* ── 6. Floating action buttons ──────────────────────────────────────────────
+   The WhatsApp bubble and back-to-top button are `position: fixed` in the
+   bottom corners and covered the last footer row and the newsletter field.
+   Shrink them and respect the iOS home-indicator inset. */
+@media (max-width: 780px) {
+  .sv-float-wa {
+    width: 48px; height: 48px;
+    font-size: 1.3rem;
+    inset-block-end: calc(var(--sv-4) + env(safe-area-inset-bottom, 0px));
+    inset-inline-end: var(--sv-4);
+  }
+  .sv-totop {
+    width: 40px; height: 40px;
+    inset-block-end: calc(var(--sv-4) + env(safe-area-inset-bottom, 0px));
+    inset-inline-start: var(--sv-4);
+  }
+  /* Reserve room so the fixed buttons never sit on the final footer row. */
+  .sv-footer__bottom { padding-bottom: calc(var(--sv-7) + env(safe-area-inset-bottom, 0px)); }
+}
+
+
+/* ── 7. Header, language switch, drawer ──────────────────────────────────────
+   The top bar carries the ONLY language switcher in the desktop layout, and it
+   is hidden below 860px. That left phone users with no visible way to change
+   language — the sole fallback was a button buried at the bottom of the drawer.
+   A compact switcher is added to the header markup for small screens. */
+@media (max-width: 1080px) {
+  .sv-header__inner { gap: var(--sv-3); }
+  .sv-lang--compact { display: inline-flex; }   /* hidden at desktop widths */
+}
+
+@media (max-width: 480px) {
+  /* Reclaim vertical space — the sticky header is costly on a short screen. */
+  :root { --sv-header-h: 64px; }
+  .sv-logo img { height: 32px; }
+  .sv-lang--compact { padding: 0.4rem 0.55rem; font-size: 11px; }
+}
+
+@media (max-width: 380px) {
+  .sv-logo img { height: 28px; }
+  /* The globe glyph alone is unambiguous and saves ~26px of a 320px row. */
+  .sv-lang--compact .sv-lang__txt { display: none; }
+}
+
+/* The drawer panel is `min(360px, 86vw)`; 86vw of 320px is only 275px, which
+   squeezed the nav labels. Give it more of the screen and honour the notch. */
+@media (max-width: 480px) {
+  .sv-drawer__panel { width: min(340px, 92vw); }
+  .sv-drawer__head { padding-top: calc(var(--sv-4) + env(safe-area-inset-top, 0px)); }
+  .sv-drawer__foot { padding-bottom: calc(var(--sv-5) + env(safe-area-inset-bottom, 0px)); }
+}
+
+
+/* ── 8. Section rhythm and headings ──────────────────────────────────────────
+   `--sv-section-y` bottoms out at 3.5rem top AND bottom, so two adjacent
+   sections put 7rem of dead space between two lines of text on a phone. */
+@media (max-width: 780px) {
+  :root { --sv-section-y: clamp(2.5rem, 8vw, 3.75rem); }
+
+  h1 { font-size: clamp(1.75rem, 7.5vw, 2.4rem); }
+  h2 { font-size: clamp(1.5rem, 6.4vw, 2rem); }
+  h3 { font-size: clamp(1.2rem, 5vw, 1.5rem); }
+
+  /* Long unbroken strings (emails, part numbers, URLs) are the classic cause
+     of sideways scroll on phones. */
+  h1, h2, h3, h4, p, li, td, th, dd, dt { overflow-wrap: break-word; }
+
+  /* Section headings (.sv-heading holds the eyebrow + h2 + lead paragraph). */
+  .sv-heading { margin-bottom: var(--sv-6); }
+  .sv-heading p { font-size: var(--sv-fs-base); }
+}
+
+
+/* ── 9. Inner-page hero ──────────────────────────────────────────────────────*/
+@media (max-width: 780px) {
+  .sv-pagehero { min-height: 240px; }
+  /* The title is a plain <h1> inside the hero, not a BEM element. */
+  .sv-pagehero h1 { font-size: clamp(1.6rem, 7vw, 2.2rem); }
+  /* Breadcrumbs already wrap; just keep the rows from colliding once each link
+     gains touch padding (§5). */
+  .sv-crumbs { row-gap: 0.1rem; }
+}
+
+
+/* ── 10. Spec tables ─────────────────────────────────────────────────────────
+   `.sv-table` is a two-column key/value spec sheet with `th { width: 42% }`.
+   At phone width the value column got so narrow that Arabic values wrapped over
+   five or six lines. Relabel each row as a stacked block instead. */
+@media (max-width: 560px) {
+  .sv-table,
+  .sv-table tbody,
+  .sv-table tr,
+  .sv-table th,
+  .sv-table td { display: block; width: 100%; }
+
+  .sv-table tr { border-bottom: 1px solid var(--sv-line); padding-block: 0.35rem; }
+  .sv-table tr:last-child { border-bottom: 0; }
+
+  .sv-table th {
+    width: 100%;
+    background: transparent;
+    border-bottom: 0;
+    padding: 0.5rem 0 0.1rem;
+    font-size: var(--sv-fs-xs);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .sv-table td { border-bottom: 0; padding: 0 0 0.5rem; font-size: var(--sv-fs-sm); }
+}
+
+
+/* ── 11. Split media blocks ──────────────────────────────────────────────────*/
+@media (max-width: 780px) {
+  /* The decorative corner rule hangs 14px outside the image on both axes; at
+     phone width that pokes past the gutter. */
+  .sv-split__media::before {
+    inset-block-start: -8px; inset-inline-start: -8px;
+    width: 72px; height: 72px;
+  }
+  .sv-split { gap: var(--sv-6); }
+}
+
+
+/* ── 12. Contact / map ───────────────────────────────────────────────────────
+   A tall map crowds out the form, which is the actual purpose of the page. */
+@media (max-width: 780px) {
+  .sv-map, #sv-map { height: 280px; min-height: 0; }
+  .sv-contact { gap: var(--sv-6); }
+}
+
+
+/* ── 13. Landscape phones ────────────────────────────────────────────────────
+   Short, wide viewports: a sticky header plus a 78vh hero left almost no
+   readable area at all. */
+@media (max-height: 480px) and (orientation: landscape) {
+  .sv-hero .swiper,
+  .sv-hero .swiper-wrapper,
+  .sv-hero__slide { min-height: 100vh; }
+  .sv-header { position: static; }   /* hand the height back to the content */
+  .sv-hero__cue { display: none; }
+}

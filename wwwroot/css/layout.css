@@ -168,6 +168,11 @@
 }
 .sv-lang i { font-size: .9em; }
 
+/* Compact header switcher: redundant while the top bar is on screen, so it is
+   hidden by default and revealed only at the burger breakpoint (mobile.css §7),
+   where the top bar — and with it the site's only language toggle — is gone. */
+.sv-lang--compact { display: none; }
+
 /* On the dark top bar: readable white, cyan on hover */
 .sv-topbar .sv-lang { color: #fff; border-color: rgba(255, 255, 255, .35); }
 .sv-topbar .sv-lang:hover { color: var(--sv-cyan); border-color: var(--sv-cyan); background: rgba(255, 255, 255, .06); }
@@ -588,14 +593,20 @@ html[lang="ar"] .sv-hero__eyebrow { letter-spacing: .02em; text-transform: none;
   height: 3px;
   background: var(--sv-grad-mix);
 }
+/* `1fr` is really `minmax(auto, 1fr)`, so a track can never shrink below the
+   min-content width of what it holds. The newsletter row (input + button) has a
+   387px min-content, which blew the last track out to 387px inside a 358px
+   container — and because .sv-footer sets `overflow: hidden`, the excess was
+   silently CLIPPED rather than scrolled: the subscribe button was sliced in half
+   at the inline-start edge. `minmax(0, …)` lets the tracks shrink to fit. */
 .sv-footer__grid {
   display: grid;
-  grid-template-columns: 1.6fr repeat(3, 1fr);
+  grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
   gap: var(--sv-7);
   padding-bottom: var(--sv-8);
 }
-@media (max-width: 980px) { .sv-footer__grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 560px) { .sv-footer__grid { grid-template-columns: 1fr; } }
+@media (max-width: 980px) { .sv-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sv-6); } }
+@media (max-width: 560px) { .sv-footer__grid { grid-template-columns: minmax(0, 1fr); gap: var(--sv-6); } }
 
 .sv-footer h4 {
   color: #fff;
@@ -620,20 +631,38 @@ html[lang="ar"] .sv-hero__eyebrow { letter-spacing: .02em; text-transform: none;
 .sv-footer__contact li { display: flex; gap: var(--sv-3); align-items: flex-start; font-size: var(--sv-fs-sm); }
 .sv-footer__contact i { color: var(--sv-red); margin-top: 5px; flex: none; }
 
+/* Social icons appear in two very different contexts: the dark footer and the
+   light .sv-sidecard on Contact. The styling below is neutral (inherits the
+   surrounding text colour and tints with currentColor) so it reads correctly on
+   both — previously it was hard-coded white on translucent white, which made the
+   Contact page's "Follow us" card look completely empty. */
 .sv-social { display: flex; gap: var(--sv-2); flex-wrap: wrap; }
 .sv-social a {
   width: 38px; height: 38px;
   display: grid; place-items: center;
-  background: rgba(255,255,255,.07);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
   border-radius: var(--sv-r-sm);
-  color: #fff;
+  color: inherit;
   transition: all var(--sv-t-fast) var(--sv-ease);
 }
-.sv-social a:hover { background: var(--sv-red); color: #fff; transform: translateY(-2px); }
+.sv-social a:hover {
+  background: var(--sv-red);
+  border-color: var(--sv-red);
+  color: #fff;
+  transform: translateY(-2px);
+}
+/* The footer sits on ink, so pin its icons to white rather than inheriting. */
+.sv-footer .sv-social a { color: #fff; }
 
-.sv-newsletter { display: flex; gap: var(--sv-2); margin-top: var(--sv-3); }
+.sv-newsletter { display: flex; gap: var(--sv-2); margin-top: var(--sv-3); flex-wrap: wrap; }
 .sv-newsletter input {
-  flex: 1;
+  /* A flex item defaults to `min-width: auto`, i.e. it refuses to shrink below
+     its intrinsic width — that is what pushed this row's min-content to 387px.
+     `min-width: 0` plus an explicit basis lets the field shrink, and wrapping
+     drops the button onto its own line on genuinely tiny screens. */
+  flex: 1 1 9rem;
+  min-width: 0;
   padding: .7rem 1rem;
   background: rgba(255,255,255,.07);
   border: 1px solid rgba(255,255,255,.14);
