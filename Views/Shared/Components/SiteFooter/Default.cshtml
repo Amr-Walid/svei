@@ -23,7 +23,9 @@
             @* ── Brand + about + social ─────────────────────────────────── *@
             <div class="sv-footer__brand">
                 <a href="@Lang.Url("/")">
-                    <img src="@Model.LogoPath" alt="@Cfg.Get("site.name")" width="372" height="100" />
+                    @* The Arabic lockup has a shorter fitted canvas than the Latin one. *@
+                    <img src="@Model.LogoPath" alt="@Cfg.Get("site.name")"
+                         width="@(((string?)Model.LogoPath)?.Contains("-ar") == true ? 304 : 363)" height="100" />
                 </a>
                 @if (!string.IsNullOrWhiteSpace(Model.AboutText))
                 {

@@ -107,6 +107,15 @@ namespace SVEI.Web.Data.Seed
             yield return S("feature.newsletter", "features", "1", null, "bool", "تفعيل النشرة البريدية", "Enable Newsletter", false, 6);
             yield return S("feature.quote", "features", "1", null, "bool", "تفعيل طلب عرض سعر", "Enable RFQ", false, 7);
 
+            // ── home page blocks ──────────────────────────────────────────────
+            // These only control the teaser block on the home page. The modules
+            // themselves stay on (see feature.* above), so /news, /events and
+            // /careers keep working and stay in the nav and sitemap regardless.
+            yield return S("home.show_news", "features", "0", null, "bool", "إظهار الأخبار في الرئيسية", "Show News on home", false, 10);
+            yield return S("home.show_events", "features", "0", null, "bool", "إظهار الفعاليات في الرئيسية", "Show Events on home", false, 11);
+            yield return S("home.show_careers", "features", "0", null, "bool", "إظهار الوظائف في الرئيسية", "Show Careers on home", false, 12);
+            yield return S("home.show_faq", "features", "0", null, "bool", "إظهار الأسئلة الشائعة في الرئيسية", "Show FAQ on home", false, 13);
+
             // ── footer ────────────────────────────────────────────────────────
             yield return S("footer.about", "footer",
                 "سيليكون فالي للصناعات الإلكترونية — شريكك الموثوق في التصنيع الإلكتروني المتكامل داخل مصر.",

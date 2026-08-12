@@ -15,7 +15,7 @@
 {
     <section class="sv-section sv-section--tight sv-section--ink">
         <div class="sv-container">
-            <div class="sv-grid sv-grid--4">
+            <div class="sv-stats" style="--sv-stat-cols:@GridLayout.Columns(Math.Min(Model.Stats.Count, 4), 4)">
                 @foreach (var stat in Model.Stats.Take(4))
                 {
                     <div class="sv-stat sv-reveal">

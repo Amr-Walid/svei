@@ -57,7 +57,12 @@ namespace SVEI.Web.Controllers
                     .OrderBy(x => x.SortOrder).Take(8).ToListAsync();
             }
 
-            if (Cfg.GetBool("feature.news", true))
+            // The `feature.*` flags gate a whole module (its pages and sitemap entries),
+            // whereas the `home.show_*` flags below only control whether that module
+            // also gets a teaser block on the home page. They default to false so the
+            // home page stays focused on the factory itself; /news, /events and
+            // /careers keep working either way and remain in the nav and sitemap.
+            if (Cfg.GetBool("feature.news", true) && Cfg.GetBool("home.show_news", false))
             {
                 vm.LatestNews = await Db.NewsPosts.AsNoTracking()
                     .Include(x => x.Category)
@@ -65,7 +70,7 @@ namespace SVEI.Web.Controllers
                     .OrderByDescending(x => x.PublishedAt).Take(3).ToListAsync();
             }
 
-            if (Cfg.GetBool("feature.events", true))
+            if (Cfg.GetBool("feature.events", true) && Cfg.GetBool("home.show_events", false))
             {
                 var today = DateTime.UtcNow.Date;
                 vm.UpcomingEvents = await Db.Events.AsNoTracking()
@@ -81,7 +86,7 @@ namespace SVEI.Web.Controllers
                 }
             }
 
-            if (Cfg.GetBool("feature.careers", true))
+            if (Cfg.GetBool("feature.careers", true) && Cfg.GetBool("home.show_careers", false))
             {
                 vm.OpenJobs = await Db.JobPostings.AsNoTracking()
                     .Include(x => x.Category)
@@ -90,9 +95,12 @@ namespace SVEI.Web.Controllers
                     .Take(4).ToListAsync();
             }
 
-            vm.Faqs = await Db.FaqItems.AsNoTracking()
-                .Where(x => x.IsActive && x.GroupKey == "general")
-                .OrderBy(x => x.SortOrder).Take(6).ToListAsync();
+            if (Cfg.GetBool("home.show_faq", false))
+            {
+                vm.Faqs = await Db.FaqItems.AsNoTracking()
+                    .Where(x => x.IsActive && x.GroupKey == "general")
+                    .OrderBy(x => x.SortOrder).Take(6).ToListAsync();
+            }
 
             return View(vm);
         }

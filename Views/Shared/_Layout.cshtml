@@ -11,7 +11,11 @@
     // artwork, so Arabic pages get the Arabic wordmark variant when one is set.
     var logoLatin   = Cfg.GetRaw("site.logo_dark", "/img/brand/logo-dark.svg");
     var logoArabic  = Cfg.GetRaw("site.logo_dark_ar");
-    var logoDark    = Lang.IsAr && !string.IsNullOrWhiteSpace(logoArabic) ? logoArabic : logoLatin;
+    var usingAr     = Lang.IsAr && !string.IsNullOrWhiteSpace(logoArabic);
+    var logoDark    = usingAr ? logoArabic : logoLatin;
+    // Each wordmark canvas is fitted to its own artwork (the Arabic lockup is
+    // shorter), so declare the matching intrinsic size to avoid a layout shift.
+    var logoW       = usingAr ? 304 : 363;
     var favicon     = Cfg.GetRaw("site.favicon", "/img/brand/favicon.svg");
     var themeColor  = Cfg.GetRaw("theme.primary", "#E31B23");
 
@@ -146,7 +150,7 @@
     <header class="sv-header">
         <div class="sv-container sv-header__inner">
             <a class="sv-logo" href="@Lang.Url("/")" aria-label="@siteName">
-                <img src="@logoDark" alt="@siteName" width="372" height="100" />
+                <img src="@logoDark" alt="@siteName" width="@logoW" height="100" />
             </a>
 
             <nav class="sv-nav" aria-label="@tMainNav">
@@ -173,7 +177,7 @@
         <div class="sv-drawer__panel">
             <div class="sv-drawer__head">
                 <a class="sv-logo" href="@Lang.Url("/")">
-                    <img src="@logoDark" alt="@siteName" width="372" height="100" />
+                    <img src="@logoDark" alt="@siteName" width="@logoW" height="100" />
                 </a>
                 <button class="sv-drawer__close" type="button" aria-label="@tClose">
                     <i class="fa-solid fa-xmark"></i>
