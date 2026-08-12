@@ -7,7 +7,11 @@
     var siteName    = Cfg.Get("site.name", "SVEI");
     var shortName   = Cfg.Get("site.short_name", "SVEI");
     var tagline     = Cfg.Get("site.tagline");
-    var logoDark    = Cfg.GetRaw("site.logo_dark", "/img/brand/logo-dark.svg");
+    // The Latin logo hard-codes "Silicon Valley / Electronic Industries" in its
+    // artwork, so Arabic pages get the Arabic wordmark variant when one is set.
+    var logoLatin   = Cfg.GetRaw("site.logo_dark", "/img/brand/logo-dark.svg");
+    var logoArabic  = Cfg.GetRaw("site.logo_dark_ar");
+    var logoDark    = Lang.IsAr && !string.IsNullOrWhiteSpace(logoArabic) ? logoArabic : logoLatin;
     var favicon     = Cfg.GetRaw("site.favicon", "/img/brand/favicon.svg");
     var themeColor  = Cfg.GetRaw("theme.primary", "#E31B23");
 
@@ -100,6 +104,8 @@
     <link rel="stylesheet" href="~/fonts/inter.local.css" />
     <link rel="stylesheet" href="~/fonts/plexar.local.css" />
     <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
+    <link rel="stylesheet" href="~/lib/swiper/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="~/lib/glightbox/glightbox.min.css" />
     <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
@@ -124,7 +130,7 @@
                 }
                 @if (!string.IsNullOrWhiteSpace(hours))
                 {
-                    <span><i class="fa-regular fa-clock"></i> @hours</span>
+                    <span class="sv-topbar__hours"><i class="fa-regular fa-clock"></i> @hours</span>
                 }
             </div>
             <div class="sv-topbar__actions">
@@ -140,7 +146,7 @@
     <header class="sv-header">
         <div class="sv-container sv-header__inner">
             <a class="sv-logo" href="@Lang.Url("/")" aria-label="@siteName">
-                <img src="@logoDark" alt="@siteName" width="167" height="50" />
+                <img src="@logoDark" alt="@siteName" width="372" height="100" />
             </a>
 
             <nav class="sv-nav" aria-label="@tMainNav">
@@ -167,7 +173,7 @@
         <div class="sv-drawer__panel">
             <div class="sv-drawer__head">
                 <a class="sv-logo" href="@Lang.Url("/")">
-                    <img src="@logoDark" alt="@siteName" width="150" height="45" />
+                    <img src="@logoDark" alt="@siteName" width="372" height="100" />
                 </a>
                 <button class="sv-drawer__close" type="button" aria-label="@tClose">
                     <i class="fa-solid fa-xmark"></i>

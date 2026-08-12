@@ -56,7 +56,11 @@ namespace SVEI.Web.Data.Seed
             yield return S("site.founded_year", "general", "2023", "2023", "text", "سنة التأسيس", "Founded", false, 5);
             yield return S("site.logo_dark", "general", "/img/brand/logo-dark.svg", null, "image", "الشعار (خلفية فاتحة)", "Logo (light bg)", false, 6);
             yield return S("site.logo_light", "general", "/img/brand/logo-light.svg", null, "image", "الشعار (خلفية داكنة)", "Logo (dark bg)", false, 7);
-            yield return S("site.favicon", "general", "/img/brand/favicon.svg", null, "image", "الأيقونة المفضلة", "Favicon", false, 8);
+            // Arabic wordmark variants — used automatically on /ar pages. Leave empty
+            // to fall back to the Latin logo above.
+            yield return S("site.logo_dark_ar", "general", "/img/brand/logo-dark-ar.svg", null, "image", "الشعار العربي (خلفية فاتحة)", "Arabic logo (light bg)", false, 8);
+            yield return S("site.logo_light_ar", "general", "/img/brand/logo-light-ar.svg", null, "image", "الشعار العربي (خلفية داكنة)", "Arabic logo (dark bg)", false, 9);
+            yield return S("site.favicon", "general", "/img/brand/favicon.svg", null, "image", "الأيقونة المفضلة", "Favicon", false, 10);
 
             // ── contact ───────────────────────────────────────────────────────
             yield return S("contact.email", "contact", "info@svei.tech", "info@svei.tech", "email", "البريد الإلكتروني", "Email", false, 1);

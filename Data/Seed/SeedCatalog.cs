@@ -202,35 +202,35 @@ namespace SVEI.Web.Data.Seed
                 new Brand
                 {
                     Slug = "oraimo", NameAr = "أوريمو", NameEn = "Oraimo", SortOrder = 1,
-                    LogoPath = "/img/brands/1.jpg", BrandType = "client",
+                    LogoPath = "/img/brands/1.webp", BrandType = "client",
                     DescAr = "علامة عالمية في ملحقات الهواتف والأجهزة الذكية.",
                     DescEn = "A global brand in phone accessories and smart devices."
                 },
                 new Brand
                 {
                     Slug = "infinix", NameAr = "إنفينكس", NameEn = "Infinix", SortOrder = 2,
-                    LogoPath = "/img/brands/2.jpg", BrandType = "client",
+                    LogoPath = "/img/brands/2.webp", BrandType = "client",
                     DescAr = "علامة رائدة في الهواتف الذكية بالأسواق الناشئة.",
                     DescEn = "A leading smartphone brand across emerging markets."
                 },
                 new Brand
                 {
                     Slug = "itel", NameAr = "آيتل", NameEn = "Itel", SortOrder = 3,
-                    LogoPath = "/img/brands/3.jpg", BrandType = "client",
+                    LogoPath = "/img/brands/3.webp", BrandType = "client",
                     DescAr = "هواتف ذكية اقتصادية بجودة موثوقة.",
                     DescEn = "Affordable smartphones with dependable quality."
                 },
                 new Brand
                 {
                     Slug = "gtide", NameAr = "جي تايد", NameEn = "Gtide", SortOrder = 4,
-                    LogoPath = "/img/brands/4.jpg", BrandType = "client",
+                    LogoPath = "/img/brands/4.webp", BrandType = "client",
                     DescAr = "ملحقات إلكترونية وحلول طاقة محمولة.",
                     DescEn = "Electronic accessories and portable power solutions."
                 },
                 new Brand
                 {
                     Slug = "unitronics", NameAr = "يوني ترونيكس", NameEn = "UniTronics", SortOrder = 5,
-                    LogoPath = "/img/brands/5.jpg", BrandType = "partner",
+                    LogoPath = "/img/brands/5.webp", BrandType = "partner",
                     DescAr = "شريك في التوزيع والحلول التقنية.",
                     DescEn = "A distribution and technology solutions partner."
                 }

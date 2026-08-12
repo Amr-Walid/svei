@@ -100,7 +100,12 @@ namespace SVEI.Web.ViewComponents
             {
                 AboutText = _cfg.Get("footer.about"),
                 Copyright = _cfg.Get("footer.copyright").Replace("{year}", DateTime.UtcNow.Year.ToString()),
-                LogoPath = _cfg.GetRaw("site.logo_light", "/img/brand/logo-light.svg"),
+                // The footer sits on a dark surface, so use the light logo — and its
+                // Arabic wordmark variant on /ar, since the Latin artwork has the
+                // English company name baked in.
+                LogoPath = _lang.IsAr
+                    ? _cfg.GetRaw("site.logo_light_ar", _cfg.GetRaw("site.logo_light", "/img/brand/logo-light.svg"))
+                    : _cfg.GetRaw("site.logo_light", "/img/brand/logo-light.svg"),
                 NewsletterTitle = _cfg.Get("footer.newsletter_title"),
                 NewsletterText = _cfg.Get("footer.newsletter_text"),
                 ShowNewsletter = _cfg.GetBool("feature.newsletter", true),

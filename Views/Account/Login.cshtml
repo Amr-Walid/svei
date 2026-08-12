@@ -1,7 +1,8 @@
 @{
     Layout = null;
     var siteName = Cfg.Get("site.name", "SVEI");
-    var logo = Cfg.GetRaw("site.logo_light") ?? "/img/brand/logo-light.svg";
+    // This screen is Arabic-only, so prefer the Arabic wordmark when available.
+    var logo = Cfg.GetRaw("site.logo_light_ar", Cfg.GetRaw("site.logo_light", "/img/brand/logo-light.svg"));
     var returnUrl = ViewData["ReturnUrl"] as string;
     var email = ViewData["Email"] as string;
     ViewData["Title"] = "تسجيل الدخول";

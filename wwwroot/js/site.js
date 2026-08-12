@@ -140,35 +140,61 @@
 
   /* ── Hero slider (Swiper) ─────────────────────────────────────────────── */
   function heroSlider() {
-    const el = $('.sv-hero .swiper');
-    if (!el || typeof Swiper === 'undefined') return;
-    if (el.querySelectorAll('.swiper-slide').length < 2) return;
+    const hero = $('.sv-hero');
+    const el   = $('.sv-hero .swiper');
+    if (!hero || !el) return;
+
+    const count = el.querySelectorAll('.swiper-slide').length;
+
+    // Mark as ready so the CSS can reveal the slides. Without this the hero
+    // stayed hidden (or flickered) whenever Swiper bailed out or was slow.
+    const ready = () => hero.classList.add('is-ready');
+
+    if (typeof Swiper === 'undefined' || count < 2) { ready(); return; }
 
     new Swiper(el, {
-      loop: true,
+      // With only 2 slides, loop + fade makes Swiper duplicate them and the
+      // crossfade visibly blinks. Rewind gives a clean A->B->A cycle instead.
+      loop: count > 2,
+      rewind: count === 2,
       speed: 900,
       effect: 'fade',
       fadeEffect: { crossFade: true },
-      autoplay: { delay: 6500, disableOnInteraction: false },
+      autoplay: { delay: 6500, disableOnInteraction: false, pauseOnMouseEnter: true },
       pagination: { el: '.sv-hero .swiper-pagination', clickable: true },
-      a11y: { enabled: true }
+      a11y: { enabled: true },
+      on: { init: ready }
     });
   }
 
   /* ── Brand marquee (Swiper) ───────────────────────────────────────────── */
   function brandSlider() {
-    const el = $('.sv-brands .swiper');
-    if (!el || typeof Swiper === 'undefined') return;
+    const wrap = $('.sv-brands');
+    const el   = $('.sv-brands .swiper');
+    if (!wrap || !el) return;
+
+    const slides = el.querySelectorAll('.swiper-slide');
+
+    // Swiper's loop mode needs noticeably more slides than are on screen.
+    // With only a handful of logos it duplicates/misplaces them, which is what
+    // stacked UNITRONICS on top of the row. Below that threshold, skip Swiper
+    // entirely and render a centred static strip instead.
+    const perView = 5;
+    if (typeof Swiper === 'undefined' || slides.length <= perView) {
+      wrap.classList.add('sv-brands--static');
+      return;
+    }
 
     new Swiper(el, {
       loop: true,
+      loopAdditionalSlides: slides.length,
       slidesPerView: 2,
       spaceBetween: 32,
       speed: 4000,
       autoplay: { delay: 0, disableOnInteraction: false, pauseOnMouseEnter: true },
       freeMode: true,
       allowTouchMove: false,
-      breakpoints: { 640: { slidesPerView: 3 }, 900: { slidesPerView: 4 }, 1200: { slidesPerView: 5 } }
+      breakpoints: { 640: { slidesPerView: 3 }, 900: { slidesPerView: 4 }, 1200: { slidesPerView: perView } }
     });
   }
 
