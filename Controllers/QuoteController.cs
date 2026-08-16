@@ -20,7 +20,12 @@ namespace SVEI.Web.Controllers
             if (!Cfg.GetBool("feature.quote", true)) return NotFound();
 
             var sections = await LoadSectionsAsync("quote");
-            SeoFromSection(sections, "hero", Cfg.T("nav.quote"));
+            // The on-page hero heading is a marketing line ("Looking for a partnership?"),
+            // but the browser/SEO title must stay the literal, searchable page name.
+            sections.TryGetValue("hero", out var quoteHero);
+            Seo(Cfg.T("nav.quote"),
+                Lang.Pick(quoteHero?.SubtitleAr, quoteHero?.SubtitleEn),
+                quoteHero?.ImagePath);
 
             var vm = new QuoteVm
             {

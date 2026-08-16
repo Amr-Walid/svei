@@ -170,8 +170,8 @@ namespace SVEI.Web.Data.Seed
             yield return new PageSection
             {
                 PageKey = "home", SectionKey = "cta", SortOrder = 9,
-                TitleAr = "جاهز لبدء مشروعك التصنيعي؟",
-                TitleEn = "Ready to start your manufacturing project?",
+                TitleAr = "هل تبحث عن شراكة؟",
+                TitleEn = "Looking for a partnership?",
                 SubtitleAr = "أرسل لنا متطلباتك وسيتواصل فريقنا الهندسي معك خلال 48 ساعة.",
                 SubtitleEn = "Send us your requirements and our engineering team will respond within 48 hours.",
                 ButtonTextAr = "اطلب عرض سعر", ButtonTextEn = "Request a quote", ButtonUrl = "/quote",
@@ -361,7 +361,7 @@ namespace SVEI.Web.Data.Seed
             {
                 PageKey = "quote", SectionKey = "hero", SortOrder = 1,
                 EyebrowAr = "ابدأ مشروعك", EyebrowEn = "Start your project",
-                TitleAr = "اطلب عرض سعر", TitleEn = "Request a Quote",
+                TitleAr = "هل تبحث عن شراكة؟", TitleEn = "Looking for a partnership?",
                 SubtitleAr = "شاركنا تفاصيل مشروعك وسنعود إليك بعرض مفصل خلال 48 ساعة.",
                 SubtitleEn = "Share your project details and we'll return a detailed quote within 48 hours."
             };
