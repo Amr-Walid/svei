@@ -182,7 +182,7 @@
             <button type="submit" class="ad-btn ad-btn--pri">
                 <i class="fa-solid fa-floppy-disk"></i> @(isAr ? "حفظ" : "Save")
             </button>
-            <button type="submit" class="ad-btn ad-btn--ok" onclick="document.getElementById('stayFlag').value='1'">
+            <button type="submit" class="ad-btn ad-btn--ok" data-stay="1">
                 <i class="fa-solid fa-check"></i> @(isAr ? "حفظ والبقاء" : "Save & stay")
             </button>
             <a class="ad-btn ad-btn--ghost" href="@listUrl">@(isAr ? "إلغاء" : "Cancel")</a>

@@ -36,14 +36,9 @@
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 
-    <script>
-        (function () {
-            try {
-                var t = localStorage.getItem('svei-admin-theme') || 'light';
-                document.documentElement.setAttribute('data-theme', t);
-            } catch (e) { }
-        })();
-    </script>
+    @* Synchronous (not deferred) so the theme is applied before first paint.
+       External rather than inline so CSP can stay at script-src 'self'. *@
+    <script src="~/js/theme-boot.js" asp-append-version="true"></script>
 </head>
 <body class="ad">
 <div class="ad-shell">

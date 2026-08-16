@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using SVEI.Web.Data;
 using SVEI.Web.Models;
@@ -35,6 +36,7 @@ namespace SVEI.Web.Controllers
         }
 
         [HttpPost, ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimiting.Forms)]
         [RequestSizeLimit(30 * 1024 * 1024)]
         public async Task<IActionResult> Send(QuoteForm form)
         {

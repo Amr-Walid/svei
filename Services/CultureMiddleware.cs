@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using SVEI.Web.Data;
+using SVEI.Web.Models;
 
 namespace SVEI.Web.Services
 {
@@ -13,14 +15,22 @@ namespace SVEI.Web.Services
         private static readonly string[] Bypass =
         {
             "/admin", "/account", "/css", "/js", "/lib", "/img", "/fonts", "/uploads",
-            "/favicon.ico", "/robots.txt", "/sitemap.xml", "/.well-known"
+            "/favicon.ico", "/robots.txt", "/sitemap.xml", "/.well-known",
+            // The error pages are mapped at literal, culture-less routes. Without
+            // this the middleware rewrites /Home/NotFoundPage to /ar/Home/NotFoundPage,
+            // which matches no route, so it 404s and re-enters the status-code
+            // handler — an infinite redirect on every 404 on the site.
+            "/home/error", "/home/notfoundpage"
         };
+
+        /// <summary>Cache key for the redirect table snapshot.</summary>
+        private const string RedirectCacheKey = "svei:redirects";
 
         private readonly RequestDelegate _next;
 
         public CultureMiddleware(RequestDelegate next) => _next = next;
 
-        public async Task InvokeAsync(HttpContext ctx, AppDbContext db)
+        public async Task InvokeAsync(HttpContext ctx, AppDbContext db, IMemoryCache cache)
         {
             var path = ctx.Request.Path.Value ?? "/";
 
@@ -34,10 +44,22 @@ namespace SVEI.Web.Services
             var normalized = path.TrimEnd('/');
             if (normalized.Length == 0) normalized = "/";
 
-            var redirect = await db.UrlRedirects.AsNoTracking()
-                .FirstOrDefaultAsync(r => r.IsActive && r.FromPath == normalized);
+            // This used to be a database round-trip on *every* request to the
+            // site — the single hottest query in the app, for a table that holds
+            // a handful of rows and changes only when an admin edits it. Caching
+            // the whole table as a dictionary turns it into a hash lookup.
+            var redirects = await cache.GetOrCreateAsync(RedirectCacheKey, async e =>
+            {
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                var rows = await db.UrlRedirects.AsNoTracking()
+                    .Where(r => r.IsActive)
+                    .ToListAsync();
+                return rows.GroupBy(r => r.FromPath, StringComparer.OrdinalIgnoreCase)
+                           .ToDictionary(g => g.Key, g => g.First(),
+                                         StringComparer.OrdinalIgnoreCase);
+            }) ?? new Dictionary<string, UrlRedirect>(StringComparer.OrdinalIgnoreCase);
 
-            if (redirect is not null)
+            if (redirects.TryGetValue(normalized, out var redirect))
             {
                 var target = string.IsNullOrWhiteSpace(redirect.ToPath) ? "/" : redirect.ToPath;
                 if (!target.StartsWith("http", StringComparison.OrdinalIgnoreCase) &&

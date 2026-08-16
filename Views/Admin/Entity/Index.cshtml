@@ -321,7 +321,7 @@
                                     {
                                         <button type="button" class="ad-btn ad-btn--sm ad-btn--ico ad-btn--danger"
                                                 title="@(isAr ? "حذف" : "Delete")"
-                                                onclick="if(confirm('@confirmDelete')) document.getElementById('del_@id').submit();">
+                                                data-del-form="del_@id" data-del-confirm="@confirmDelete">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     }

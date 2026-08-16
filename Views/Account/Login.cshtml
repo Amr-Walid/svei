@@ -56,7 +56,7 @@
 <body>
     <main class="sv-login">
         <div class="sv-login__brand">
-            <img src="@logo" alt="@siteName" onerror="this.style.display='none'" />
+            <img src="@logo" alt="@siteName" data-hide-on-error="1" />
             <h1>لوحة تحكم @siteName</h1>
             <p>سجّل الدخول لإدارة محتوى الموقع</p>
         </div>
@@ -107,5 +107,6 @@
             <a href="/ar"><i class="fa-solid fa-arrow-right"></i> العودة إلى الموقع</a>
         </div>
     </main>
+    <script src="~/js/login.js" asp-append-version="true" defer></script>
 </body>
 </html>

@@ -134,7 +134,7 @@
                                 </a>
                                 <button type="button" class="ad-btn ad-btn--sm ad-btn--ico"
                                         title="@(isAr ? "نسخ المسار" : "Copy path")"
-                                        onclick="navigator.clipboard.writeText(this.getAttribute('data-p'));window.adToast&amp;&amp;window.adToast('@(isAr ? "تم النسخ" : "Copied")');"
+                                        data-copy="@(isAr ? "تم النسخ" : "Copied")"
                                         data-p="@m.Path">
                                     <i class="fa-solid fa-copy"></i>
                                 </button>

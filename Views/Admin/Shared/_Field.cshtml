@@ -174,7 +174,7 @@ else
                     var colorVal = string.IsNullOrWhiteSpace(str) ? "#E31B23" : str;
                     <div style="display:flex;gap:6px">
                         <input class="ad-in" type="color" value="@colorVal" style="max-width:56px"
-                               oninput="this.nextElementSibling.value=this.value" />
+                               data-color-sync="1" />
                         <input class="ad-in" type="text" id="@id" name="@f.Name" value="@str" dir="ltr" placeholder="#E31B23" />
                     </div>
                 }

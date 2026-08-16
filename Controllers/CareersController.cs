@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using SVEI.Web.Data;
 using SVEI.Web.Models;
@@ -127,6 +128,7 @@ namespace SVEI.Web.Controllers
         //  APPLY
         // ══════════════════════════════════════════════════════════════════════
         [HttpPost("/{culture:regex(^ar|en$)}/careers/apply"), ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimiting.Forms)]
         [RequestSizeLimit(30 * 1024 * 1024)]
         public async Task<IActionResult> Apply(JobApplicationForm form, string? website)
         {

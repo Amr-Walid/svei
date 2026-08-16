@@ -23,10 +23,12 @@ namespace SVEI.Web.Controllers.Admin
     {
         private readonly IMediaService _media;
         private readonly ISettings _cfg;
+        private readonly IHtmlSanitizer _html;
 
-        public EntityController(AppDbContext db, ILang lang, IMediaService media, ISettings cfg)
+        public EntityController(AppDbContext db, ILang lang, IMediaService media, ISettings cfg,
+                                IHtmlSanitizer html)
             : base(db, lang)
-        { _media = media; _cfg = cfg; }
+        { _media = media; _cfg = cfg; _html = html; }
 
         // ══════════════════════════════════════════════════════════════════════
         //  LIST
@@ -354,6 +356,16 @@ namespace SVEI.Web.Controllers.Admin
                 }
 
                 var raw = form[f.Name].ToString();
+
+                // ── rich text ─────────────────────────────────────────────
+                // Html fields are rendered with @Html.Raw, so the encoder is
+                // out of the picture by design. Sanitize on the way in, which
+                // makes the stored value the thing that is trusted.
+                if (f.Kind == FieldKind.Html)
+                {
+                    prop.SetValue(entity, _html.Clean(raw));
+                    continue;
+                }
 
                 // ── slug auto-generation ──────────────────────────────────
                 if (f.Kind == FieldKind.Slug)

@@ -29,7 +29,19 @@
     var bodyClass   = ViewData["BodyClass"] as string ?? "";
 
     var req         = Context.Request;
-    var baseUrl     = Cfg.GetRaw("site.base_url", req.Scheme + "://" + req.Host).TrimEnd('/');
+
+    // The absolute base for canonical/hreflang/OG/JSON-LD URLs.
+    //
+    // This must NOT fall back to req.Host: that header is attacker-controlled,
+    // so a request carrying "Host: evil.com" would emit
+    // <link rel="canonical" href="http://evil.com/..."> and an Organization
+    // JSON-LD pointing at the attacker — classic host-header poisoning that
+    // hands our SEO authority to someone else and, behind a shared cache,
+    // serves those poisoned URLs to real visitors.
+    //
+    // Order: admin setting → appsettings Site:BaseUrl → the production origin.
+    var baseUrl     = Cfg.GetRaw("site.base_url",
+                          AppCfg["Site:BaseUrl"] ?? "https://svei.tech").TrimEnd('/');
     var pathQuery   = req.Path + req.QueryString;
     var canonical   = baseUrl + pathQuery;
     var switchUrl   = Lang.SwitchUrl(pathQuery);
@@ -74,7 +86,16 @@
             ["addressCountry"] = "EG",
             ["streetAddress"]  = Cfg.Get("contact.address")
         }
-    }, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+    });
+
+    // Every value above is admin-editable, so it must not be able to terminate
+    // the <script> element it is emitted into. The default encoder escapes the
+    // non-ASCII we care about anyway (JSON-LD consumers read \uXXXX fine, and
+    // Google's structured-data parser is a strict JSON parser), while
+    // UnsafeRelaxedJsonEscaping would pass "</script>" through verbatim and let
+    // a company-name field break out into executable markup.
+    // Belt and braces: neutralise the sequence even if the encoder changes.
+    jsonLd = jsonLd.Replace("</", "<\\/", StringComparison.Ordinal);
 }
 <!DOCTYPE html>
 <html lang="@lang" dir="@dir">

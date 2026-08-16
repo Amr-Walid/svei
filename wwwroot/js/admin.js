@@ -324,6 +324,68 @@
         });
     }
 
+    /* ── Inline-handler replacements ────────────────────────────────────
+       These used to be onclick="" / oninput="" / onerror="" attributes in the
+       Razor views. Inline handlers are blocked by the Content-Security-Policy
+       (script-src 'self'), and allowing them back with 'unsafe-inline' would
+       defeat most of the XSS protection the CSP exists to provide — so the
+       behaviour lives here instead, bound by delegation.                    */
+    function initInlineReplacements() {
+        // "Save & stay" — flag the form so the server returns to the editor.
+        document.addEventListener('click', function (e) {
+            var stay = e.target.closest('[data-stay]');
+            if (stay) {
+                var flag = document.getElementById('stayFlag');
+                if (flag) flag.value = '1';
+            }
+        });
+
+        // Row delete — confirm, then submit the matching hidden form.
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-del-form]');
+            if (!btn) return;
+            var msg = btn.getAttribute('data-del-confirm') || 'Delete?';
+            if (!confirm(msg)) return;
+            var form = document.getElementById(btn.getAttribute('data-del-form'));
+            if (form) form.submit();
+        });
+
+        // Media library — copy the asset path to the clipboard.
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-copy]');
+            if (!btn) return;
+            var path = btn.getAttribute('data-p') || '';
+            var done = btn.getAttribute('data-copy');
+            var ok = function () { if (window.adToast) window.adToast(done); };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(path).then(ok, function () { });
+            } else {
+                var t = document.createElement('textarea');
+                t.value = path;
+                document.body.appendChild(t);
+                t.select();
+                try { document.execCommand('copy'); ok(); } catch (err) { }
+                document.body.removeChild(t);
+            }
+        });
+
+        // Colour picker mirrors its value into the adjacent hex text input.
+        document.addEventListener('input', function (e) {
+            var pick = e.target.closest('[data-color-sync]');
+            if (pick && pick.nextElementSibling)
+                pick.nextElementSibling.value = pick.value;
+        });
+
+        // Hide a broken logo rather than showing the browser's placeholder.
+        // Capture phase: "error" does not bubble.
+        document.addEventListener('error', function (e) {
+            var img = e.target;
+            if (img && img.tagName === 'IMG' && img.hasAttribute('data-hide-on-error'))
+                img.style.display = 'none';
+        }, true);
+    }
+
     /* ── Boot ──────────────────────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', function () {
         initTheme();
@@ -337,6 +399,7 @@
         initConfirm();
         initDirtyGuard();
         initKeys();
+        initInlineReplacements();
         autoDismiss();
     });
 
