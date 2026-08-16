@@ -161,6 +161,9 @@ namespace SVEI.Web.Data.Seed
             yield return T("nav.gallery", "معرض الصور", "Gallery", "nav");
             yield return T("nav.contact", "اتصل بنا", "Contact", "nav");
             yield return T("nav.quote", "اطلب عرض سعر", "Request a Quote", "nav");
+            // Header / drawer call-to-action. Kept separate from nav.quote so the
+            // breadcrumb and the in-page quote buttons keep their literal wording.
+            yield return T("cta.partnership", "هل تبحث عن شراكة؟", "Looking for a partnership?", "nav");
 
             // buttons
             yield return T("btn.read_more", "اقرأ المزيد", "Read more", "btn");

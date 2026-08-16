@@ -704,7 +704,24 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
 .sv-search .sv-input { flex: 1; }
 .sv-search .sv-btn { flex: none; padding-inline: 1rem; }
 
+/* ── Careers: heading + search share the top row ──────────────────────────── */
+.sv-jobsbar {
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: var(--sv-4);
+  margin-bottom: var(--sv-6);
+}
+/* .sv-heading carries a bottom margin of its own that would break the baseline
+   alignment with the search field. */
+.sv-jobsbar__head { margin-bottom: 0; flex: 1 1 420px; min-width: 0; }
+.sv-jobsbar__search { flex: 0 1 320px; }
+@media (max-width: 720px) {
+  .sv-jobsbar__search { flex-basis: 100%; }
+}
+
 .sv-filters--soft { margin-block: calc(var(--sv-4) * -1) var(--sv-6); }
+/* The negative pull above assumes a preceding filter row. When every other facet
+   row is suppressed this row follows .sv-jobsbar directly and must not ride up. */
+.sv-jobsbar + .sv-filters--soft { margin-block-start: 0; }
 .sv-filters--soft .sv-filter { font-size: var(--sv-fs-xs); padding: .4rem .85rem; }
 .sv-filter i { margin-inline-end: .35rem; opacity: .8; }
 
@@ -957,8 +974,10 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
 .sv-step p { font-size: var(--sv-fs-sm); color: var(--sv-text-muted); }
 
 /* ── Service card (services index) ────────────────────────────────────────── */
+/* Stacked: media on top, copy underneath. A side-by-side split starved the text
+   column and forced one or two words per line, so the card reads vertically. */
 .sv-svc {
-  display: grid; grid-template-columns: 220px minmax(0, 1fr);
+  display: flex; flex-direction: column;
   background: var(--sv-bg);
   border: 1px solid var(--sv-line);
   border-radius: var(--sv-r-lg);
@@ -966,8 +985,10 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
   transition: all var(--sv-t) var(--sv-ease);
 }
 .sv-svc:hover { box-shadow: var(--sv-shadow-lg); border-color: transparent; transform: translateY(-4px); }
-@media (max-width: 620px) { .sv-svc { grid-template-columns: 1fr; } }
-.sv-svc__media { position: relative; display: block; overflow: hidden; min-height: 180px; background: var(--sv-bg-alt); }
+.sv-svc__media {
+  position: relative; display: block; overflow: hidden;
+  aspect-ratio: 16 / 10; background: var(--sv-bg-alt);
+}
 .sv-svc__media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--sv-t-slow) var(--sv-ease); }
 .sv-svc:hover .sv-svc__media img { transform: scale(1.06); }
 .sv-svc__icon {
@@ -976,7 +997,12 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
   border-radius: var(--sv-r-sm);
   background: var(--sv-accent, var(--sv-red)); color: #fff;
 }
-.sv-svc__body { padding: var(--sv-5); display: grid; gap: var(--sv-3); align-content: start; }
+.sv-svc__body {
+  padding: var(--sv-5); display: flex; flex-direction: column; gap: var(--sv-3);
+  flex: 1 1 auto; min-height: 0;
+}
+/* Keep "Learn more" pinned to the bottom so cards of unequal copy still line up. */
+.sv-svc__body > .sv-btn { margin-block-start: auto; align-self: start; }
 .sv-svc__body h3 { font-size: var(--sv-fs-lg); }
 .sv-svc__body h3 a { color: inherit; }
 .sv-svc__body h3 a:hover { color: var(--sv-red); }

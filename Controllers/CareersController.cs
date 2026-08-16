@@ -26,9 +26,24 @@ namespace SVEI.Web.Controllers
             SeoFromSection(sections, "hero", Cfg.T("nav.careers"));
 
             var today = DateTime.UtcNow.Date;
-            var query = Db.JobPostings.AsNoTracking()
-                .Include(x => x.Category)
+
+            // Every posting that is currently open. Used both as the base for the
+            // result list and as the source of the filter facets below.
+            var live = Db.JobPostings.AsNoTracking()
                 .Where(x => x.IsActive && (x.ClosingDate == null || x.ClosingDate >= today));
+
+            // Only offer a chip when at least one open posting would match it —
+            // otherwise a visitor can pick a department or a contract type and land
+            // on an empty result set. Facets ignore the active category/type filter
+            // so the visitor can always switch between them.
+            var liveCategoryIds = await live.Select(x => x.CategoryId).Distinct().ToListAsync();
+            var liveTypes = await live
+                .Where(x => x.JobType != "")
+                .Select(x => x.JobType).Distinct().ToListAsync();
+
+            // Typed as IQueryable so the conditional .Where() calls below can
+            // reassign it (Include() returns the narrower IIncludableQueryable).
+            IQueryable<JobPosting> query = live.Include(x => x.Category);
 
             if (!string.IsNullOrWhiteSpace(category))
                 query = query.Where(x => x.Category.Slug == category);
@@ -60,7 +75,10 @@ namespace SVEI.Web.Controllers
                     Query = q, Filter = category
                 },
                 Categories = await Db.JobCategories.AsNoTracking()
-                    .Where(x => x.IsActive).OrderBy(x => x.SortOrder).ToListAsync(),
+                    .Where(x => x.IsActive && liveCategoryIds.Contains(x.Id))
+                    .OrderBy(x => x.SortOrder).ToListAsync(),
+                // Preserve the canonical display order from JobLabels.Types.
+                Types = JobLabels.Types.Where(t => liveTypes.Contains(t)).ToList(),
                 WhyUs = await Db.InfoCards.AsNoTracking()
                     .Where(x => x.IsActive && x.GroupKey == "careers.why_us")
                     .OrderBy(x => x.SortOrder).ToListAsync(),

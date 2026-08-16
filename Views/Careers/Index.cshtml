@@ -39,30 +39,20 @@
 @* ── Openings ────────────────────────────────────────────────────────────── *@
 <section class="sv-section sv-section--alt" id="openings">
     <div class="sv-container">
-        <div class="sv-heading sv-reveal">
-            <span class="sv-eyebrow">@(Lang.IsAr ? "انضم إلينا" : "Join us")</span>
-            <h2>@(Lang.IsAr ? "الوظائف المتاحة" : "Open positions")</h2>
-            <p>
-                @(Lang.IsAr
-                    ? $"{Model.Paged.TotalItems} وظيفة متاحة حالياً في مصنعنا بالعين السخنة."
-                    : $"{Model.Paged.TotalItems} open roles at our Ain Sokhna facility.")
-            </p>
-        </div>
-
-        <div class="sv-toolbar sv-reveal">
-            <div class="sv-filters">
-                <a class="@(string.IsNullOrWhiteSpace(Model.CategorySlug) ? "sv-filter is-active" : "sv-filter")"
-                   href="@JobsUrl(null, Model.JobType)">@(Lang.IsAr ? "كل الأقسام" : "All departments")</a>
-                @foreach (var c in Model.Categories)
-                {
-                    var active = Model.CategorySlug == c.Slug ? "sv-filter is-active" : "sv-filter";
-                    <a class="@active" href="@JobsUrl(c.Slug, Model.JobType)">
-                        <i class="@c.IconClass"></i> @Lang.Pick(c.NameAr, c.NameEn)
-                    </a>
-                }
+@* Search sits on the heading row: it is the primary action here, and leaving it
+   beside the department chips buried it under two rows of filters. *@
+        <div class="sv-jobsbar sv-reveal">
+            <div class="sv-heading sv-jobsbar__head">
+                <span class="sv-eyebrow">@(Lang.IsAr ? "انضم إلينا" : "Join us")</span>
+                <h2>@(Lang.IsAr ? "الوظائف المتاحة" : "Open positions")</h2>
+                <p>
+                    @(Lang.IsAr
+                        ? $"{Model.Paged.TotalItems} وظيفة متاحة حالياً في مصنعنا بالعين السخنة."
+                        : $"{Model.Paged.TotalItems} open roles at our Ain Sokhna facility.")
+                </p>
             </div>
 
-            <form class="sv-search" method="get" action="@basePath">
+            <form class="sv-search sv-jobsbar__search" method="get" action="@basePath">
                 @if (!string.IsNullOrWhiteSpace(Model.CategorySlug))
                 {
                     <input type="hidden" name="category" value="@Model.CategorySlug" />
@@ -79,17 +69,38 @@
             </form>
         </div>
 
-        <div class="sv-filters sv-filters--soft sv-reveal">
-            <a class="@(string.IsNullOrWhiteSpace(Model.JobType) ? "sv-filter is-active" : "sv-filter")"
-               href="@JobsUrl(Model.CategorySlug, null)">@(Lang.IsAr ? "كل الأنواع" : "All types")</a>
-            @foreach (var t in JobLabels.Types)
-            {
-                var active = Model.JobType == t ? "sv-filter is-active" : "sv-filter";
-                <a class="@active" href="@JobsUrl(Model.CategorySlug, t)">
-                    <i class="@JobLabels.Icon(t)"></i> @JobLabels.Type(t, Lang.IsAr)
-                </a>
-            }
-        </div>
+@* Both rows are facet-driven: the controller only sends departments and contract
+   types that an open posting actually uses. A lone chip means there is nothing to
+   choose between, so the row is dropped rather than shown as a dead control. *@
+        @if (Model.Categories.Count > 1)
+        {
+            <div class="sv-filters sv-reveal">
+                <a class="@(string.IsNullOrWhiteSpace(Model.CategorySlug) ? "sv-filter is-active" : "sv-filter")"
+                   href="@JobsUrl(null, Model.JobType)">@(Lang.IsAr ? "كل الأقسام" : "All departments")</a>
+                @foreach (var c in Model.Categories)
+                {
+                    var active = Model.CategorySlug == c.Slug ? "sv-filter is-active" : "sv-filter";
+                    <a class="@active" href="@JobsUrl(c.Slug, Model.JobType)">
+                        <i class="@c.IconClass"></i> @Lang.Pick(c.NameAr, c.NameEn)
+                    </a>
+                }
+            </div>
+        }
+
+        @if (Model.Types.Count > 1)
+        {
+            <div class="sv-filters sv-filters--soft sv-reveal">
+                <a class="@(string.IsNullOrWhiteSpace(Model.JobType) ? "sv-filter is-active" : "sv-filter")"
+                   href="@JobsUrl(Model.CategorySlug, null)">@(Lang.IsAr ? "كل الأنواع" : "All types")</a>
+                @foreach (var t in Model.Types)
+                {
+                    var active = Model.JobType == t ? "sv-filter is-active" : "sv-filter";
+                    <a class="@active" href="@JobsUrl(Model.CategorySlug, t)">
+                        <i class="@JobLabels.Icon(t)"></i> @JobLabels.Type(t, Lang.IsAr)
+                    </a>
+                }
+            </div>
+        }
 
         @if (Model.Paged.Items.Count == 0)
         {
