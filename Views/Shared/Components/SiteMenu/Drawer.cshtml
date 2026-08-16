@@ -6,6 +6,12 @@
 
 @foreach (var item in Model.Items)
 {
+    @* A highlighted item (currently "Get a Quote") is already rendered as a
+       prominent button in the drawer's footer, so listing it here as well showed
+       the same call to action twice, a few rows apart. The desktop nav hides it
+       for exactly the same reason — see the .is-highlighted rule in layout.css. *@
+    if (item.IsHighlighted) { continue; }
+
     var target = item.OpenInNewTab ? "_blank" : null;
     var rel    = item.OpenInNewTab ? "noopener" : null;
 

@@ -56,7 +56,11 @@ namespace SVEI.Web.Data.Seed
             yield return S("site.founded_year", "general", "2023", "2023", "text", "سنة التأسيس", "Founded", false, 5);
             yield return S("site.logo_dark", "general", "/img/brand/logo-dark.svg", null, "image", "الشعار (خلفية فاتحة)", "Logo (light bg)", false, 6);
             yield return S("site.logo_light", "general", "/img/brand/logo-light.svg", null, "image", "الشعار (خلفية داكنة)", "Logo (dark bg)", false, 7);
-            yield return S("site.favicon", "general", "/img/brand/favicon.svg", null, "image", "الأيقونة المفضلة", "Favicon", false, 8);
+            // Arabic wordmark variants — used automatically on /ar pages. Leave empty
+            // to fall back to the Latin logo above.
+            yield return S("site.logo_dark_ar", "general", "/img/brand/logo-dark-ar.svg", null, "image", "الشعار العربي (خلفية فاتحة)", "Arabic logo (light bg)", false, 8);
+            yield return S("site.logo_light_ar", "general", "/img/brand/logo-light-ar.svg", null, "image", "الشعار العربي (خلفية داكنة)", "Arabic logo (dark bg)", false, 9);
+            yield return S("site.favicon", "general", "/img/brand/favicon.svg", null, "image", "الأيقونة المفضلة", "Favicon", false, 10);
 
             // ── contact ───────────────────────────────────────────────────────
             yield return S("contact.email", "contact", "info@svei.tech", "info@svei.tech", "email", "البريد الإلكتروني", "Email", false, 1);
@@ -103,6 +107,15 @@ namespace SVEI.Web.Data.Seed
             yield return S("feature.newsletter", "features", "1", null, "bool", "تفعيل النشرة البريدية", "Enable Newsletter", false, 6);
             yield return S("feature.quote", "features", "1", null, "bool", "تفعيل طلب عرض سعر", "Enable RFQ", false, 7);
 
+            // ── home page blocks ──────────────────────────────────────────────
+            // These only control the teaser block on the home page. The modules
+            // themselves stay on (see feature.* above), so /news, /events and
+            // /careers keep working and stay in the nav and sitemap regardless.
+            yield return S("home.show_news", "features", "0", null, "bool", "إظهار الأخبار في الرئيسية", "Show News on home", false, 10);
+            yield return S("home.show_events", "features", "0", null, "bool", "إظهار الفعاليات في الرئيسية", "Show Events on home", false, 11);
+            yield return S("home.show_careers", "features", "0", null, "bool", "إظهار الوظائف في الرئيسية", "Show Careers on home", false, 12);
+            yield return S("home.show_faq", "features", "0", null, "bool", "إظهار الأسئلة الشائعة في الرئيسية", "Show FAQ on home", false, 13);
+
             // ── footer ────────────────────────────────────────────────────────
             yield return S("footer.about", "footer",
                 "سيليكون فالي للصناعات الإلكترونية — شريكك الموثوق في التصنيع الإلكتروني المتكامل داخل مصر.",
@@ -148,6 +161,9 @@ namespace SVEI.Web.Data.Seed
             yield return T("nav.gallery", "معرض الصور", "Gallery", "nav");
             yield return T("nav.contact", "اتصل بنا", "Contact", "nav");
             yield return T("nav.quote", "اطلب عرض سعر", "Request a Quote", "nav");
+            // Header / drawer call-to-action. Kept separate from nav.quote so the
+            // breadcrumb and the in-page quote buttons keep their literal wording.
+            yield return T("cta.partnership", "هل تبحث عن شراكة؟", "Looking for a partnership?", "nav");
 
             // buttons
             yield return T("btn.read_more", "اقرأ المزيد", "Read more", "btn");

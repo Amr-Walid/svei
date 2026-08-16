@@ -7,7 +7,8 @@
 }
 
 <section class="sv-pagehero" style="--hero-img:url('@image')">
-    <div class="sv-pagehero__bg"><img src="@image" alt="" loading="eager" /></div>
+    @* Page-hero banner is the LCP element on every inner page. *@
+    <div class="sv-pagehero__bg"><img src="@image" alt="" sv-priority="true" sv-sizes="100vw" /></div>
     <div class="sv-container">
         @if (crumbs.Count > 0)
         {

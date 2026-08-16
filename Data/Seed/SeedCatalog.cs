@@ -33,7 +33,7 @@ namespace SVEI.Web.Data.Seed
                     DescEn = "A complete line for manufacturing and assembling mobile phones: SMT board population, screen and battery assembly, OS flashing, full functional testing, and final packaging in the client's brand identity.",
                     CapacityPerDay = 2000,
                     CapacityUnitAr = "هاتف / يوم", CapacityUnitEn = "handsets / day",
-                    ImagePath = "/img/sections/feature1.webp",
+                    ImagePath = "/img/lines/phones.webp",
                     Specs =
                     {
                         new ProductionLineSpec { LabelAr = "الطاقة اليومية", LabelEn = "Daily capacity", ValueAr = "2000 وحدة", ValueEn = "2,000 units", Icon = "fa-solid fa-gauge-high", SortOrder = 1 },
@@ -53,7 +53,7 @@ namespace SVEI.Web.Data.Seed
                     DescEn = "A dedicated line for power banks and portable charging devices: lithium cell assembly, protection-circuit soldering, real capacity testing, and charge/discharge cycling to verify safety and performance.",
                     CapacityPerDay = 1000,
                     CapacityUnitAr = "وحدة / يوم", CapacityUnitEn = "units / day",
-                    ImagePath = "/img/sections/feature2.webp",
+                    ImagePath = "/img/lines/power.webp",
                     Specs =
                     {
                         new ProductionLineSpec { LabelAr = "الطاقة اليومية", LabelEn = "Daily capacity", ValueAr = "1000 وحدة", ValueEn = "1,000 units", Icon = "fa-solid fa-gauge-high", SortOrder = 1 },
@@ -72,7 +72,7 @@ namespace SVEI.Web.Data.Seed
                     DescEn = "Specialised in smartwatches and fitness bands: precision sensor assembly, displays, Bluetooth modules, plus water and dust resistance testing and sensor calibration.",
                     CapacityPerDay = 1500,
                     CapacityUnitAr = "جهاز / يوم", CapacityUnitEn = "devices / day",
-                    ImagePath = "/img/sections/feature3.webp",
+                    ImagePath = "/img/lines/wearables.webp",
                     Specs =
                     {
                         new ProductionLineSpec { LabelAr = "الطاقة اليومية", LabelEn = "Daily capacity", ValueAr = "1500 جهاز", ValueEn = "1,500 devices", Icon = "fa-solid fa-gauge-high", SortOrder = 1 },
@@ -90,7 +90,7 @@ namespace SVEI.Web.Data.Seed
                     DescAr = "خط تصنيع سماعات الأذن اللاسلكية، السماعات السلكية ومكبرات الصوت المحمولة، مع غرفة اختبار صوتي معزولة لضمان جودة الصوت ومطابقة المواصفات.",
                     DescEn = "Manufacturing wireless earbuds, wired headsets and portable speakers, with an isolated acoustic test chamber to guarantee sound quality and specification compliance.",
                     CapacityUnitAr = "وحدة / يوم", CapacityUnitEn = "units / day",
-                    ImagePath = "/img/sections/feature1.webp",
+                    ImagePath = "/img/lines/audio.webp",
                     Specs =
                     {
                         new ProductionLineSpec { LabelAr = "المنتجات", LabelEn = "Products", ValueAr = "سماعات لاسلكية، سلكية، مكبرات صوت", ValueEn = "Wireless earbuds, wired headsets, speakers", Icon = "fa-solid fa-headphones", SortOrder = 1 },
@@ -111,7 +111,7 @@ namespace SVEI.Web.Data.Seed
             db.ServiceItems.AddRange(
                 new ServiceItem
                 {
-                    Slug = "oem-odm", SortOrder = 1, IsFeatured = true, Icon = "fa-solid fa-industry",
+                    Slug = "oem-odm", ImagePath = "/img/services/oem.webp", SortOrder = 1, IsFeatured = true, Icon = "fa-solid fa-industry",
                     AccentColor = "#E31B23",
                     TitleAr = "تصنيع OEM و ODM", TitleEn = "OEM & ODM Manufacturing",
                     ShortDescAr = "نصنع منتجك بمواصفاتك وهويتك التجارية، أو نطوّر لك التصميم من الصفر.",
@@ -127,7 +127,7 @@ namespace SVEI.Web.Data.Seed
                 },
                 new ServiceItem
                 {
-                    Slug = "smt-assembly", SortOrder = 2, IsFeatured = true, Icon = "fa-solid fa-microchip",
+                    Slug = "smt-assembly", ImagePath = "/img/services/smt.webp", SortOrder = 2, IsFeatured = true, Icon = "fa-solid fa-microchip",
                     AccentColor = "#22C6E8",
                     TitleAr = "التجميع السطحي SMT", TitleEn = "SMT Assembly",
                     ShortDescAr = "تركيب المكونات الإلكترونية على اللوحات بدقة عالية وسرعة إنتاجية.",
@@ -143,7 +143,7 @@ namespace SVEI.Web.Data.Seed
                 },
                 new ServiceItem
                 {
-                    Slug = "quality-control", SortOrder = 3, IsFeatured = true, Icon = "fa-solid fa-vial-circle-check",
+                    Slug = "quality-control", ImagePath = "/img/services/qc.webp", SortOrder = 3, IsFeatured = true, Icon = "fa-solid fa-vial-circle-check",
                     AccentColor = "#FDB714",
                     TitleAr = "مراقبة الجودة والاختبار", TitleEn = "Quality Control & Testing",
                     ShortDescAr = "نظام جودة متعدد المراحل من استلام المكونات حتى المنتج النهائي.",
@@ -159,7 +159,7 @@ namespace SVEI.Web.Data.Seed
                 },
                 new ServiceItem
                 {
-                    Slug = "packaging-logistics", SortOrder = 4, Icon = "fa-solid fa-boxes-packing",
+                    Slug = "packaging-logistics", ImagePath = "/img/services/packaging.webp", SortOrder = 4, Icon = "fa-solid fa-boxes-packing",
                     AccentColor = "#0E7C99",
                     TitleAr = "التغليف والخدمات اللوجستية", TitleEn = "Packaging & Logistics",
                     ShortDescAr = "تغليف احترافي بهويتك التجارية وشحن من ميناء السخنة.",
@@ -175,7 +175,7 @@ namespace SVEI.Web.Data.Seed
                 },
                 new ServiceItem
                 {
-                    Slug = "after-sales", SortOrder = 5, Icon = "fa-solid fa-screwdriver-wrench",
+                    Slug = "after-sales", ImagePath = "/img/services/support.webp", SortOrder = 5, Icon = "fa-solid fa-screwdriver-wrench",
                     AccentColor = "#5A5C5E",
                     TitleAr = "خدمات ما بعد البيع", TitleEn = "After-Sales Services",
                     ShortDescAr = "دعم فني وصيانة وقطع غيار على مدار الساعة.",
@@ -202,35 +202,35 @@ namespace SVEI.Web.Data.Seed
                 new Brand
                 {
                     Slug = "oraimo", NameAr = "أوريمو", NameEn = "Oraimo", SortOrder = 1,
-                    LogoPath = "/img/brands/1.jpg", BrandType = "client",
+                    LogoPath = "/img/brands/1.webp", BrandType = "client",
                     DescAr = "علامة عالمية في ملحقات الهواتف والأجهزة الذكية.",
                     DescEn = "A global brand in phone accessories and smart devices."
                 },
                 new Brand
                 {
                     Slug = "infinix", NameAr = "إنفينكس", NameEn = "Infinix", SortOrder = 2,
-                    LogoPath = "/img/brands/2.jpg", BrandType = "client",
+                    LogoPath = "/img/brands/2.webp", BrandType = "client",
                     DescAr = "علامة رائدة في الهواتف الذكية بالأسواق الناشئة.",
                     DescEn = "A leading smartphone brand across emerging markets."
                 },
                 new Brand
                 {
                     Slug = "itel", NameAr = "آيتل", NameEn = "Itel", SortOrder = 3,
-                    LogoPath = "/img/brands/3.jpg", BrandType = "client",
+                    LogoPath = "/img/brands/3.webp", BrandType = "client",
                     DescAr = "هواتف ذكية اقتصادية بجودة موثوقة.",
                     DescEn = "Affordable smartphones with dependable quality."
                 },
                 new Brand
                 {
                     Slug = "gtide", NameAr = "جي تايد", NameEn = "Gtide", SortOrder = 4,
-                    LogoPath = "/img/brands/4.jpg", BrandType = "client",
+                    LogoPath = "/img/brands/4.webp", BrandType = "client",
                     DescAr = "ملحقات إلكترونية وحلول طاقة محمولة.",
                     DescEn = "Electronic accessories and portable power solutions."
                 },
                 new Brand
                 {
                     Slug = "unitronics", NameAr = "يوني ترونيكس", NameEn = "UniTronics", SortOrder = 5,
-                    LogoPath = "/img/brands/5.jpg", BrandType = "partner",
+                    LogoPath = "/img/brands/5.webp", BrandType = "partner",
                     DescAr = "شريك في التوزيع والحلول التقنية.",
                     DescEn = "A distribution and technology solutions partner."
                 }
@@ -244,11 +244,11 @@ namespace SVEI.Web.Data.Seed
             if (await db.ProductCategories.AnyAsync()) return;
 
             db.ProductCategories.AddRange(
-                new ProductCategory { Slug = "smartphones", NameAr = "هواتف ذكية", NameEn = "Smartphones", Icon = "fa-solid fa-mobile-screen", SortOrder = 1 },
-                new ProductCategory { Slug = "power-banks", NameAr = "بنوك طاقة", NameEn = "Power Banks", Icon = "fa-solid fa-battery-full", SortOrder = 2 },
-                new ProductCategory { Slug = "smartwatches", NameAr = "ساعات ذكية", NameEn = "Smartwatches", Icon = "fa-solid fa-clock", SortOrder = 3 },
-                new ProductCategory { Slug = "audio", NameAr = "سماعات وصوتيات", NameEn = "Audio & Headphones", Icon = "fa-solid fa-headphones", SortOrder = 4 },
-                new ProductCategory { Slug = "accessories", NameAr = "إكسسوارات", NameEn = "Accessories", Icon = "fa-solid fa-plug", SortOrder = 5 }
+                new ProductCategory { Slug = "smartphones", ImagePath = "/img/products/smartphones.webp", NameAr = "هواتف ذكية", NameEn = "Smartphones", Icon = "fa-solid fa-mobile-screen", SortOrder = 1 },
+                new ProductCategory { Slug = "power-banks", ImagePath = "/img/products/powerbanks.webp", NameAr = "بنوك طاقة", NameEn = "Power Banks", Icon = "fa-solid fa-battery-full", SortOrder = 2 },
+                new ProductCategory { Slug = "smartwatches", ImagePath = "/img/products/smartwatches.webp", NameAr = "ساعات ذكية", NameEn = "Smartwatches", Icon = "fa-solid fa-clock", SortOrder = 3 },
+                new ProductCategory { Slug = "audio", ImagePath = "/img/products/audio.webp", NameAr = "سماعات وصوتيات", NameEn = "Audio & Headphones", Icon = "fa-solid fa-headphones", SortOrder = 4 },
+                new ProductCategory { Slug = "accessories", ImagePath = "/img/products/accessories.webp", NameAr = "إكسسوارات", NameEn = "Accessories", Icon = "fa-solid fa-plug", SortOrder = 5 }
             );
             await db.SaveChangesAsync();
         }

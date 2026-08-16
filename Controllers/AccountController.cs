@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SVEI.Web.Services;
 
 namespace SVEI.Web.Controllers
@@ -30,6 +31,7 @@ namespace SVEI.Web.Controllers
         }
 
         [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimiting.Login)]
         public async Task<IActionResult> Login(string email, string password, bool rememberMe = false,
                                                string? returnUrl = null)
         {
@@ -43,8 +45,15 @@ namespace SVEI.Web.Controllers
             }
 
             var user = await _users.FindByEmailAsync(email.Trim());
+
+            // A missing account used to return immediately, while a real account
+            // went on to a password hash verification. That timing difference is
+            // a username oracle: it tells an attacker which addresses exist so a
+            // password spray can be aimed only at those. Burn a comparable amount
+            // of work on the miss so both paths look the same from outside.
             if (user is null)
             {
+                await Task.Delay(Random.Shared.Next(180, 320));
                 ModelState.AddModelError("", "بيانات الدخول غير صحيحة.");
                 return View();
             }

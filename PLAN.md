@@ -266,6 +266,36 @@ Category · AuthorName · IsPublished · IsFeatured · ViewCount · PublishedAt 
 ### `JobCategory` / `JobPosting` / `JobApplication` — وظائف
 > نفس موديل Uni-Group بالظبط (مجرّب وشغال) + رفع CV
 
+### `NewsCategory` — تصنيفات الأخبار
+```
+Id · NameAr/En · Slug · IsActive · SortOrder
+```
+
+### `Event` — الفعاليات والمعارض ⭐
+> المصنع بيشارك في معارض (Cairo ICT) وبيعمل أيام مفتوحة وبرامج تدريب — الموديول ده بيغطّي الثلاثة.
+```
+Id · TitleAr/En · Slug · SummaryAr/En · DescAr/En(HTML) · CoverImagePath · VideoUrl
+EventType (exhibition | conference | training | ceremony | visit | launch | other)
+StartDate · EndDate
+LocationAr/En · MapUrl
+Capacity · AllowRegistration · RegistrationUrl
+IsPublished · IsFeatured · ViewCount · SortOrder
+CreatedAt · UpdatedAt · MetaTitle/MetaDesc
+```
+**حقل محسوب (`[NotMapped]`):**
+- `Status` → `upcoming` / `ongoing` / `past` — يُحسب من `StartDate` و`EndDate ?? StartDate` مقارنةً بتاريخ اليوم (UTC). لو مفيش `StartDate` تعتبر `past`.
+
+### `EventImage` — معرض صور الفعالية
+```
+Id · EventId · ImagePath · CaptionAr/En · SortOrder
+```
+
+### `EventRegistration` — تسجيل الحضور (يروح لصندوق الوارد)
+```
+Id · EventId · FullName · Email · Phone · Company · Notes
+IsConfirmed · IsRead · CreatedAt
+```
+
 ## المجموعة 5 — صندوق الوارد (كل ما يصل من الزوار)
 
 ### `ContactMessage`
@@ -333,7 +363,9 @@ Id · UserId · UserName · Action · EntityType · EntityId · Changes(JSON) ·
 | `/services` | خدمات التصنيع (OEM/ODM/EMS) | PageSection, InfoCard |
 | `/gallery` | معرض المصنع | GalleryAlbum |
 | `/gallery/{slug}` | ألبوم | GalleryImage (lightbox) |
-| `/news` · `/news/{slug}` | الأخبار | NewsPost |
+| `/news` · `/news/{slug}` | الأخبار | NewsPost + NewsCategory |
+| `/events` | الفعاليات (قادمة / جارية / سابقة) ⭐ | Event |
+| `/events/{slug}` | تفاصيل الفعالية + خريطة + صور + تسجيل | Event + EventImage + EventRegistration |
 | `/careers` · `/careers/{slug}` | الوظائف + التقديم | JobPosting |
 | `/contact` | تواصل + خريطة + فورم | SiteLocation, SiteSetting |
 | `/quote` | **اطلب عرض سعر** ⭐ | QuoteRequest |
@@ -341,6 +373,41 @@ Id · UserId · UserName · Action · EntityType · EntityId · Changes(JSON) ·
 | `/sitemap.xml` · `/robots.txt` | SEO | مولّد ديناميكياً |
 
 **اللغة:** `/ar/...` و `/en/...` — العربي هو الافتراضي (شركة مصرية) مع تبديل حقيقي شغّال (مش زي القديم).
+
+## 4.1 موديول الفعاليات (Events) ⭐
+
+> ليه موديول منفصل عن الأخبار؟ لأن الفعالية ليها **زمن** (بداية/نهاية) و**مكان** و**تسجيل حضور** — الخبر مالوش. خلطهم مع بعض بيخرّب الفلترة والترتيب.
+
+**صفحة `/events` — القائمة** (`EventsController.Index`)
+- فلتر بالحالة عبر `?status=` : `all` (افتراضي) · `upcoming` · `ongoing` · `past`
+- فلتر بالنوع عبر `?type=` — القيم المتاحة تتولّد ديناميكياً من الفعاليات المنشورة نفسها (مفيش قائمة ثابتة)
+- بحث عبر `?q=` في العنوان والملخّص بالعربي والإنجليزي
+- الترتيب: القادمة والجارية الأول (الأقرب تاريخاً)، بعدها السابقة (الأحدث الأول)
+- **شريط "أقرب الفعاليات"** (3 كروت) يظهر في أول صفحة فقط ولمّا مفيش أي فلتر أو بحث
+- Pagination بـ 9 عناصر في الصفحة + حالة فاضية (`_Empty`) لو مفيش نتائج
+- الموديول كله بيتقفل من الإعدادات بمفتاح `feature.events` (لو `false` الصفحة بترجّع 404)
+
+**صفحة `/events/{slug}` — التفاصيل** (`EventsController.Details`)
+- هيرو بصورة الغلاف + العنوان + ميتا (النوع · تاريخ البداية/النهاية · المكان)
+- المحتوى الكامل `DescAr/En` (HTML من محرر Quill)
+- معرض صور الفعالية (`EventImage` مرتّبة بـ `SortOrder`) بـ GLightbox
+- `MapUrl` للمكان و`VideoUrl` للفيديو لو متحطّين
+- **فورم التسجيل** يظهر لمّا `AllowRegistration == true`
+  - `RegisteredCount` = عدد التسجيلات الحالية
+  - `IsFull` = `Capacity` متحطّ و`RegisteredCount >= Capacity` → بتتعرض رسالة "اكتمل العدد" بدل الفورم
+  - لو `RegistrationUrl` متحطّ → زرار خارجي بدل الفورم الداخلي
+- `ViewCount` بيتزوّد بـ `ExecuteUpdateAsync` (تحديث مباشر من غير tracking)
+- 3 فعاليات مقترحة في آخر الصفحة
+
+**التكامل مع باقي الموقع**
+- الرئيسية: قسم الفعاليات القادمة — يختفي تلقائياً لو مفيش
+- `sitemap.xml`: كل فعالية منشورة بالنسختين AR/EN
+- نصوص القسم (العنوان/الوصف) من `PageSection` بمفتاح صفحة `events` — يعني قابلة للتعديل من الأدمن
+
+**في الأدمن** (3 مفاتيح في `AdminSchema`)
+- `events` — CRUD كامل بكل الحقول عربي + إنجليزي
+- `event-images` — صور الفعاليات مع سحب للترتيب
+- `event-registrations` — `CanCreate = false` (جدول وارد): بادچ بعدد الجديد في السايدبار + `IsRead` / `IsConfirmed` toggle + حذف
 
 ---
 
@@ -361,13 +428,14 @@ Id · UserId · UserName · Action · EntityType · EntityId · Changes(JSON) ·
 | 7 | **العلامات التجارية** | CRUD + لوجو فاتح/غامق + رابط |
 | 8 | **الشهادات** | CRUD + صورة + PDF + تواريخ (تنبيه قبل الانتهاء) |
 | 9 | **المعرض** | ألبومات + رفع متعدد + سحب للترتيب |
-| 10 | **الأخبار** | CRUD + محرر غني + جدولة نشر + SEO |
-| 11 | **الوظائف** | أقسام + وظائف + طلبات التقديم + تحميل CVs |
-| 12 | **صندوق الوارد** | رسائل + طلبات أسعار (مع pipeline: جديد→تم التواصل→عرض مُرسل→فوز/خسارة) + تصدير Excel |
-| 13 | **القوائم** | بناء قائمة النافبار والفوتر بالسحب والإفلات |
-| 14 | **مكتبة الوسائط** | كل الصور في مكان واحد + بحث + حذف الغير مستخدم |
-| 15 | **الإعدادات** | تبويبات: عام · تواصل · سوشيال · SEO · مظهر (ألوان!) · تكاملات |
-| 16 | **المستخدمون** | Admin / Editor + سجل التدقيق |
+| 10 | **الأخبار** | تصنيفات + CRUD + محرر غني + جدولة نشر + SEO |
+| 11 | **الفعاليات** ⭐ | CRUD + نوع الفعالية + تاريخ بداية/نهاية + مكان وخريطة + صور + فتح/قفل التسجيل + سعة |
+| 12 | **الوظائف** | أقسام + وظائف + طلبات التقديم + تحميل CVs |
+| 13 | **صندوق الوارد** | رسائل + طلبات أسعار (مع pipeline: جديد→تم التواصل→عرض مُرسل→فوز/خسارة) + **تسجيلات الفعاليات** + تصدير Excel |
+| 14 | **القوائم** | بناء قائمة النافبار والفوتر بالسحب والإفلات |
+| 15 | **مكتبة الوسائط** | كل الصور في مكان واحد + بحث + حذف الغير مستخدم |
+| 16 | **الإعدادات** | تبويبات: عام · تواصل · سوشيال · SEO · مظهر (ألوان!) · تكاملات |
+| 17 | **المستخدمون** | Admin / Editor + سجل التدقيق |
 
 ## 5.2 مميزات الأدمن
 - عربي RTL كامل (نفس نمط Uni-Group المجرّب) + Dark/Light
@@ -477,13 +545,13 @@ ImageMagick  7.1.1-43       git-lfs    3.6.1
 - [ ] خطوط الإنتاج + المنتجات + صفحة المنتج
 - [ ] العلامات + الخدمات
 - [ ] المعرض + Lightbox
-- [ ] الأخبار + الوظائف
+- [ ] الأخبار + الفعاليات + الوظائف
 - [ ] تواصل + خريطة Leaflet + **اطلب عرض سعر**
 - [ ] صفحات قانونية + 404 + sitemap.xml + robots.txt
 
 ## 🔹 المرحلة 4 — لوحة التحكم (أيام 12-18)
 - [ ] لايوت الأدمن + الدخول + الداشبورد
-- [ ] الـ 16 موديول (CRUD + سحب وإفلات + رفع)
+- [ ] الـ 17 موديول (CRUD + سحب وإفلات + رفع)
 - [ ] مكتبة الوسائط + المحرر الغني
 - [ ] Pipeline طلبات الأسعار + تصدير Excel
 - [ ] بناء القوائم + الإعدادات + سجل التدقيق
@@ -579,7 +647,8 @@ Inter + IBM Plex Sans Arabic     خطوط self-hosted
 | الصفحات | 2 | 16+ |
 | المحتوى | Hard-coded | 100% من DB |
 | اللغات | EN فقط (مبدّل وهمي) | AR + EN حقيقي |
-| لوحة تحكم | ❌ | ✅ 16 موديول |
+| لوحة تحكم | ❌ | ✅ 17 موديول |
+| أخبار / فعاليات / وظائف | ❌ | ✅ الثلاثة بالعربي والإنجليزي |
 | الرسائل | تضيع | تتخزن + إشعار إيميل |
 | طلبات الأسعار | ❌ | ✅ مع pipeline |
 | JS للزائر | ~800KB | ~105KB |
@@ -590,3 +659,4 @@ Inter + IBM Plex Sans Arabic     خطوط self-hosted
 ---
 
 *آخر تحديث: 2026-08-11 · تحليل مبني على قراءة كاملة لـ `svei.tech/index.html` (75KB) و `contact.html` + فحص كل الأصول*
+*تحديث لاحق: أُضيف الجزء 4.1 (موديول الفعاليات) بعد بنائه فعلياً — الخطة الأصلية كانت سابقة له.*

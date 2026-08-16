@@ -18,6 +18,13 @@ namespace SVEI.Web.Services
         string? Pick(string? ar, string? en);
         /// <summary>Prefix a site-relative path with the current culture segment.</summary>
         string Url(string path);
+        /// <summary>
+        /// Culture-prefix a link that came from the database (button and card URLs the
+        /// admin types in). Unlike <see cref="Url"/> this is defensive: it leaves
+        /// external, mail/tel, fragment and already-prefixed links untouched, so an
+        /// admin can paste anything into the field and get a sane result.
+        /// </summary>
+        string? LinkUrl(string? url);
         /// <summary>Same path in the other language (for the language switcher).</summary>
         string SwitchUrl(string currentPathAndQuery);
     }
@@ -49,6 +56,44 @@ namespace SVEI.Web.Services
             path = "/" + (path ?? "").TrimStart('/');
             if (path == "/") return $"/{Code}";
             return $"/{Code}{path}";
+        }
+
+        public string? LinkUrl(string? url)
+        {
+            var u = (url ?? "").Trim();
+            if (u.Length == 0) return null;
+
+            // Anything that is not a plain site-relative path is passed through as
+            // typed: absolute URLs (the online shop), protocol-relative links,
+            // mailto:/tel:, in-page anchors and query-only links.
+            if (u.StartsWith("#") || u.StartsWith("?") || u.StartsWith("//")) return u;
+            if (u.Contains("://")) return u;
+            if (u.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase)) return u;
+            if (u.StartsWith("tel:", StringComparison.OrdinalIgnoreCase)) return u;
+            if (u.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase)) return u;
+
+            // Tolerate an admin typing "contact" instead of "/contact".
+            if (!u.StartsWith("/")) u = "/" + u;
+
+            // Already carries a culture segment ("/en/contact" or just "/en")?
+            // Respect it — an admin may be linking deliberately across languages.
+            foreach (var c in Supported)
+            {
+                if (u.Equals($"/{c}", StringComparison.OrdinalIgnoreCase)) return u;
+                if (u.StartsWith($"/{c}/", StringComparison.OrdinalIgnoreCase)) return u;
+            }
+
+            // Static assets and framework endpoints are not localized.
+            if (u.StartsWith("/img/", StringComparison.OrdinalIgnoreCase) ||
+                u.StartsWith("/css/", StringComparison.OrdinalIgnoreCase) ||
+                u.StartsWith("/js/", StringComparison.OrdinalIgnoreCase) ||
+                u.StartsWith("/lib/", StringComparison.OrdinalIgnoreCase) ||
+                u.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase) ||
+                u.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase) ||
+                u.StartsWith("/Account", StringComparison.OrdinalIgnoreCase))
+                return u;
+
+            return Url(u);
         }
 
         public string SwitchUrl(string currentPathAndQuery)

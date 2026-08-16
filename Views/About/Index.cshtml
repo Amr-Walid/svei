@@ -54,7 +54,9 @@
 {
     <section class="sv-section sv-section--tight sv-section--ink">
         <div class="sv-container">
-            <div class="sv-grid sv-grid--4">
+            @* Column count derived from the data so no stat is stranded alone on a
+               second row — see GridLayout.Columns. *@
+            <div class="sv-stats" style="--sv-stat-cols:@GridLayout.Columns(Model.Stats.Count)">
                 @foreach (var stat in Model.Stats)
                 {
                     <div class="sv-stat sv-reveal">

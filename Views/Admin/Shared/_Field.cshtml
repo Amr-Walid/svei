@@ -1,0 +1,240 @@
+@model SVEI.Web.ViewModels.Admin.FieldVm
+@{
+    var f = Model.Field;
+    var entity = Model.Entity;
+    var isAr = Lang.IsAr;
+
+    var label = isAr ? f.LabelAr : f.LabelEn;
+    var value = AdminSchema.GetValue(entity, f.Name);
+    var str = value?.ToString() ?? "";
+    var id = "f_" + f.Name;
+
+    var err = ViewData.ModelState.TryGetValue(f.Name, out var st) && st.Errors.Count > 0
+        ? st.Errors[0].ErrorMessage : null;
+
+    // Arabic fields keep RTL; everything technical is forced LTR.
+    var isArabicField = f.Lang == "ar";
+    var isTechnical = f.Kind is FieldKind.Url or FieldKind.Email or FieldKind.Slug
+                      or FieldKind.Color or FieldKind.Number or FieldKind.Decimal
+                      or FieldKind.Icon;
+    string? inputDir = isArabicField ? "rtl" : (isTechnical || f.Lang == "en" ? "ltr" : null);
+
+    var hint = isAr ? f.HintAr : null;
+    var placeholder = f.Placeholder;
+}
+
+@if (f.Kind == FieldKind.Bool)
+{
+    <div class="ad-f">
+        <label class="ad-sw" for="@id">
+            <input type="hidden" name="@f.Name" value="0" />
+            <input type="checkbox" id="@id" name="@f.Name" value="1" checked="@(value is true)" />
+            <span class="ad-sw__track"></span>
+            <span class="ad-sw__lbl">@label</span>
+        </label>
+        @if (!string.IsNullOrWhiteSpace(hint))
+        {
+            <p class="ad-f__hint">@hint</p>
+        }
+    </div>
+}
+else
+{
+    <div class="ad-f">
+        <label for="@id">
+            @if (f.Lang == "ar")
+            {
+                <span class="ad-lang ad-lang--ar">ع</span>
+            }
+            else if (f.Lang == "en")
+            {
+                <span class="ad-lang ad-lang--en">EN</span>
+            }
+            <span>@label</span>
+            @if (f.Required)
+            {
+                <span class="req">*</span>
+            }
+        </label>
+
+        @switch (f.Kind)
+        {
+            case FieldKind.TextArea:
+                <textarea class="ad-ta" id="@id" name="@f.Name" dir="@inputDir" placeholder="@placeholder">@str</textarea>
+                break;
+
+            case FieldKind.Html:
+                {
+                    <input type="hidden" name="@f.Name" value="@str" />
+                    <div class="ad-rte">
+                        <div data-rte="@f.Name"></div>
+                    </div>
+                }
+                break;
+
+            case FieldKind.Select:
+                {
+                    <select class="ad-sel" id="@id" name="@f.Name" dir="@inputDir">
+                        @if (!f.Required)
+                        {
+                            <option value="">@(isAr ? "— اختر —" : "— select —")</option>
+                        }
+                        @foreach (var o in f.Options ?? Array.Empty<(string, string, string)>())
+                        {
+                            var optLabel = isAr ? o.Item2 : o.Item3;
+                            <option value="@o.Item1" selected="@(str == o.Item1)">@optLabel</option>
+                        }
+                    </select>
+                }
+                break;
+
+            case FieldKind.Lookup:
+                {
+                    var opts = Model.Lookups.TryGetValue(f.Name, out var list)
+                        ? list : new List<(int Id, string Label)>();
+                    <select class="ad-sel" id="@id" name="@f.Name">
+                        <option value="">@(isAr ? "— بدون —" : "— none —")</option>
+                        @foreach (var o in opts)
+                        {
+                            <option value="@o.Id" selected="@(str == o.Id.ToString())">@o.Label</option>
+                        }
+                    </select>
+                }
+                break;
+
+            case FieldKind.Image:
+            case FieldKind.File:
+                {
+                    var isImg = f.Kind == FieldKind.Image;
+                    var has = !string.IsNullOrWhiteSpace(str);
+                    var accept = isImg ? "image/*" : ".pdf,.doc,.docx,.xls,.xlsx,.zip,.txt";
+                    var fileName = has ? System.IO.Path.GetFileName(str) : (isAr ? "لم يتم اختيار ملف" : "No file selected");
+                    <div class="ad-up">
+                        <div class="ad-up__prev">
+                            @if (has && isImg)
+                            {
+                                <img src="@str" alt="" />
+                            }
+                            else if (has)
+                            {
+                                <i class="fa-solid fa-file-lines"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-solid @(isImg ? "fa-image" : "fa-file-arrow-up")"></i>
+                            }
+                        </div>
+                        <div class="ad-up__body">
+                            <input type="file" id="@id" name="@f.Name" accept="@accept" />
+                            <span class="ad-up__name">@fileName</span>
+                            @if (has)
+                            {
+                                <label class="ad-sw" style="gap:6px">
+                                    <input type="checkbox" name="__clear_@f.Name" value="1" data-clear-file />
+                                    <span class="ad-sw__track" style="width:32px;height:18px"></span>
+                                    <span class="ad-sw__lbl" style="font-size:11.5px">@(isAr ? "حذف الملف الحالي" : "Remove current file")</span>
+                                </label>
+                                <a href="@str" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--ad-cyan)">
+                                    <i class="fa-solid fa-up-right-from-square"></i>
+                                    @(isAr ? "فتح" : "Open")
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+                break;
+
+            case FieldKind.Slug:
+                {
+                    var from = f.SlugFrom ?? "TitleEn";
+                    <div style="display:flex;gap:6px">
+                        <input class="ad-in" type="text" id="@id" name="@f.Name" value="@str"
+                               dir="ltr" data-slug-from="@from" placeholder="auto-generated" />
+                        <button type="button" class="ad-btn ad-btn--sm" data-slug-gen title="@(isAr ? "توليد" : "Generate")">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </button>
+                    </div>
+                }
+                break;
+
+            case FieldKind.Icon:
+                {
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <span class="ad-up__prev" style="width:38px;height:38px;font-size:15px">
+                            <i class="@(string.IsNullOrWhiteSpace(str) ? "fa-regular fa-square" : str)"></i>
+                        </span>
+                        <input class="ad-in" type="text" id="@id" name="@f.Name" value="@str"
+                               dir="ltr" placeholder="fa-solid fa-star" list="fa-suggest" />
+                    </div>
+                }
+                break;
+
+            case FieldKind.Color:
+                {
+                    var colorVal = string.IsNullOrWhiteSpace(str) ? "#E31B23" : str;
+                    <div style="display:flex;gap:6px">
+                        <input class="ad-in" type="color" value="@colorVal" style="max-width:56px"
+                               data-color-sync="1" />
+                        <input class="ad-in" type="text" id="@id" name="@f.Name" value="@str" dir="ltr" placeholder="#E31B23" />
+                    </div>
+                }
+                break;
+
+            case FieldKind.Number:
+                <input class="ad-in" type="number" step="1" id="@id" name="@f.Name" value="@str" dir="ltr" />
+                break;
+
+            case FieldKind.Decimal:
+                <input class="ad-in" type="number" step="any" id="@id" name="@f.Name" value="@str" dir="ltr" />
+                break;
+
+            case FieldKind.Date:
+                {
+                    var dv = value is DateTime dd ? dd.ToString("yyyy-MM-dd") : "";
+                    <input class="ad-in" type="date" id="@id" name="@f.Name" value="@dv" dir="ltr" />
+                }
+                break;
+
+            case FieldKind.DateTime:
+                {
+                    var dtv = value is DateTime dt ? dt.ToString("yyyy-MM-ddTHH:mm") : "";
+                    <input class="ad-in" type="datetime-local" id="@id" name="@f.Name" value="@dtv" dir="ltr" />
+                }
+                break;
+
+            case FieldKind.Url:
+                <input class="ad-in" type="text" id="@id" name="@f.Name" value="@str" dir="ltr" placeholder="https://" />
+                break;
+
+            case FieldKind.Email:
+                <input class="ad-in" type="email" id="@id" name="@f.Name" value="@str" dir="ltr" />
+                break;
+
+            case FieldKind.ReadOnly:
+                {
+                    var ro = value is DateTime rd ? rd.ToString("yyyy-MM-dd HH:mm") : str;
+                    <input class="ad-in" type="text" value="@ro" dir="@inputDir" readonly
+                           style="background:var(--ad-hover);color:var(--ad-muted)" />
+                }
+                break;
+
+            case FieldKind.Hidden:
+                <input type="hidden" name="@f.Name" value="@str" />
+                break;
+
+            default:
+                <input class="ad-in" type="text" id="@id" name="@f.Name" value="@str"
+                       dir="@inputDir" placeholder="@placeholder" />
+                break;
+        }
+
+        @if (!string.IsNullOrWhiteSpace(hint))
+        {
+            <p class="ad-f__hint">@hint</p>
+        }
+        @if (err is not null)
+        {
+            <span class="ad-f__err"><i class="fa-solid fa-circle-exclamation"></i> @err</span>
+        }
+    </div>
+}

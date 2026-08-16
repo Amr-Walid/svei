@@ -97,6 +97,10 @@ namespace SVEI.Web.Services
         {
             _cache.Remove(SettingsCacheKey);
             _cache.Remove(TransCacheKey);
+            // The culture middleware caches the redirect table too; the admin
+            // edits it through the same generic screens, so it has to be dropped
+            // here or a new redirect would not take effect for five minutes.
+            _cache.Remove("svei:redirects");
         }
 
         public Task<Dictionary<string, SiteSetting>> AllAsync()

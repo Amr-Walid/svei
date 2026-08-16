@@ -15,7 +15,7 @@
 {
     <section class="sv-section sv-section--tight sv-section--ink">
         <div class="sv-container">
-            <div class="sv-grid sv-grid--4">
+            <div class="sv-stats" style="--sv-stat-cols:@GridLayout.Columns(Math.Min(Model.Stats.Count, 4), 4)">
                 @foreach (var stat in Model.Stats.Take(4))
                 {
                     <div class="sv-stat sv-reveal">
@@ -57,7 +57,10 @@
 
                 <div class="@reverse sv-mt-8" style="@accent">
                     <div class="sv-split__media sv-reveal">
-                        <img src="@(line.ImagePath ?? "/img/sections/feature1.webp")" alt="@name" loading="lazy" />
+                        @* This is a half-and-half split row, not a card in a grid:
+                           the media column is ~50% of the container, so it needs a
+                           much larger hint than the shared card sizes string. *@
+                        <img src="@(line.ImagePath ?? "/img/sections/feature1.webp")" alt="@name" loading="lazy" sv-sizes="(max-width: 700px) 92vw, (max-width: 1200px) 50vw, 600px" />
                         @if (line.CapacityPerDay.HasValue)
                         {
                             <div class="sv-split__badge">

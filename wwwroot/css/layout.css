@@ -9,12 +9,40 @@
   font-size: var(--sv-fs-xs);
   padding-block: .55rem;
 }
-.sv-topbar .sv-container { display: flex; align-items: center; justify-content: space-between; gap: var(--sv-4); flex-wrap: wrap; }
-.sv-topbar__info { display: flex; gap: var(--sv-5); flex-wrap: wrap; }
-.sv-topbar__info a, .sv-topbar__info span { display: inline-flex; align-items: center; gap: var(--sv-2); color: inherit; }
+/* nowrap + a flexible info block keeps the contact details pinned to the
+   start edge and the actions to the end edge. With flex-wrap the info block
+   could reflow and visually jump to the opposite side of the logo. */
+.sv-topbar .sv-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sv-4);
+  flex-wrap: nowrap;
+}
+.sv-topbar__info {
+  display: flex;
+  align-items: center;
+  gap: var(--sv-5);
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.sv-topbar__info a, .sv-topbar__info span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sv-2);
+  color: inherit;
+  white-space: nowrap;
+}
 .sv-topbar__info a:hover { color: var(--sv-cyan); }
-.sv-topbar__info i { color: var(--sv-red); }
-.sv-topbar__actions { display: flex; align-items: center; gap: var(--sv-4); }
+.sv-topbar__info i { color: var(--sv-red); flex: none; }
+/* A bidi isolate stops the LTR phone number from reordering its neighbours */
+.sv-topbar__info a[dir="ltr"] { unicode-bidi: isolate; }
+.sv-topbar__actions { display: flex; align-items: center; gap: var(--sv-4); flex: none; }
+
+/* Drop the least important item before letting anything overflow */
+@media (max-width: 1180px) { .sv-topbar__info .sv-topbar__hours { display: none; } }
 
 @media (max-width: 860px) { .sv-topbar { display: none; } }
 
@@ -39,14 +67,25 @@
   height: var(--sv-header-h);
 }
 
-.sv-logo { display: flex; align-items: center; gap: var(--sv-3); flex: none; }
-.sv-logo img { height: 42px; width: auto; }
+/* The logo is a 372x100 SVG. Constrain it by width as well as height so a
+   long wordmark can never grow into the nav, and let it shrink on narrow
+   viewports instead of overlapping. */
+.sv-logo { display: flex; align-items: center; gap: var(--sv-3); flex: 0 1 auto; min-width: 0; }
+.sv-logo img {
+  height: 42px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
+}
+[dir="rtl"] .sv-logo img { object-position: right center; }
+@media (max-width: 1180px) { .sv-logo img { height: 36px; } }
 .sv-logo__text { display: flex; flex-direction: column; line-height: 1.1; }
 .sv-logo__text strong { font-size: var(--sv-fs-lg); font-weight: var(--sv-fw-black); color: var(--sv-ink); letter-spacing: -.02em; }
 .sv-logo__text small { font-size: 10px; color: var(--sv-text-muted); letter-spacing: .04em; }
 
 /* ── Nav ──────────────────────────────────────────────────────────────────── */
-.sv-nav { display: flex; align-items: center; gap: var(--sv-1); }
+.sv-nav { display: flex; align-items: center; gap: var(--sv-1); flex: 0 1 auto; min-width: 0; }
 .sv-nav__link {
   position: relative;
   display: block;
@@ -112,20 +151,35 @@
 
 .sv-header__actions { display: flex; align-items: center; gap: var(--sv-3); flex: none; }
 
-/* Language switch */
+/* Language switch — inherits its surroundings, so it stays legible on both
+   the dark top bar and the light header. Never hard-code a text colour here:
+   --sv-text is near-black and became invisible on the dark top bar. */
 .sv-lang {
   display: inline-flex;
   align-items: center;
   gap: var(--sv-1);
   padding: .45rem .8rem;
-  border: 1.5px solid var(--sv-line);
+  border: 1.5px solid currentColor;
   border-radius: var(--sv-r-sm);
   font-size: var(--sv-fs-xs);
   font-weight: var(--sv-fw-bold);
-  color: var(--sv-text);
+  color: inherit;
   transition: all var(--sv-t-fast) var(--sv-ease);
 }
-.sv-lang:hover { border-color: var(--sv-red); color: var(--sv-red); }
+.sv-lang i { font-size: .9em; }
+
+/* Compact header switcher: redundant while the top bar is on screen, so it is
+   hidden by default and revealed only at the burger breakpoint (mobile.css §7),
+   where the top bar — and with it the site's only language toggle — is gone. */
+.sv-lang--compact { display: none; }
+
+/* On the dark top bar: readable white, cyan on hover */
+.sv-topbar .sv-lang { color: #fff; border-color: rgba(255, 255, 255, .35); }
+.sv-topbar .sv-lang:hover { color: var(--sv-cyan); border-color: var(--sv-cyan); background: rgba(255, 255, 255, .06); }
+
+/* Anywhere on a light surface (header / drawer): dark text, red on hover */
+.sv-header .sv-lang, .sv-drawer .sv-lang { color: var(--sv-text); border-color: var(--sv-line); }
+.sv-header .sv-lang:hover, .sv-drawer .sv-lang:hover { border-color: var(--sv-red); color: var(--sv-red); }
 
 /* Burger */
 .sv-burger {
@@ -138,6 +192,22 @@
   cursor: pointer;
   color: var(--sv-ink);
   font-size: var(--sv-fs-lg);
+}
+
+/* The header menu already ends with a highlighted "Get a Quote" item while the
+   actions area renders its own quote button. Rendering both overflowed the row
+   so the button painted over the link. Hide the duplicate in the desktop nav
+   only — the drawer still shows it, since the button is hidden there.
+   The plain rule is the fallback for engines without :has(). */
+.sv-nav .sv-nav__link.is-highlighted { display: none; }
+@supports selector(:has(*)) {
+  .sv-nav .sv-nav__item:has(> .sv-nav__link.is-highlighted) { display: none; }
+}
+
+/* Tighten the nav before resorting to the burger */
+@media (max-width: 1240px) {
+  .sv-nav__link { padding-inline: .6rem; font-size: .82rem; }
+  .sv-header__inner { gap: var(--sv-3); }
 }
 
 @media (max-width: 1080px) {
@@ -207,6 +277,19 @@
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 .sv-hero { position: relative; background: var(--sv-ink); overflow: hidden; }
+
+/* Reserve the hero's height up front. Before Swiper initialises the wrapper
+   has no height, so the section collapsed and then snapped open — that was
+   the "image appears for a second then disappears" flicker. */
+.sv-hero .swiper,
+.sv-hero .swiper-wrapper { min-height: clamp(520px, 78vh, 760px); }
+
+/* Until Swiper takes over, show only the first slide stacked in flow. This
+   avoids all slides painting on top of each other on first render. */
+.sv-hero .swiper:not(.swiper-initialized) { display: block; }
+.sv-hero .swiper:not(.swiper-initialized) .swiper-wrapper { display: block; }
+.sv-hero .swiper:not(.swiper-initialized) .swiper-slide:not(:first-child) { display: none; }
+
 .sv-hero__slide {
   position: relative;
   min-height: clamp(520px, 78vh, 760px);
@@ -214,8 +297,10 @@
   align-items: center;
   isolation: isolate;
 }
-.sv-hero__bg { position: absolute; inset: 0; z-index: -2; }
-.sv-hero__bg img { width: 100%; height: 100%; object-fit: cover; }
+/* z-index 0 (not -2): a negative index escaped the slide's isolation context
+   in some browsers and let the image paint over the text. */
+.sv-hero__bg { position: absolute; inset: 0; z-index: 0; }
+.sv-hero__bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sv-hero__bg::after {
   content: "";
   position: absolute; inset: 0;
@@ -225,13 +310,16 @@
     rgba(10,13,20,.88) 100%);
 }
 .sv-hero__pattern {
-  position: absolute; inset: 0; z-index: -1;
+  position: absolute; inset: 0; z-index: 1;
   background-image: url("/img/patterns/circuit.svg");
   background-size: 620px;
   opacity: .09;
   mix-blend-mode: screen;
+  pointer-events: none;
 }
 
+/* Text sits above both the image and the pattern */
+.sv-hero__slide > .sv-container { position: relative; z-index: 2; }
 .sv-hero__content { max-width: 800px; color: #fff; padding-block: var(--sv-8); }
 .sv-hero__slide[data-align="center"] .sv-hero__content { margin-inline: auto; text-align: center; }
 .sv-hero__slide[data-align="center"] .sv-hero__eyebrow { justify-content: center; }
@@ -261,6 +349,9 @@ html[lang="ar"] .sv-hero__eyebrow { letter-spacing: .02em; text-transform: none;
   margin-bottom: var(--sv-4);
   text-wrap: balance;
 }
+/* Arabic glyphs carry taller ascenders/descenders than Latin, so 1.08 makes
+   consecutive lines collide. Loosen leading for RTL only. */
+[dir="rtl"] .sv-hero__title { line-height: 1.32; }
 .sv-hero__title em { font-style: normal; color: var(--sv-cyan); }
 .sv-hero__sub {
   font-size: clamp(1rem, 1.8vw, var(--sv-fs-lg));
@@ -294,17 +385,73 @@ html[lang="ar"] .sv-hero__eyebrow { letter-spacing: .02em; text-transform: none;
 @keyframes sv-bob { 0%,100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 8px); } }
 
 /* ── Brand strip ──────────────────────────────────────────────────────────── */
-.sv-brands { padding-block: var(--sv-7); border-block: 1px solid var(--sv-line); background: var(--sv-bg-tint); }
-.sv-brands__track { display: flex; align-items: center; gap: var(--sv-8); flex-wrap: wrap; justify-content: center; }
-.sv-brands__item {
-  height: 46px;
-  display: grid; place-items: center;
-  filter: grayscale(1);
-  opacity: .55;
-  transition: all var(--sv-t) var(--sv-ease);
+.sv-brands {
+  padding-block: var(--sv-7);
+  border-block: 1px solid var(--sv-line);
+  background: var(--sv-bg-tint);
 }
-.sv-brands__item:hover { filter: none; opacity: 1; transform: scale(1.05); }
-.sv-brands__item img { max-height: 100%; width: auto; object-fit: contain; }
+/* Swiper owns the wrapper's layout. Do NOT set flex-wrap or justify-content
+   here: wrapping fought Swiper's transform and stacked the last logo on a
+   second row, on top of the others. Only alignment is safe to add. */
+.sv-brands__track { align-items: center; }
+.sv-brands .swiper { overflow: hidden; }
+
+.sv-brands__item {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--sv-4);
+  box-sizing: border-box;
+  filter: grayscale(1);
+  opacity: .6;
+  transition: filter var(--sv-t) var(--sv-ease), opacity var(--sv-t) var(--sv-ease);
+}
+.sv-brands__item:hover { filter: none; opacity: 1; }
+.sv-brands__item a { display: flex; align-items: center; justify-content: center; height: 100%; width: 100%; }
+/* The logo assets are tightly trimmed, so the height cap is the real rendered
+   size of the mark — keep it generous enough to stay legible. */
+.sv-brands__item img {
+  max-height: 52px;
+  max-width: 190px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+@media (max-width: 720px) {
+  .sv-brands__item { height: 52px; padding-inline: var(--sv-2); }
+  .sv-brands__item img { max-height: 40px; max-width: 130px; }
+}
+
+/* Static fallback used when there are too few logos to justify a marquee.
+   Swiper's own stylesheet sets `.swiper-slide { width: 100% }`, which made
+   every logo take a full row and stack vertically — so the width has to be
+   overridden explicitly here, not just the wrapper's flex settings.
+   A grid (rather than wrapping flex) is used so the logos share the row evenly
+   and a wide one can't push the last logo onto its own line. */
+.sv-brands--static .swiper { overflow: visible; }
+.sv-brands--static .sv-brands__track {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  align-items: center;
+  justify-items: center;
+  gap: var(--sv-4) var(--sv-5);
+  transform: none !important;
+}
+.sv-brands--static .sv-brands__item {
+  width: 100%;
+  min-width: 0;
+  padding-inline: var(--sv-2);
+}
+/* Cap each cell's logo to its share of the row so nothing overflows. */
+.sv-brands--static .sv-brands__item img { max-width: 100%; }
+
+@media (max-width: 900px) {
+  .sv-brands--static .sv-brands__track { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .sv-brands--static .sv-brands__track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 /* ── Split media block ────────────────────────────────────────────────────── */
 .sv-split { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4.5rem); align-items: center; }
@@ -446,14 +593,20 @@ html[lang="ar"] .sv-hero__eyebrow { letter-spacing: .02em; text-transform: none;
   height: 3px;
   background: var(--sv-grad-mix);
 }
+/* `1fr` is really `minmax(auto, 1fr)`, so a track can never shrink below the
+   min-content width of what it holds. The newsletter row (input + button) has a
+   387px min-content, which blew the last track out to 387px inside a 358px
+   container — and because .sv-footer sets `overflow: hidden`, the excess was
+   silently CLIPPED rather than scrolled: the subscribe button was sliced in half
+   at the inline-start edge. `minmax(0, …)` lets the tracks shrink to fit. */
 .sv-footer__grid {
   display: grid;
-  grid-template-columns: 1.6fr repeat(3, 1fr);
+  grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
   gap: var(--sv-7);
   padding-bottom: var(--sv-8);
 }
-@media (max-width: 980px) { .sv-footer__grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 560px) { .sv-footer__grid { grid-template-columns: 1fr; } }
+@media (max-width: 980px) { .sv-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sv-6); } }
+@media (max-width: 560px) { .sv-footer__grid { grid-template-columns: minmax(0, 1fr); gap: var(--sv-6); } }
 
 .sv-footer h4 {
   color: #fff;
@@ -472,26 +625,44 @@ html[lang="ar"] .sv-hero__eyebrow { letter-spacing: .02em; text-transform: none;
 .sv-footer a { color: rgba(255,255,255,.68); font-size: var(--sv-fs-sm); }
 .sv-footer a:hover { color: var(--sv-cyan); }
 .sv-footer li { margin-bottom: var(--sv-2); }
-.sv-footer__brand img { height: 46px; margin-bottom: var(--sv-4); }
+.sv-footer__brand img { height: 46px; width: auto; max-width: 100%; object-fit: contain; margin-bottom: var(--sv-4); }
 .sv-footer__about { font-size: var(--sv-fs-sm); margin-bottom: var(--sv-4); max-width: 340px; }
 
 .sv-footer__contact li { display: flex; gap: var(--sv-3); align-items: flex-start; font-size: var(--sv-fs-sm); }
 .sv-footer__contact i { color: var(--sv-red); margin-top: 5px; flex: none; }
 
+/* Social icons appear in two very different contexts: the dark footer and the
+   light .sv-sidecard on Contact. The styling below is neutral (inherits the
+   surrounding text colour and tints with currentColor) so it reads correctly on
+   both — previously it was hard-coded white on translucent white, which made the
+   Contact page's "Follow us" card look completely empty. */
 .sv-social { display: flex; gap: var(--sv-2); flex-wrap: wrap; }
 .sv-social a {
   width: 38px; height: 38px;
   display: grid; place-items: center;
-  background: rgba(255,255,255,.07);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
   border-radius: var(--sv-r-sm);
-  color: #fff;
+  color: inherit;
   transition: all var(--sv-t-fast) var(--sv-ease);
 }
-.sv-social a:hover { background: var(--sv-red); color: #fff; transform: translateY(-2px); }
+.sv-social a:hover {
+  background: var(--sv-red);
+  border-color: var(--sv-red);
+  color: #fff;
+  transform: translateY(-2px);
+}
+/* The footer sits on ink, so pin its icons to white rather than inheriting. */
+.sv-footer .sv-social a { color: #fff; }
 
-.sv-newsletter { display: flex; gap: var(--sv-2); margin-top: var(--sv-3); }
+.sv-newsletter { display: flex; gap: var(--sv-2); margin-top: var(--sv-3); flex-wrap: wrap; }
 .sv-newsletter input {
-  flex: 1;
+  /* A flex item defaults to `min-width: auto`, i.e. it refuses to shrink below
+     its intrinsic width — that is what pushed this row's min-content to 387px.
+     `min-width: 0` plus an explicit basis lets the field shrink, and wrapping
+     drops the button onto its own line on genuinely tiny screens. */
+  flex: 1 1 9rem;
+  min-width: 0;
   padding: .7rem 1rem;
   background: rgba(255,255,255,.07);
   border: 1px solid rgba(255,255,255,.14);

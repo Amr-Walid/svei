@@ -17,7 +17,39 @@ namespace SVEI.Web.Services
     public class MediaService : IMediaService
     {
         private static readonly string[] ImageExts = { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp" };
-        private static readonly string[] BlockedExts = { ".exe", ".dll", ".bat", ".cmd", ".sh", ".ps1", ".js", ".php", ".aspx", ".cshtml" };
+
+        /// <summary>
+        /// Extensions a non-image upload (CV, datasheet, certificate) may use.
+        ///
+        /// This is deliberately an ALLOWLIST. The previous blocklist could only
+        /// reject the extensions someone thought to enumerate, so an anonymous
+        /// visitor could attach "cv.html" or "cv.svg" to a job application and
+        /// have it stored under wwwroot and served from the site's own origin as
+        /// text/html — a stored XSS that runs with the admin's session when the
+        /// admin opens the CV from the inbox. SVG is excluded for the same
+        /// reason: it is an active document that can carry &lt;script&gt;.
+        /// </summary>
+        private static readonly string[] AllowedFileExts =
+        {
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+            ".txt", ".csv", ".rtf", ".odt", ".zip"
+        };
+
+        /// <summary>Content types that must never be echoed back by the static file handler.</summary>
+        private static readonly string[] AllowedFileContentTypes =
+        {
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/vnd.oasis.opendocument.text",
+            "application/rtf", "application/zip", "application/x-zip-compressed",
+            "application/octet-stream",
+            "text/plain", "text/csv", "text/rtf"
+        };
 
         private readonly IWebHostEnvironment _env;
         private readonly AppDbContext _db;
@@ -34,12 +66,14 @@ namespace SVEI.Web.Services
             if (file is null || file.Length == 0) return null;
 
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (BlockedExts.Contains(ext)) return null;
 
-            // SVG passes through untouched (ImageSharp can't rasterize it).
-            if (ext == ".svg") return await SaveFileAsync(file, folder);
+            // Anything that is not a raster image we recognise is handed to the
+            // document path, which applies its own allowlist. SVG deliberately
+            // goes there too (and is rejected): it is a scriptable document, not
+            // a safe image, and it used to be passed through untouched.
             if (!ImageExts.Contains(ext)) return await SaveFileAsync(file, folder);
 
+            folder = SafeFolder(folder);
             var dir = EnsureDir(folder);
             var name = $"{Guid.NewGuid():N}.webp";
             var full = Path.Combine(dir, name);
@@ -83,8 +117,15 @@ namespace SVEI.Web.Services
             if (file is null || file.Length == 0) return null;
 
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (BlockedExts.Contains(ext)) return null;
+            if (!AllowedFileExts.Contains(ext)) return null;
 
+            // Cross-check the declared content type. The extension is what the
+            // static file handler uses to pick a Content-Type, so the two must
+            // agree before we persist anything under wwwroot.
+            var ctype = (file.ContentType ?? "").Split(';')[0].Trim().ToLowerInvariant();
+            if (ctype.Length > 0 && !AllowedFileContentTypes.Contains(ctype)) return null;
+
+            folder = SafeFolder(folder);
             var dir = EnsureDir(folder);
             var name = $"{Guid.NewGuid():N}{ext}";
             var webPath = $"/uploads/{folder}/{name}";
@@ -113,12 +154,40 @@ namespace SVEI.Web.Services
         }
 
         // ── helpers ───────────────────────────────────────────────────────────
+        /// <summary>
+        /// The folder comes from a form field on the admin media screen, so it is
+        /// caller-controlled. Reduce it to a single safe segment and then verify
+        /// the resolved path really is inside wwwroot/uploads before creating it,
+        /// so no combination of "..", absolute paths or separators can escape.
+        /// </summary>
         private string EnsureDir(string folder)
         {
             var root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var dir = Path.Combine(root, "uploads", folder);
+            var uploads = Path.GetFullPath(Path.Combine(root, "uploads"));
+
+            var safe = new string((folder ?? "").Trim()
+                .Where(c => char.IsLetterOrDigit(c) || c is '-' or '_')
+                .ToArray());
+            if (safe.Length == 0) safe = "library";
+            if (safe.Length > 40) safe = safe[..40];
+
+            var dir = Path.GetFullPath(Path.Combine(uploads, safe));
+            if (!dir.StartsWith(uploads + Path.DirectorySeparatorChar, StringComparison.Ordinal) &&
+                !string.Equals(dir, uploads, StringComparison.Ordinal))
+                dir = uploads;
+
             Directory.CreateDirectory(dir);
             return dir;
+        }
+
+        /// <summary>Folder name as it will appear in the public URL (matches EnsureDir).</summary>
+        private static string SafeFolder(string folder)
+        {
+            var safe = new string((folder ?? "").Trim()
+                .Where(c => char.IsLetterOrDigit(c) || c is '-' or '_')
+                .ToArray());
+            if (safe.Length == 0) safe = "library";
+            return safe.Length > 40 ? safe[..40] : safe;
         }
 
         private void TryDelete(string webPath)

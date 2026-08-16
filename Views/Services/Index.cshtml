@@ -22,7 +22,7 @@ else
 {
     <section class="sv-section">
         <div class="sv-container">
-            <div class="sv-grid sv-grid--2">
+            <div class="sv-grid sv-grid--3">
                 @{ var i = 0; }
                 @foreach (var svc in Model.Services)
                 {
@@ -35,7 +35,7 @@ else
                     <article class="sv-svc sv-reveal" style="@accent">
                         <a class="sv-svc__media" href="@url">
                             <img src="@(svc.ImagePath ?? "/img/sections/feature" + ((i % 3) + 1) + ".webp")"
-                                 alt="@title" loading="lazy" />
+                                 alt="@title" loading="lazy" sv-sizes="(max-width: 700px) 92vw, (max-width: 1100px) 46vw, 380px" />
                             @if (!string.IsNullOrWhiteSpace(svc.Icon))
                             {
                                 <span class="sv-svc__icon"><i class="@svc.Icon"></i></span>

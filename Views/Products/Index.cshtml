@@ -62,33 +62,21 @@
             </form>
         </div>
 
-        @if (Model.Lines.Count > 0 || Model.Brands.Count > 0)
+@* Brands only. The production-line chips duplicated the dedicated
+   /production-lines page and made this row read as two merged filters. *@
+        @if (Model.Brands.Count > 0)
         {
             <div class="sv-filters sv-filters--soft sv-reveal">
-                @if (Model.Lines.Count > 0)
+                <a class="@(string.IsNullOrWhiteSpace(Model.BrandSlug) ? "sv-filter is-active" : "sv-filter")"
+                   href="@FilterUrl(Model.CategorySlug, null, Model.LineSlug)">
+                    <i class="fa-solid fa-tags"></i> @(Lang.IsAr ? "كل البراندات" : "All brands")
+                </a>
+                @foreach (var b in Model.Brands)
                 {
-                    <a class="@(string.IsNullOrWhiteSpace(Model.LineSlug) ? "sv-filter is-active" : "sv-filter")"
-                       href="@FilterUrl(Model.CategorySlug, Model.BrandSlug, null)">
-                        <i class="fa-solid fa-industry"></i> @(Lang.IsAr ? "كل الخطوط" : "All lines")
+                    var active = Model.BrandSlug == b.Slug ? "sv-filter is-active" : "sv-filter";
+                    <a class="@active" href="@FilterUrl(Model.CategorySlug, b.Slug, Model.LineSlug)">
+                        @Lang.Pick(b.NameAr, b.NameEn)
                     </a>
-                    foreach (var l in Model.Lines)
-                    {
-                        var active = Model.LineSlug == l.Slug ? "sv-filter is-active" : "sv-filter";
-                        <a class="@active" href="@FilterUrl(Model.CategorySlug, Model.BrandSlug, l.Slug)">
-                            @Lang.Pick(l.NameAr, l.NameEn)
-                        </a>
-                    }
-                }
-                @if (Model.Brands.Count > 0)
-                {
-                    foreach (var b in Model.Brands)
-                    {
-                        var active = Model.BrandSlug == b.Slug ? "sv-filter is-active" : "sv-filter";
-                        var target = Model.BrandSlug == b.Slug ? null : b.Slug;
-                        <a class="@active" href="@FilterUrl(Model.CategorySlug, target, Model.LineSlug)">
-                            @Lang.Pick(b.NameAr, b.NameEn)
-                        </a>
-                    }
                 }
             </div>
         }

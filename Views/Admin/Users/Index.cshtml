@@ -1,0 +1,145 @@
+@model List<AdminUserVm>
+@{
+    var isAr = Lang.IsAr;
+    ViewData["Title"] = isAr ? "المستخدمون" : "Users";
+    ViewData["PageIcon"] = "fa-solid fa-user-shield";
+    ViewData["ActiveKey"] = "users";
+
+    var allRoles = ViewData["AllRoles"] as List<string> ?? new List<string> { "Admin", "Editor" };
+    var me = User.Identity?.Name ?? "";
+    var confirmDelete = isAr ? "حذف هذا المستخدم؟" : "Delete this user?";
+}
+
+<div class="ad-page">
+    <div>
+        <h1><i class="fa-solid fa-user-shield" style="color:var(--ad-red);margin-inline-end:6px"></i> @(isAr ? "المستخدمون" : "Users")</h1>
+        <p>@Model.Count @(isAr ? "مستخدم" : "users")</p>
+    </div>
+</div>
+
+<div class="ad-card">
+    <div class="ad-card__hd">
+        <h2><i class="fa-solid fa-user-plus"></i> @(isAr ? "إضافة مستخدم" : "Add a user")</h2>
+    </div>
+    <div class="ad-card__bd">
+        <form method="post" action="/Admin/Users/create">
+            @Html.AntiForgeryToken()
+            <div class="ad-grid">
+                <div class="c4">
+                    <div class="ad-f">
+                        <label>@(isAr ? "البريد الإلكتروني" : "Email") <span class="req">*</span></label>
+                        <input class="ad-in" type="email" name="email" dir="ltr" required />
+                    </div>
+                </div>
+                <div class="c4">
+                    <div class="ad-f">
+                        <label>@(isAr ? "كلمة المرور" : "Password") <span class="req">*</span></label>
+                        <input class="ad-in" type="text" name="password" dir="ltr" required
+                               placeholder="@(isAr ? "8 أحرف على الأقل" : "min 8 characters")" />
+                    </div>
+                </div>
+                <div class="c2">
+                    <div class="ad-f">
+                        <label>@(isAr ? "الصلاحية" : "Role")</label>
+                        <select class="ad-sel" name="role">
+                            @foreach (var r in allRoles)
+                            {
+                                <option value="@r">@r</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="c2" style="display:flex;align-items:flex-end">
+                    <button type="submit" class="ad-btn ad-btn--pri" style="width:100%">
+                        <i class="fa-solid fa-plus"></i> @(isAr ? "إضافة" : "Add")
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ad-card">
+    <div class="ad-card__hd">
+        <h2><i class="fa-solid fa-users"></i> @(isAr ? "قائمة المستخدمين" : "All users")</h2>
+    </div>
+    <div class="ad-tw">
+        <table class="ad-tbl">
+            <thead>
+            <tr>
+                <th>@(isAr ? "البريد" : "Email")</th>
+                <th style="width:150px">@(isAr ? "الصلاحية" : "Role")</th>
+                <th style="width:110px">@(isAr ? "الحالة" : "Status")</th>
+                <th style="width:260px">@(isAr ? "كلمة مرور جديدة" : "New password")</th>
+                <th style="width:80px"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var u in Model)
+            {
+                var isMe = string.Equals(u.Email, me, StringComparison.OrdinalIgnoreCase);
+                var role = u.Roles.FirstOrDefault() ?? "";
+                var roleUrl = "/Admin/Users/role/" + u.Id;
+                var pwUrl = "/Admin/Users/password/" + u.Id;
+                var delUrl = "/Admin/Users/delete/" + u.Id;
+
+                <tr>
+                    <td>
+                        <b dir="ltr">@u.Email</b>
+                        @if (isMe)
+                        {
+                            <span class="ad-pill ad-pill--cyan">@(isAr ? "أنت" : "you")</span>
+                        }
+                    </td>
+                    <td>
+                        <form method="post" action="@roleUrl" style="display:flex;gap:5px">
+                            @Html.AntiForgeryToken()
+                            <select class="ad-sel" name="role" style="padding:5px 10px;font-size:12px">
+                                @foreach (var r in allRoles)
+                                {
+                                    <option value="@r" selected="@(role == r)">@r</option>
+                                }
+                            </select>
+                            <button type="submit" class="ad-btn ad-btn--sm ad-btn--ico" title="@(isAr ? "حفظ" : "Save")">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        @if (u.LockedOut)
+                        {
+                            <span class="ad-pill ad-pill--red"><i class="fa-solid fa-lock"></i> @(isAr ? "موقوف" : "Locked")</span>
+                        }
+                        else
+                        {
+                            <span class="ad-pill ad-pill--ok"><i class="fa-solid fa-circle-check"></i> @(isAr ? "نشط" : "Active")</span>
+                        }
+                    </td>
+                    <td>
+                        <form method="post" action="@pwUrl" style="display:flex;gap:5px">
+                            @Html.AntiForgeryToken()
+                            <input class="ad-in" type="text" name="password" dir="ltr"
+                                   style="padding:5px 10px;font-size:12px"
+                                   placeholder="@(isAr ? "كلمة مرور جديدة" : "new password")" required />
+                            <button type="submit" class="ad-btn ad-btn--sm ad-btn--ico" title="@(isAr ? "تغيير" : "Change")">
+                                <i class="fa-solid fa-key"></i>
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        @if (!isMe)
+                        {
+                            <form method="post" action="@delUrl" data-confirm="@confirmDelete">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="ad-btn ad-btn--sm ad-btn--ico ad-btn--danger">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

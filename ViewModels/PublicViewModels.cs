@@ -150,6 +150,8 @@ namespace SVEI.Web.ViewModels
     {
         public PagedVm<JobPosting> Paged { get; set; } = new();
         public List<JobCategory> Categories { get; set; } = new();
+        /// <summary>Contract types that at least one open posting actually uses.</summary>
+        public List<string> Types { get; set; } = new();
         public List<InfoCard> WhyUs { get; set; } = new();
         public string? CategorySlug { get; set; }
         public string? JobType { get; set; }

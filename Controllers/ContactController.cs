@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using SVEI.Web.Data;
 using SVEI.Web.Models;
@@ -32,6 +33,7 @@ namespace SVEI.Web.Controllers
         }
 
         [HttpPost, ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimiting.Forms)]
         public async Task<IActionResult> Send(ContactForm form)
         {
             if (IsSpam(form.Website)) return RedirectLocalized("/contact");

@@ -1,0 +1,302 @@
+@model EntityFormVm
+@{
+    var def = Model.Def;
+    var isAr = Lang.IsAr;
+    var title = isAr ? def.TitleAr : def.TitleEn;
+    var singular = isAr ? def.SingularAr : def.SingularEn;
+
+    ViewData["Title"] = (Model.IsNew ? (isAr ? "إضافة " : "New ") : (isAr ? "تعديل " : "Edit ")) + singular;
+    ViewData["PageIcon"] = def.Icon;
+    ViewData["ActiveKey"] = def.Key;
+
+    var listUrl = "/Admin/e/" + def.Key;
+    var postUrl = Model.IsNew
+        ? $"/Admin/e/{def.Key}/create"
+        : $"/Admin/e/{def.Key}/edit/{Model.Id}";
+    var deleteUrl = $"/Admin/e/{def.Key}/delete/{Model.Id}";
+
+    var confirmDelete = isAr
+        ? "هل أنت متأكد من حذف هذا العنصر؟ لا يمكن التراجع."
+        : "Delete this item? This cannot be undone.";
+
+    // Split the fields into: main body, grouped <details> panels
+    var main = def.Fields.Where(f => f.Group is null && f.Kind != FieldKind.Hidden).ToList();
+    var groups = def.Fields.Where(f => f.Group is not null)
+                           .GroupBy(f => f.Group!)
+                           .ToList();
+    var hidden = def.Fields.Where(f => f.Kind == FieldKind.Hidden).ToList();
+
+    string GroupTitle(string g) => g switch
+    {
+        "seo" => isAr ? "تحسين محركات البحث (SEO)" : "SEO",
+        "cta" => isAr ? "أزرار الإجراء" : "Call-to-action buttons",
+        "advanced" => isAr ? "إعدادات متقدمة" : "Advanced",
+        _ => g
+    };
+    string GroupIcon(string g) => g switch
+    {
+        "seo" => "fa-solid fa-magnifying-glass-chart",
+        "cta" => "fa-solid fa-hand-pointer",
+        "advanced" => "fa-solid fa-code",
+        _ => "fa-solid fa-layer-group"
+    };
+
+}
+
+<div class="ad-page">
+    <div>
+        <h1>
+            @(Model.IsNew ? (isAr ? "إضافة " : "New ") : (isAr ? "تعديل " : "Edit "))@singular
+        </h1>
+        <p>
+            <a href="@listUrl" style="color:var(--ad-cyan)">@title</a>
+            @if (!Model.IsNew)
+            {
+                <span> · #@Model.Id</span>
+            }
+        </p>
+    </div>
+    <div class="ad-page__actions">
+        <a class="ad-btn" href="@listUrl"><i class="fa-solid fa-arrow-right-long"></i> @(isAr ? "رجوع" : "Back")</a>
+        @if (!Model.IsNew && def.CanDelete)
+        {
+            <form method="post" action="@deleteUrl" data-confirm="@confirmDelete" style="display:inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="ad-btn ad-btn--danger">
+                    <i class="fa-solid fa-trash"></i> @(isAr ? "حذف" : "Delete")
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="ad-alert">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        @(isAr ? "من فضلك صحّح الأخطاء التالية:" : "Please fix the following:")
+        <ul>
+            @foreach (var e in ViewData.ModelState.SelectMany(m => m.Value!.Errors))
+            {
+                <li>@e.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<form method="post" action="@postUrl" enctype="multipart/form-data" data-guard>
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="__stay" value="0" id="stayFlag" />
+
+    @foreach (var f in hidden)
+    {
+        @await Html.PartialAsync("~/Views/Admin/Shared/_Field.cshtml", new FieldVm(f, Model.Entity, Model.Lookups))
+    }
+
+    <div class="ad-card">
+        <div class="ad-card__hd">
+            <h2><i class="@def.Icon"></i> @(isAr ? "البيانات الأساسية" : "Main details")</h2>
+        </div>
+        <div class="ad-card__bd">
+            <div class="ad-grid">
+                @{
+                    var i = 0;
+                    while (i < main.Count)
+                    {
+                        var f = main[i];
+
+                        // Merge an Ar/En pair into a single bordered panel
+                        if (f.Pair is not null && i + 1 < main.Count && main[i + 1].Pair == f.Pair)
+                        {
+                            var g = main[i + 1];
+                            var pairLabel = isAr
+                                ? f.LabelAr.Replace(" (عربي)", "")
+                                : f.LabelEn.Replace(" (Arabic)", "");
+                            <div class="ad-pair">
+                                <div class="ad-pair__hd">
+                                    <i class="fa-solid fa-language"></i>
+                                    <span>@pairLabel</span>
+                                    @if (f.Required)
+                                    {
+                                        <span style="color:var(--ad-red)">*</span>
+                                    }
+                                </div>
+                                <div class="ad-pair__body">
+                                    @await Html.PartialAsync("~/Views/Admin/Shared/_Field.cshtml", new FieldVm(f, Model.Entity, Model.Lookups))
+                                    @await Html.PartialAsync("~/Views/Admin/Shared/_Field.cshtml", new FieldVm(g, Model.Entity, Model.Lookups))
+                                </div>
+                            </div>
+                            i += 2;
+                            continue;
+                        }
+
+                        var cls = "c" + Math.Clamp(f.Span, 1, 12);
+                        <div class="@cls">
+                            @await Html.PartialAsync("~/Views/Admin/Shared/_Field.cshtml", new FieldVm(f, Model.Entity, Model.Lookups))
+                        </div>
+                        i++;
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    @foreach (var grp in groups)
+    {
+        var gf = grp.ToList();
+        <details class="ad-fs" open="@(grp.Key == "cta")">
+            <summary><i class="@GroupIcon(grp.Key)"></i> @GroupTitle(grp.Key)</summary>
+            <div class="ad-fs__bd">
+                @{
+                    var j = 0;
+                    while (j < gf.Count)
+                    {
+                        var f = gf[j];
+                        if (f.Pair is not null && j + 1 < gf.Count && gf[j + 1].Pair == f.Pair)
+                        {
+                            var g2 = gf[j + 1];
+                            var pl = isAr ? f.LabelAr.Replace(" (عربي)", "") : f.LabelEn.Replace(" (Arabic)", "");
+                            <div class="ad-pair">
+                                <div class="ad-pair__hd"><i class="fa-solid fa-language"></i><span>@pl</span></div>
+                                <div class="ad-pair__body">
+                                    @await Html.PartialAsync("~/Views/Admin/Shared/_Field.cshtml", new FieldVm(f, Model.Entity, Model.Lookups))
+                                    @await Html.PartialAsync("~/Views/Admin/Shared/_Field.cshtml", new FieldVm(g2, Model.Entity, Model.Lookups))
+                                </div>
+                            </div>
+                            j += 2;
+                            continue;
+                        }
+                        var cls2 = "c" + Math.Clamp(f.Span, 1, 12);
+                        <div class="@cls2">
+                            @await Html.PartialAsync("~/Views/Admin/Shared/_Field.cshtml", new FieldVm(f, Model.Entity, Model.Lookups))
+                        </div>
+                        j++;
+                    }
+                }
+            </div>
+        </details>
+    }
+
+    <div class="ad-card">
+        <div class="ad-card__ft">
+            <button type="submit" class="ad-btn ad-btn--pri">
+                <i class="fa-solid fa-floppy-disk"></i> @(isAr ? "حفظ" : "Save")
+            </button>
+            <button type="submit" class="ad-btn ad-btn--ok" data-stay="1">
+                <i class="fa-solid fa-check"></i> @(isAr ? "حفظ والبقاء" : "Save & stay")
+            </button>
+            <a class="ad-btn ad-btn--ghost" href="@listUrl">@(isAr ? "إلغاء" : "Cancel")</a>
+            <span style="margin-inline-start:auto;font-size:11.5px;color:var(--ad-muted)">
+                <i class="fa-solid fa-keyboard"></i> Ctrl+S
+            </span>
+        </div>
+    </div>
+</form>
+
+@* ── Child rows (specs / images / features) ───────────────────────────── *@
+@if (Model.ChildDef is not null && !Model.IsNew)
+{
+    var cd = Model.ChildDef;
+    var cTitle = isAr ? cd.TitleAr : cd.TitleEn;
+    var addUrl = $"/Admin/e/{cd.Key}/create?parentId={Model.Id}";
+    var childCols = cd.ListFields.Where(f => f.Kind != FieldKind.Lookup).Take(4).ToList();
+
+    <div class="ad-card">
+        <div class="ad-card__hd">
+            <h2><i class="@cd.Icon"></i> @cTitle <span class="ad-pill">@Model.Children.Count</span></h2>
+            <div style="margin-inline-start:auto">
+                <a class="ad-btn ad-btn--pri ad-btn--sm" href="@addUrl">
+                    <i class="fa-solid fa-plus"></i> @(isAr ? "إضافة" : "Add")
+                </a>
+            </div>
+        </div>
+
+        @if (Model.Children.Count == 0)
+        {
+            <div class="ad-empty">
+                <i class="@cd.Icon"></i>
+                <p>@(isAr ? "لا توجد عناصر بعد." : "No items yet.")</p>
+                <a class="ad-btn ad-btn--pri ad-btn--sm" href="@addUrl">
+                    <i class="fa-solid fa-plus"></i> @(isAr ? "إضافة أول عنصر" : "Add the first item")
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="ad-tw">
+                <table class="ad-tbl">
+                    <thead>
+                    <tr>
+                        <th style="width:36px"></th>
+                        @foreach (var cf in childCols)
+                        {
+                            <th>@(isAr ? cf.LabelAr : cf.LabelEn)</th>
+                        }
+                        <th style="width:100px"></th>
+                    </tr>
+                    </thead>
+                    @{ var childSortUrl = cd.Sortable ? "/Admin/e/" + cd.Key + "/reorder" : null; }
+                    <tbody data-sortable="@childSortUrl">
+                    @foreach (var row in Model.Children)
+                    {
+                        var rid = AdminSchema.GetValue(row, "Id") as int? ?? 0;
+                        var cEdit = $"/Admin/e/{cd.Key}/edit/{rid}";
+                        var cDel = $"/Admin/e/{cd.Key}/delete/{rid}";
+                        <tr data-id="@rid">
+                            <td><i class="fa-solid fa-grip-vertical ad-drag"></i></td>
+                            @foreach (var cf in childCols)
+                            {
+                                var cv = AdminSchema.GetValue(row, cf.Name);
+                                <td class="ad-tbl__cell">
+                                    @if (cf.Kind == FieldKind.Image && cv is string ip && !string.IsNullOrWhiteSpace(ip))
+                                    {
+                                        <img class="ad-tbl__thumb" src="@ip" alt="" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        @(cv?.ToString())
+                                    }
+                                </td>
+                            }
+                            <td>
+                                <div class="ad-tbl__actions">
+                                    <a class="ad-btn ad-btn--sm ad-btn--ico" href="@cEdit"><i class="fa-solid fa-pen"></i></a>
+                                    <form method="post" action="@cDel" data-confirm="@confirmDelete" style="display:inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="ad-btn ad-btn--sm ad-btn--ico ad-btn--danger">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+<datalist id="fa-suggest">
+    <option value="fa-solid fa-star"></option>
+    <option value="fa-solid fa-industry"></option>
+    <option value="fa-solid fa-microchip"></option>
+    <option value="fa-solid fa-mobile-screen"></option>
+    <option value="fa-solid fa-battery-full"></option>
+    <option value="fa-solid fa-headphones"></option>
+    <option value="fa-solid fa-clock"></option>
+    <option value="fa-solid fa-shield-halved"></option>
+    <option value="fa-solid fa-gears"></option>
+    <option value="fa-solid fa-award"></option>
+    <option value="fa-solid fa-users"></option>
+    <option value="fa-solid fa-truck-fast"></option>
+    <option value="fa-solid fa-flask"></option>
+    <option value="fa-solid fa-handshake"></option>
+    <option value="fa-solid fa-globe"></option>
+    <option value="fa-solid fa-lightbulb"></option>
+    <option value="fa-solid fa-chart-line"></option>
+    <option value="fa-solid fa-boxes-stacked"></option>
+    <option value="fa-solid fa-circle-check"></option>
+    <option value="fa-solid fa-location-dot"></option>
+</datalist>

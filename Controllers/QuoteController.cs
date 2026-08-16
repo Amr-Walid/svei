@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using SVEI.Web.Data;
 using SVEI.Web.Models;
@@ -19,7 +20,12 @@ namespace SVEI.Web.Controllers
             if (!Cfg.GetBool("feature.quote", true)) return NotFound();
 
             var sections = await LoadSectionsAsync("quote");
-            SeoFromSection(sections, "hero", Cfg.T("nav.quote"));
+            // The on-page hero heading is a marketing line ("Looking for a partnership?"),
+            // but the browser/SEO title must stay the literal, searchable page name.
+            sections.TryGetValue("hero", out var quoteHero);
+            Seo(Cfg.T("nav.quote"),
+                Lang.Pick(quoteHero?.SubtitleAr, quoteHero?.SubtitleEn),
+                quoteHero?.ImagePath);
 
             var vm = new QuoteVm
             {
@@ -35,6 +41,7 @@ namespace SVEI.Web.Controllers
         }
 
         [HttpPost, ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimiting.Forms)]
         [RequestSizeLimit(30 * 1024 * 1024)]
         public async Task<IActionResult> Send(QuoteForm form)
         {

@@ -88,6 +88,17 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
 .sv-heading h2 { margin-bottom: var(--sv-3); }
 .sv-heading p  { color: var(--sv-text-muted); font-size: var(--sv-fs-lg); }
 
+/* On a dark surface the h2/p element rules above resolve to near-black
+   (--sv-text is #0A0D14) and beat the `color: #fff` that .sv-section--ink sets
+   on the section, so the title and subtitle rendered invisible against the dark
+   background — only the red eyebrow was legible. Re-assert light colours for
+   every dark context. */
+.sv-section--ink .sv-heading h2,
+.sv-section--ink .sv-heading h3 { color: #fff; }
+.sv-section--ink .sv-heading p  { color: rgba(255, 255, 255, .76); }
+.sv-section--ink .sv-eyebrow    { color: var(--sv-cyan); }
+.sv-section--ink .sv-eyebrow::before { background: var(--sv-cyan); }
+
 /* ── Card ─────────────────────────────────────────────────────────────────── */
 .sv-card {
   background: var(--sv-bg);
@@ -264,20 +275,85 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
 .sv-alert--warning { background: rgba(245,158,11,.10); border-color: var(--sv-warning); color: #78350F; }
 
 /* ── Stats ────────────────────────────────────────────────────────────────── */
-.sv-stat { text-align: center; padding: var(--sv-5) var(--sv-3); position: relative; }
-.sv-stat__icon { font-size: var(--sv-fs-2xl); color: var(--sv-cyan); margin-bottom: var(--sv-3); }
+/* An explicit column count (set inline from the stat count, capped at 5) rather
+   than auto-fit/minmax, so every stat shares one row instead of a 5th dropping
+   to a line of its own. minmax(0, 1fr) lets the cells shrink below their content
+   width, which is what keeps them on that single row. */
+.sv-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--sv-stat-cols, 4), minmax(0, 1fr));
+  gap: var(--sv-4) var(--sv-2);
+  align-items: start;
+}
+/* Below the desktop breakpoints there isn't room for the full row, so step down
+   to layouts that stay legible instead of squeezing. */
+@media (max-width: 1100px) {
+  .sv-stats { grid-template-columns: repeat(min(var(--sv-stat-cols, 4), 3), minmax(0, 1fr)); }
+}
+/* Orphan guard for the 3-column step only. It must be bounded on BOTH sides:
+   an unbounded max-width:1100px rule also applies at 700px, where the grid is
+   already down to 2 columns, and the 3n+1 selector then spans the wrong item
+   and splits a 4-stat strip into three ragged rows. */
+@media (min-width: 781px) and (max-width: 1100px) {
+  .sv-stats > .sv-stat:nth-child(3n+1):last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 780px) {
+  .sv-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Orphan guard for the 2-column step only — bounded below by the single-column
+   breakpoint, where every item is already full width and the rule is moot. */
+@media (min-width: 421px) and (max-width: 780px) {
+  /* At two columns an odd count leaves the final stat alone in one half of the
+     last row, hugging one edge. Let that orphan span both columns so it centres
+     under the pair above it. :nth-child(odd):last-child matches only when the
+     total count is odd, so even lists are untouched. */
+  .sv-stats > .sv-stat:nth-child(odd):last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 420px) {
+  .sv-stats { grid-template-columns: 1fr; }
+}
+
+.sv-stat {
+  text-align: center;
+  padding: var(--sv-5) var(--sv-2);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sv-2);
+  min-width: 0;
+}
+/* Every child is inline (<span>) in the views — force block flow so the number
+   and its label never run together on the same line. */
+.sv-stat__icon,
+.sv-stat__value,
+.sv-stat__label { display: block; width: 100%; }
+
+.sv-stat__icon { font-size: var(--sv-fs-2xl); color: var(--sv-cyan); margin-bottom: var(--sv-1); line-height: 1; }
 .sv-stat__value {
-  font-size: clamp(2.2rem, 5vw, var(--sv-fs-4xl));
+  /* Scaled down from the old 4.2vw: with five columns instead of four each cell
+     is narrower, and the larger size overflowed its column. */
+  font-size: clamp(1.5rem, 2.6vw, var(--sv-fs-4xl));
   font-weight: var(--sv-fw-black);
-  line-height: 1;
+  line-height: 1.05;
   font-variant-numeric: tabular-nums;
   background: var(--sv-grad-mix);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  overflow-wrap: break-word;
 }
 .sv-section--ink .sv-stat__value { background: none; color: #fff; -webkit-text-fill-color: #fff; }
-.sv-stat__label { font-size: var(--sv-fs-sm); color: var(--sv-text-muted); margin-top: var(--sv-2); }
+.sv-stat__label {
+  font-size: var(--sv-fs-sm);
+  color: var(--sv-text-muted);
+  margin-top: 0;
+  line-height: 1.45;
+  max-width: 22ch;
+  margin-inline: auto;
+  text-wrap: balance;
+}
+.sv-section--ink .sv-stat__label { color: rgba(255, 255, 255, .72); }
 
 /* ── Breadcrumb ───────────────────────────────────────────────────────────── */
 .sv-crumbs { display: flex; flex-wrap: wrap; gap: var(--sv-2); font-size: var(--sv-fs-xs); align-items: center; }
@@ -301,11 +377,23 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
   background-image: url("/img/patterns/circuit.svg");
   background-size: 520px;
   opacity: .07;
-  z-index: -1;
+  z-index: 1;
+  pointer-events: none;
 }
-.sv-pagehero h1 { color: #fff; margin-bottom: var(--sv-3); }
-.sv-pagehero p  { color: rgba(255,255,255,.72); font-size: var(--sv-fs-lg); max-width: 640px; }
-.sv-pagehero .sv-crumbs { margin-bottom: var(--sv-4); color: rgba(255,255,255,.65); }
+.sv-pagehero h1 {
+  color: #fff;
+  margin-bottom: var(--sv-3);
+  text-shadow: 0 2px 18px rgba(10, 13, 20, .45);
+}
+.sv-pagehero p {
+  color: rgba(255,255,255,.88);
+  font-size: var(--sv-fs-lg);
+  max-width: 640px;
+  text-shadow: 0 1px 10px rgba(10, 13, 20, .5);
+}
+.sv-pagehero .sv-crumbs { margin-bottom: var(--sv-4); color: rgba(255,255,255,.8); }
+.sv-pagehero .sv-crumbs a { color: rgba(255,255,255,.8); }
+.sv-pagehero .sv-crumbs a:hover { color: #fff; }
 
 /* ── Pagination ───────────────────────────────────────────────────────────── */
 .sv-pager { display: flex; gap: var(--sv-2); justify-content: center; flex-wrap: wrap; margin-top: var(--sv-8); }
@@ -405,7 +493,37 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
 
 /* ── Page hero (inner pages) ───────────────────────────────────────────────── */
 .sv-pagehero__bg { position: absolute; inset: 0; z-index: 0; }
-.sv-pagehero__bg img { width: 100%; height: 100%; object-fit: cover; }
+.sv-pagehero__bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Dark scrim ON TOP of the background image. Without this the white heading
+   sat directly on a bright factory photo and was unreadable — the pattern
+   ::after used to be at z-index -1, i.e. behind the image, so it darkened
+   nothing at all. */
+.sv-pagehero__bg::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg,
+    rgba(10, 13, 20, .78) 0%,
+    rgba(10, 13, 20, .62) 45%,
+    rgba(10, 13, 20, .80) 100%);
+}
+/* Extra horizontal falloff from the text edge so long titles stay legible.
+   linear-gradient takes no logical keywords, so flip it explicitly for RTL. */
+.sv-pagehero__bg::before {
+  content: "";
+  position: absolute; inset: 0;
+  z-index: 1;
+  background: linear-gradient(to right,
+    rgba(10, 13, 20, .55) 0%,
+    rgba(10, 13, 20, .15) 60%,
+    transparent 100%);
+}
+[dir="rtl"] .sv-pagehero__bg::before {
+  background: linear-gradient(to left,
+    rgba(10, 13, 20, .55) 0%,
+    rgba(10, 13, 20, .15) 60%,
+    transparent 100%);
+}
 .sv-pagehero .sv-container { position: relative; z-index: 2; }
 
 /* ── Card meta / extras ────────────────────────────────────────────────────── */
@@ -586,7 +704,24 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
 .sv-search .sv-input { flex: 1; }
 .sv-search .sv-btn { flex: none; padding-inline: 1rem; }
 
+/* ── Careers: heading + search share the top row ──────────────────────────── */
+.sv-jobsbar {
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: var(--sv-4);
+  margin-bottom: var(--sv-6);
+}
+/* .sv-heading carries a bottom margin of its own that would break the baseline
+   alignment with the search field. */
+.sv-jobsbar__head { margin-bottom: 0; flex: 1 1 420px; min-width: 0; }
+.sv-jobsbar__search { flex: 0 1 320px; }
+@media (max-width: 720px) {
+  .sv-jobsbar__search { flex-basis: 100%; }
+}
+
 .sv-filters--soft { margin-block: calc(var(--sv-4) * -1) var(--sv-6); }
+/* The negative pull above assumes a preceding filter row. When every other facet
+   row is suppressed this row follows .sv-jobsbar directly and must not ride up. */
+.sv-jobsbar + .sv-filters--soft { margin-block-start: 0; }
 .sv-filters--soft .sv-filter { font-size: var(--sv-fs-xs); padding: .4rem .85rem; }
 .sv-filter i { margin-inline-end: .35rem; opacity: .8; }
 
@@ -839,8 +974,10 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
 .sv-step p { font-size: var(--sv-fs-sm); color: var(--sv-text-muted); }
 
 /* ── Service card (services index) ────────────────────────────────────────── */
+/* Stacked: media on top, copy underneath. A side-by-side split starved the text
+   column and forced one or two words per line, so the card reads vertically. */
 .sv-svc {
-  display: grid; grid-template-columns: 220px minmax(0, 1fr);
+  display: flex; flex-direction: column;
   background: var(--sv-bg);
   border: 1px solid var(--sv-line);
   border-radius: var(--sv-r-lg);
@@ -848,8 +985,10 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
   transition: all var(--sv-t) var(--sv-ease);
 }
 .sv-svc:hover { box-shadow: var(--sv-shadow-lg); border-color: transparent; transform: translateY(-4px); }
-@media (max-width: 620px) { .sv-svc { grid-template-columns: 1fr; } }
-.sv-svc__media { position: relative; display: block; overflow: hidden; min-height: 180px; background: var(--sv-bg-alt); }
+.sv-svc__media {
+  position: relative; display: block; overflow: hidden;
+  aspect-ratio: 16 / 10; background: var(--sv-bg-alt);
+}
 .sv-svc__media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--sv-t-slow) var(--sv-ease); }
 .sv-svc:hover .sv-svc__media img { transform: scale(1.06); }
 .sv-svc__icon {
@@ -858,7 +997,12 @@ html[lang="ar"] .sv-eyebrow { letter-spacing: .02em; }
   border-radius: var(--sv-r-sm);
   background: var(--sv-accent, var(--sv-red)); color: #fff;
 }
-.sv-svc__body { padding: var(--sv-5); display: grid; gap: var(--sv-3); align-content: start; }
+.sv-svc__body {
+  padding: var(--sv-5); display: flex; flex-direction: column; gap: var(--sv-3);
+  flex: 1 1 auto; min-height: 0;
+}
+/* Keep "Learn more" pinned to the bottom so cards of unequal copy still line up. */
+.sv-svc__body > .sv-btn { margin-block-start: auto; align-self: start; }
 .sv-svc__body h3 { font-size: var(--sv-fs-lg); }
 .sv-svc__body h3 a { color: inherit; }
 .sv-svc__body h3 a:hover { color: var(--sv-red); }

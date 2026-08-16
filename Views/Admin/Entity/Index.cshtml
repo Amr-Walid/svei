@@ -1,0 +1,380 @@
+@model EntityListVm
+@{
+    var def = Model.Def;
+    var isAr = Lang.IsAr;
+    var title = isAr ? def.TitleAr : def.TitleEn;
+    var singular = isAr ? def.SingularAr : def.SingularEn;
+
+    ViewData["Title"] = title;
+    ViewData["PageIcon"] = def.Icon;
+    ViewData["ActiveKey"] = def.Key;
+
+    var baseUrl = "/Admin/e/" + def.Key;
+    var createUrl = baseUrl + "/create";
+    var reorderUrl = baseUrl + "/reorder";
+    var bulkUrl = baseUrl + "/bulk";
+    var sortUrl = def.Sortable && string.IsNullOrWhiteSpace(Model.Query) && Model.Page == 1
+        ? reorderUrl : null;
+
+    var cols = def.ListFields.ToList();
+    var confirmDelete = isAr ? "حذف هذا العنصر؟ لا يمكن التراجع." : "Delete this item? This cannot be undone.";
+    var confirmBulk = isAr ? "حذف كل العناصر المحددة؟" : "Delete all selected items?";
+
+    string PageUrl(int p)
+    {
+        var parts = new List<string> { "page=" + p };
+        if (!string.IsNullOrWhiteSpace(Model.Query)) { parts.Add("q=" + Uri.EscapeDataString(Model.Query!)); }
+        if (!string.IsNullOrWhiteSpace(Model.Group)) { parts.Add("g=" + Uri.EscapeDataString(Model.Group!)); }
+        return baseUrl + "?" + string.Join("&", parts);
+    }
+
+    string GroupUrl(string? g)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(g)) { parts.Add("g=" + Uri.EscapeDataString(g!)); }
+        if (!string.IsNullOrWhiteSpace(Model.Query)) { parts.Add("q=" + Uri.EscapeDataString(Model.Query!)); }
+        return parts.Count == 0 ? baseUrl : baseUrl + "?" + string.Join("&", parts);
+    }
+
+    var searchPlaceholder = isAr ? "بحث…" : "Search…";
+    var rangeText = isAr
+        ? $"عرض {Model.From}–{Model.To} من {Model.Total}"
+        : $"Showing {Model.From}–{Model.To} of {Model.Total}";
+}
+
+<div class="ad-page">
+    <div>
+        <h1><i class="@def.Icon" style="color:var(--ad-red);margin-inline-end:6px"></i> @title</h1>
+        <p>@rangeText</p>
+    </div>
+    <div class="ad-page__actions">
+        @if (def.CanCreate)
+        {
+            <a class="ad-btn ad-btn--pri" href="@createUrl">
+                <i class="fa-solid fa-plus"></i> @(isAr ? "إضافة " : "New ")@singular
+            </a>
+        }
+    </div>
+</div>
+
+<div class="ad-card">
+    <div class="ad-tools">
+        <form method="get" action="@baseUrl">
+            @if (!string.IsNullOrWhiteSpace(Model.Group))
+            {
+                <input type="hidden" name="g" value="@Model.Group" />
+            }
+            <input class="ad-in" type="search" name="q" value="@Model.Query"
+                   placeholder="@searchPlaceholder" data-search />
+            <button type="submit" class="ad-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            @if (!string.IsNullOrWhiteSpace(Model.Query))
+            {
+                <a class="ad-btn ad-btn--ghost ad-btn--sm" href="@GroupUrl(Model.Group)">
+                    <i class="fa-solid fa-xmark"></i>
+                </a>
+            }
+        </form>
+
+        @if (Model.Groups.Count > 0)
+        {
+            <div class="ad-chips">
+                <a class="ad-chip @(string.IsNullOrWhiteSpace(Model.Group) ? "is-on" : "")" href="@GroupUrl(null)">
+                    @(isAr ? "الكل" : "All")
+                </a>
+                @foreach (var g in Model.Groups)
+                {
+                    <a class="ad-chip @(Model.Group == g ? "is-on" : "")" href="@GroupUrl(g)">@g</a>
+                }
+            </div>
+        }
+
+        <div class="ad-tools__spacer"></div>
+
+        @if (sortUrl is not null)
+        {
+            <span class="ad-pill ad-pill--cyan">
+                <i class="fa-solid fa-arrows-up-down"></i>
+                @(isAr ? "اسحب لإعادة الترتيب" : "Drag to reorder")
+            </span>
+        }
+    </div>
+
+    @* bulk action bar *@
+    <div class="ad-tools" data-bulk-bar style="display:none;background:rgba(34,198,232,.07)">
+        <b style="font-size:12.5px">
+            <span data-bulk-count>0</span> @(isAr ? "عنصر محدد" : "selected")
+        </b>
+        <div class="ad-tools__spacer"></div>
+        <button type="button" class="ad-btn ad-btn--sm" data-bulk-action="activate">
+            <i class="fa-solid fa-eye"></i> @(isAr ? "تفعيل" : "Activate")
+        </button>
+        <button type="button" class="ad-btn ad-btn--sm" data-bulk-action="deactivate">
+            <i class="fa-solid fa-eye-slash"></i> @(isAr ? "تعطيل" : "Deactivate")
+        </button>
+        @if (def.HasUnread)
+        {
+            <button type="button" class="ad-btn ad-btn--sm" data-bulk-action="read">
+                <i class="fa-solid fa-envelope-open"></i> @(isAr ? "تعليم كمقروء" : "Mark read")
+            </button>
+        }
+        @if (def.CanDelete)
+        {
+            <button type="button" class="ad-btn ad-btn--sm ad-btn--danger"
+                    data-bulk-action="delete" data-confirm="@confirmBulk">
+                <i class="fa-solid fa-trash"></i> @(isAr ? "حذف" : "Delete")
+            </button>
+        }
+    </div>
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="ad-empty">
+            <i class="@def.Icon"></i>
+            <p>
+                @if (!string.IsNullOrWhiteSpace(Model.Query))
+                {
+                    @(isAr ? "لا توجد نتائج مطابقة لبحثك." : "No results match your search.")
+                }
+                else
+                {
+                    @(isAr ? "لا توجد عناصر بعد." : "Nothing here yet.")
+                }
+            </p>
+            @if (def.CanCreate)
+            {
+                <a class="ad-btn ad-btn--pri" href="@createUrl">
+                    <i class="fa-solid fa-plus"></i> @(isAr ? "إضافة " : "New ")@singular
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <form method="post" action="@bulkUrl" id="bulkForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="action" value="" />
+
+            <div class="ad-tw">
+                <table class="ad-tbl">
+                    <thead>
+                    <tr>
+                        <th style="width:34px">
+                            <input type="checkbox" data-check-all />
+                        </th>
+                        @if (sortUrl is not null)
+                        {
+                            <th style="width:30px"></th>
+                        }
+                        <th style="width:52px">#</th>
+                        @foreach (var f in cols)
+                        {
+                            <th>@(isAr ? f.LabelAr : f.LabelEn)</th>
+                        }
+                        <th style="width:110px"></th>
+                    </tr>
+                    </thead>
+                    <tbody data-sortable="@sortUrl">
+                    @foreach (var row in Model.Items)
+                    {
+                        var id = AdminSchema.GetValue(row, "Id") as int? ?? 0;
+                        var editUrl = $"{baseUrl}/edit/{id}";
+                        var delUrl = $"{baseUrl}/delete/{id}";
+                        var unread = def.HasUnread && AdminSchema.GetValue(row, "IsRead") is false;
+                        var rowCls = unread ? "is-unread" : null;
+
+                        <tr data-id="@id" class="@rowCls">
+                            <td>
+                                <input type="checkbox" name="ids" value="@id" data-check />
+                            </td>
+                            @if (sortUrl is not null)
+                            {
+                                <td><i class="fa-solid fa-grip-vertical ad-drag"></i></td>
+                            }
+                            <td style="color:var(--ad-muted);font-size:12px">@id</td>
+
+                            @foreach (var f in cols)
+                            {
+                                var v = AdminSchema.GetValue(row, f.Name);
+                                <td class="ad-tbl__cell">
+                                    @switch (f.Kind)
+                                    {
+                                        case FieldKind.Bool:
+                                            {
+                                                var on = v is true;
+                                                var tUrl = $"{baseUrl}/toggle/{id}";
+                                                <label class="ad-sw" title="@(isAr ? f.LabelAr : f.LabelEn)">
+                                                    <input type="checkbox" checked="@on"
+                                                           data-toggle-url="@tUrl" data-toggle-field="@f.Name" />
+                                                    <span class="ad-sw__track" style="width:34px;height:19px"></span>
+                                                </label>
+                                            }
+                                            break;
+
+                                        case FieldKind.Image:
+                                            {
+                                                if (v is string ip && !string.IsNullOrWhiteSpace(ip))
+                                                {
+                                                    <img class="ad-tbl__thumb" src="@ip" alt="" loading="lazy" />
+                                                }
+                                                else
+                                                {
+                                                    <span style="color:var(--ad-muted)">—</span>
+                                                }
+                                            }
+                                            break;
+
+                                        case FieldKind.File:
+                                            {
+                                                if (v is string fp && !string.IsNullOrWhiteSpace(fp))
+                                                {
+                                                    <a href="@fp" target="_blank" rel="noopener" class="ad-pill ad-pill--cyan">
+                                                        <i class="fa-solid fa-file-arrow-down"></i>
+                                                        @(isAr ? "تحميل" : "Download")
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span style="color:var(--ad-muted)">—</span>
+                                                }
+                                            }
+                                            break;
+
+                                        case FieldKind.Lookup:
+                                            {
+                                                var lid = v?.ToString();
+                                                var name = "—";
+                                                if (!string.IsNullOrWhiteSpace(lid)
+                                                    && Model.Lookups.TryGetValue(f.Name, out var opts))
+                                                {
+                                                    var hit = opts.FirstOrDefault(o => o.Id.ToString() == lid);
+                                                    if (hit.Label is not null) { name = hit.Label; }
+                                                }
+                                                <span class="ad-pill">@name</span>
+                                            }
+                                            break;
+
+                                        case FieldKind.Select:
+                                            {
+                                                var sv = v?.ToString() ?? "";
+                                                var opt = (f.Options ?? Array.Empty<(string, string, string)>())
+                                                    .FirstOrDefault(o => o.Item1 == sv);
+                                                var lbl = opt.Item1 is null ? sv : (isAr ? opt.Item2 : opt.Item3);
+                                                if (string.IsNullOrWhiteSpace(lbl))
+                                                {
+                                                    <span style="color:var(--ad-muted)">—</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="ad-pill ad-pill--cyan">@lbl</span>
+                                                }
+                                            }
+                                            break;
+
+                                        case FieldKind.Date:
+                                            {
+                                                var dv = v is DateTime d1 ? d1.ToString("yyyy-MM-dd") : "—";
+                                                <span style="font-size:12px">@dv</span>
+                                            }
+                                            break;
+
+                                        case FieldKind.DateTime:
+                                        case FieldKind.ReadOnly:
+                                            {
+                                                var dv2 = v is DateTime d2 ? d2.ToString("yyyy-MM-dd HH:mm") : (v?.ToString() ?? "—");
+                                                <span style="font-size:12px;color:var(--ad-muted)">@dv2</span>
+                                            }
+                                            break;
+
+                                        case FieldKind.Color:
+                                            {
+                                                var cvv = v?.ToString();
+                                                if (!string.IsNullOrWhiteSpace(cvv))
+                                                {
+                                                    var style = "display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:middle;background:" + cvv;
+                                                    <span style="@style"></span>
+                                                    <span style="font-size:11.5px;color:var(--ad-muted)"> @cvv</span>
+                                                }
+                                            }
+                                            break;
+
+                                        default:
+                                            {
+                                                var txt = v?.ToString() ?? "";
+                                                if (txt.Length > 90) { txt = txt.Substring(0, 90) + "…"; }
+                                                @txt
+                                            }
+                                            break;
+                                    }
+                                </td>
+                            }
+
+                            <td>
+                                <div class="ad-tbl__actions">
+                                    @if (def.CanEdit)
+                                    {
+                                        <a class="ad-btn ad-btn--sm ad-btn--ico" href="@editUrl"
+                                           title="@(isAr ? "تعديل" : "Edit")">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                    }
+                                    @if (def.CanDelete)
+                                    {
+                                        <button type="button" class="ad-btn ad-btn--sm ad-btn--ico ad-btn--danger"
+                                                title="@(isAr ? "حذف" : "Delete")"
+                                                data-del-form="del_@id" data-del-confirm="@confirmDelete">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </form>
+
+        @* delete forms live outside the bulk form to avoid nesting *@
+        @foreach (var row in Model.Items)
+        {
+            var id = AdminSchema.GetValue(row, "Id") as int? ?? 0;
+            var delUrl = $"{baseUrl}/delete/{id}";
+            <form method="post" action="@delUrl" id="del_@id" style="display:none">
+                @Html.AntiForgeryToken()
+            </form>
+        }
+
+        @if (Model.TotalPages > 1)
+        {
+            <div class="ad-pager">
+                <span>@rangeText</span>
+                <div class="ad-pager__nums">
+                    @if (Model.HasPrev)
+                    {
+                        <a href="@PageUrl(Model.Page - 1)"><i class="fa-solid fa-angle-right"></i></a>
+                    }
+                    @{
+                        var start = Math.Max(1, Model.Page - 2);
+                        var end = Math.Min(Model.TotalPages, start + 4);
+                        start = Math.Max(1, end - 4);
+                    }
+                    @for (var p = start; p <= end; p++)
+                    {
+                        if (p == Model.Page)
+                        {
+                            <span class="cur">@p</span>
+                        }
+                        else
+                        {
+                            <a href="@PageUrl(p)">@p</a>
+                        }
+                    }
+                    @if (Model.HasNext)
+                    {
+                        <a href="@PageUrl(Model.Page + 1)"><i class="fa-solid fa-angle-left"></i></a>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>

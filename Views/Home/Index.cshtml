@@ -15,8 +15,14 @@
     <section class="sv-hero">
         <div class="swiper">
             <div class="swiper-wrapper">
+                @{ var slideIndex = 0; }
                 @foreach (var slide in Model.Slides)
                 {
+                    // Only the first slide is on screen at first paint. The rest used
+                    // to download immediately too, so a 2-slide hero cost ~490 KB before
+                    // the visitor saw anything. Slide 1 is the LCP element (eager, high
+                    // priority); every later slide waits until the carousel needs it.
+                    var isFirstSlide = slideIndex++ == 0;
                     var img     = slide.ImagePath ?? "/img/hero/hero-factory.webp";
                     var eyebrow = Lang.Pick(slide.EyebrowAr, slide.EyebrowEn);
                     var title   = Lang.Pick(slide.TitleAr, slide.TitleEn);
@@ -27,7 +33,16 @@
                     <div class="swiper-slide">
                         <div class="sv-hero__slide" data-align="@slide.Align"
                              style="--sv-overlay:@((slide.OverlayOpacity / 100.0).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))">
-                            <div class="sv-hero__bg"><img src="@img" alt="@title" /></div>
+                            <div class="sv-hero__bg">
+                                @* loading="lazy" is ignored on slides 2+: they are stacked
+                                   inside the viewport, so the browser treats them as visible
+                                   and downloads them immediately, competing with the LCP
+                                   image. sv-defer parks the URL in data-src until site.js
+                                   hydrates it after load. *@
+                                <img src="@img" alt="@title" sv-sizes="100vw"
+                                     sv-priority="@isFirstSlide" sv-defer="@(!isFirstSlide)"
+                                     class="@(isFirstSlide ? null : "sv-hero__deferred")" />
+                            </div>
                             <div class="sv-hero__pattern"></div>
                             <div class="sv-container">
                                 <div class="sv-hero__content">
@@ -43,13 +58,13 @@
                                     <div class="sv-hero__actions">
                                         @if (!string.IsNullOrWhiteSpace(b1))
                                         {
-                                            <a class="sv-btn sv-btn--primary sv-btn--lg" href="@(slide.ButtonUrl ?? "#")">
+                                            <a class="sv-btn sv-btn--primary sv-btn--lg" href="@(Lang.LinkUrl(slide.ButtonUrl) ?? "#")">
                                                 @b1 <i class="fa-solid @arrow"></i>
                                             </a>
                                         }
                                         @if (!string.IsNullOrWhiteSpace(b2))
                                         {
-                                            <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@(slide.Button2Url ?? "#")">@b2</a>
+                                            <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@(Lang.LinkUrl(slide.Button2Url) ?? "#")">@b2</a>
                                         }
                                     </div>
                                 </div>
@@ -77,7 +92,8 @@
             <div class="sv-split">
                 <div class="sv-split__media sv-reveal">
                     <img src="@(intro.ImagePath ?? "/img/hero/hero-factory.webp")"
-                         alt="@Lang.Pick(intro.TitleAr, intro.TitleEn)" loading="lazy" />
+                         alt="@Lang.Pick(intro.TitleAr, intro.TitleEn)" loading="lazy"
+                         sv-sizes="(max-width: 900px) 100vw, 50vw" />
                     @if (!string.IsNullOrWhiteSpace(Cfg.GetRaw("site.founded_year")))
                     {
                         <div class="sv-split__badge">
@@ -103,13 +119,13 @@
                     <div class="sv-split__actions">
                         @if (!string.IsNullOrWhiteSpace(Lang.Pick(intro.ButtonTextAr, intro.ButtonTextEn)))
                         {
-                            <a class="sv-btn sv-btn--primary" href="@(intro.ButtonUrl ?? Lang.Url("/about"))">
+                            <a class="sv-btn sv-btn--primary" href="@(Lang.LinkUrl(intro.ButtonUrl) ?? Lang.Url("/about"))">
                                 @Lang.Pick(intro.ButtonTextAr, intro.ButtonTextEn) <i class="fa-solid @arrow"></i>
                             </a>
                         }
                         @if (!string.IsNullOrWhiteSpace(Lang.Pick(intro.Button2TextAr, intro.Button2TextEn)))
                         {
-                            <a class="sv-btn sv-btn--outline" href="@(intro.Button2Url ?? Lang.Url("/contact"))">
+                            <a class="sv-btn sv-btn--outline" href="@(Lang.LinkUrl(intro.Button2Url) ?? Lang.Url("/contact"))">
                                 @Lang.Pick(intro.Button2TextAr, intro.Button2TextEn)
                             </a>
                         }
@@ -128,7 +144,10 @@
     <section class="sv-section sv-section--tight sv-section--ink">
         <div class="sv-container">
             @await Html.PartialAsync("_SectionHeading", Sec("stats"))
-            <div class="sv-grid sv-grid--4">
+            @* The generic auto-fit grid has a 230px minimum, so a 5th stat always
+               wrapped onto its own row. Derive the column count from the data
+               instead — see GridLayout.Columns. *@
+            <div class="sv-stats" style="--sv-stat-cols:@GridLayout.Columns(Model.Stats.Count)">
                 @foreach (var stat in Model.Stats)
                 {
                     <div class="sv-stat sv-reveal">
@@ -166,7 +185,11 @@
 
                     <article class="sv-line sv-reveal" style="@accent">
                         <a class="sv-line__media" href="@url">
-                            <img src="@(line.ImagePath ?? "/img/sections/feature1.webp")" alt="@name" loading="lazy" />
+                            @* 3-up grid on desktop, single column on phones — the card is
+                               never wider than ~380 CSS px, so telling the browser that
+                               saves it fetching the 1200 px master. *@
+                            <img src="@(line.ImagePath ?? "/img/sections/feature1.webp")" alt="@name" loading="lazy"
+                                 sv-sizes="(max-width: 700px) 92vw, (max-width: 1100px) 46vw, 380px" />
                         </a>
                         <div class="sv-line__body">
                             @if (!string.IsNullOrWhiteSpace(line.Icon))
@@ -223,7 +246,8 @@
             @await Html.PartialAsync("_SectionHeading", video)
             <div class="sv-video sv-reveal" data-video="@video.VideoUrl">
                 <img src="@(video.ImagePath ?? "/img/hero/hero-chip.webp")"
-                     alt="@Lang.Pick(video.TitleAr, video.TitleEn)" loading="lazy" />
+                     alt="@Lang.Pick(video.TitleAr, video.TitleEn)" loading="lazy"
+                     sv-sizes="(max-width: 1200px) 100vw, 1160px" />
                 <button class="sv-video__play" type="button" aria-label="@(Lang.IsAr ? "تشغيل الفيديو" : "Play video")">
                     <i class="fa-solid fa-play"></i>
                 </button>
@@ -429,13 +453,13 @@
                 <div class="sv-cta__actions">
                     @if (!string.IsNullOrWhiteSpace(Lang.Pick(cta.ButtonTextAr, cta.ButtonTextEn)))
                     {
-                        <a class="sv-btn sv-btn--light sv-btn--lg" href="@(cta.ButtonUrl ?? Lang.Url("/quote"))">
+                        <a class="sv-btn sv-btn--light sv-btn--lg" href="@(Lang.LinkUrl(cta.ButtonUrl) ?? Lang.Url("/quote"))">
                             @Lang.Pick(cta.ButtonTextAr, cta.ButtonTextEn) <i class="fa-solid @arrow"></i>
                         </a>
                     }
                     @if (!string.IsNullOrWhiteSpace(Lang.Pick(cta.Button2TextAr, cta.Button2TextEn)))
                     {
-                        <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@(cta.Button2Url ?? Lang.Url("/contact"))">
+                        <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@(Lang.LinkUrl(cta.Button2Url) ?? Lang.Url("/contact"))">
                             @Lang.Pick(cta.Button2TextAr, cta.Button2TextEn)
                         </a>
                     }

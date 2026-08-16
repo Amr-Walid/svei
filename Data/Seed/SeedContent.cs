@@ -135,7 +135,7 @@ namespace SVEI.Web.Data.Seed
                 SubtitleAr = "جولة مصورة داخل خطوط الإنتاج ومعامل الاختبار.",
                 SubtitleEn = "A guided tour through our production lines and test labs.",
                 VideoUrl = "https://www.youtube.com/watch?v=VngRX0yj_iE",
-                ImagePath = "/img/hero/hero-chip.webp"
+                ImagePath = "/img/lines/phones.webp"
             };
 
             yield return new PageSection
@@ -170,8 +170,8 @@ namespace SVEI.Web.Data.Seed
             yield return new PageSection
             {
                 PageKey = "home", SectionKey = "cta", SortOrder = 9,
-                TitleAr = "جاهز لبدء مشروعك التصنيعي؟",
-                TitleEn = "Ready to start your manufacturing project?",
+                TitleAr = "هل تبحث عن شراكة؟",
+                TitleEn = "Looking for a partnership?",
                 SubtitleAr = "أرسل لنا متطلباتك وسيتواصل فريقنا الهندسي معك خلال 48 ساعة.",
                 SubtitleEn = "Send us your requirements and our engineering team will respond within 48 hours.",
                 ButtonTextAr = "اطلب عرض سعر", ButtonTextEn = "Request a quote", ButtonUrl = "/quote",
@@ -187,7 +187,7 @@ namespace SVEI.Web.Data.Seed
                 TitleEn = "Silicon Valley for Electronic Industries",
                 SubtitleAr = "نبني قاعدة صناعية إلكترونية مصرية بمعايير عالمية.",
                 SubtitleEn = "Building an Egyptian electronics industrial base to global standards.",
-                ImagePath = "/img/hero/hero-factory.webp"
+                ImagePath = "/img/about/exterior.webp"
             };
 
             yield return new PageSection
@@ -197,7 +197,7 @@ namespace SVEI.Web.Data.Seed
                 TitleAr = "بدأنا في 2023 برؤية واضحة", TitleEn = "We started in 2023 with a clear vision",
                 BodyAr = "انطلق مصنع سيليكون فالي للصناعات الإلكترونية عام 2023 داخل منطقة تيدا بالعين السخنة، ضمن المنطقة الاقتصادية لقناة السويس. اخترنا هذا الموقع لقربه من ميناء السخنة وسهولة الوصول للأسواق الإقليمية.\n\nمنذ اليوم الأول والهدف واحد: توطين صناعة الإلكترونيات في مصر، ونقل المعرفة التقنية لكوادر مصرية قادرة على المنافسة عالمياً.",
                 BodyEn = "Silicon Valley for Electronic Industries launched in 2023 within the TEDA zone in Ain Sokhna, inside the Suez Canal Economic Zone. The location was chosen for its proximity to Sokhna Port and easy access to regional markets.\n\nThe goal has been the same since day one: localise electronics manufacturing in Egypt and transfer technical know-how to Egyptian talent able to compete globally.",
-                ImagePath = "/img/sections/feature1.webp"
+                ImagePath = "/img/careers/team.webp"
             };
 
             yield return new PageSection
@@ -361,7 +361,7 @@ namespace SVEI.Web.Data.Seed
             {
                 PageKey = "quote", SectionKey = "hero", SortOrder = 1,
                 EyebrowAr = "ابدأ مشروعك", EyebrowEn = "Start your project",
-                TitleAr = "اطلب عرض سعر", TitleEn = "Request a Quote",
+                TitleAr = "هل تبحث عن شراكة؟", TitleEn = "Looking for a partnership?",
                 SubtitleAr = "شاركنا تفاصيل مشروعك وسنعود إليك بعرض مفصل خلال 48 ساعة.",
                 SubtitleEn = "Share your project details and we'll return a detailed quote within 48 hours."
             };

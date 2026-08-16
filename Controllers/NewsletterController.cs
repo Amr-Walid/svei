@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using SVEI.Web.Data;
 using SVEI.Web.Models;
@@ -15,6 +16,7 @@ namespace SVEI.Web.Controllers
         [Route("/{culture:regex(^ar|en$)}/newsletter/subscribe")]
         [Route("/newsletter/subscribe")]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimiting.Forms)]
         public async Task<IActionResult> Subscribe(string? email, string? name)
         {
             if (!Cfg.GetBool("feature.newsletter", true))

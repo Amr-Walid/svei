@@ -33,11 +33,25 @@ namespace SVEI.Web.Data.Seed
                     await roleMgr.CreateAsync(new IdentityRole(role));
 
             var email = cfg["AdminSeed:Email"] ?? "admin@svei.tech";
-            var password = cfg["AdminSeed:Password"] ?? "Svei@2024!";
+
+            // No hardcoded password fallback. A literal in the source is a
+            // credential that ships in the build and survives every config
+            // change, so if the deployment has not supplied one we create no
+            // account at all rather than a predictable one. Set it via
+            // AdminSeed__Password in the environment (or user-secrets locally).
+            var password = cfg["AdminSeed:Password"];
 
             var user = await userMgr.FindByEmailAsync(email);
             if (user is null)
             {
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    sp.GetRequiredService<ILogger<AppDbContext>>().LogWarning(
+                        "No AdminSeed:Password configured — the initial admin account was not created. " +
+                        "Set AdminSeed__Password and restart.");
+                    return;
+                }
+
                 user = new IdentityUser { UserName = email, Email = email, EmailConfirmed = true };
                 var result = await userMgr.CreateAsync(user, password);
                 if (!result.Succeeded) return;
