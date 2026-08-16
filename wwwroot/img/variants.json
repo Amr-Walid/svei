@@ -1,0 +1,632 @@
+{
+ "/img/about/exterior.webp": {
+  "h": 906,
+  "variants": [
+   {
+    "bytes": 13044,
+    "h": 226,
+    "url": "/img/about/exterior-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 44366,
+    "h": 453,
+    "url": "/img/about/exterior-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 92546,
+    "h": 680,
+    "url": "/img/about/exterior-1200w.webp",
+    "w": 1200
+   },
+   {
+    "bytes": 162986,
+    "h": 906,
+    "url": "/img/about/exterior.webp",
+    "w": 1600
+   }
+  ],
+  "w": 1600
+ },
+ "/img/careers/team.webp": {
+  "h": 906,
+  "variants": [
+   {
+    "bytes": 21288,
+    "h": 226,
+    "url": "/img/careers/team-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 52942,
+    "h": 453,
+    "url": "/img/careers/team-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 91130,
+    "h": 680,
+    "url": "/img/careers/team-1200w.webp",
+    "w": 1200
+   },
+   {
+    "bytes": 149350,
+    "h": 906,
+    "url": "/img/careers/team.webp",
+    "w": 1600
+   }
+  ],
+  "w": 1600
+ },
+ "/img/events/expo.webp": {
+  "h": 680,
+  "variants": [
+   {
+    "bytes": 24676,
+    "h": 227,
+    "url": "/img/events/expo-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 70226,
+    "h": 453,
+    "url": "/img/events/expo-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 130460,
+    "h": 680,
+    "url": "/img/events/expo.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/events/open-day.webp": {
+  "h": 680,
+  "variants": [
+   {
+    "bytes": 26022,
+    "h": 227,
+    "url": "/img/events/open-day-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 81660,
+    "h": 453,
+    "url": "/img/events/open-day-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 159672,
+    "h": 680,
+    "url": "/img/events/open-day.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/events/training.webp": {
+  "h": 680,
+  "variants": [
+   {
+    "bytes": 21584,
+    "h": 227,
+    "url": "/img/events/training-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 62220,
+    "h": 453,
+    "url": "/img/events/training-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 122142,
+    "h": 680,
+    "url": "/img/events/training.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/hero/hero-chip.webp": {
+  "h": 1087,
+  "variants": [
+   {
+    "bytes": 22032,
+    "h": 226,
+    "url": "/img/hero/hero-chip-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 59402,
+    "h": 453,
+    "url": "/img/hero/hero-chip-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 103076,
+    "h": 679,
+    "url": "/img/hero/hero-chip-1200w.webp",
+    "w": 1200
+   },
+   {
+    "bytes": 146394,
+    "h": 906,
+    "url": "/img/hero/hero-chip-1600w.webp",
+    "w": 1600
+   },
+   {
+    "bytes": 201284,
+    "h": 1087,
+    "url": "/img/hero/hero-chip.webp",
+    "w": 1920
+   }
+  ],
+  "w": 1920
+ },
+ "/img/hero/hero-factory.webp": {
+  "h": 1087,
+  "variants": [
+   {
+    "bytes": 21694,
+    "h": 226,
+    "url": "/img/hero/hero-factory-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 69484,
+    "h": 453,
+    "url": "/img/hero/hero-factory-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 134072,
+    "h": 679,
+    "url": "/img/hero/hero-factory-1200w.webp",
+    "w": 1200
+   },
+   {
+    "bytes": 211230,
+    "h": 906,
+    "url": "/img/hero/hero-factory-1600w.webp",
+    "w": 1600
+   },
+   {
+    "bytes": 298558,
+    "h": 1087,
+    "url": "/img/hero/hero-factory.webp",
+    "w": 1920
+   }
+  ],
+  "w": 1920
+ },
+ "/img/lines/audio.webp": {
+  "h": 795,
+  "variants": [
+   {
+    "bytes": 25080,
+    "h": 265,
+    "url": "/img/lines/audio-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 67284,
+    "h": 530,
+    "url": "/img/lines/audio-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 119684,
+    "h": 795,
+    "url": "/img/lines/audio.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/lines/phones.webp": {
+  "h": 795,
+  "variants": [
+   {
+    "bytes": 22658,
+    "h": 265,
+    "url": "/img/lines/phones-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 61598,
+    "h": 530,
+    "url": "/img/lines/phones-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 113432,
+    "h": 795,
+    "url": "/img/lines/phones.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/lines/power.webp": {
+  "h": 795,
+  "variants": [
+   {
+    "bytes": 22908,
+    "h": 265,
+    "url": "/img/lines/power-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 62588,
+    "h": 530,
+    "url": "/img/lines/power-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 112918,
+    "h": 795,
+    "url": "/img/lines/power.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/lines/wearables.webp": {
+  "h": 795,
+  "variants": [
+   {
+    "bytes": 25408,
+    "h": 265,
+    "url": "/img/lines/wearables-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 63158,
+    "h": 530,
+    "url": "/img/lines/wearables-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 111706,
+    "h": 795,
+    "url": "/img/lines/wearables.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/news/opening.webp": {
+  "h": 680,
+  "variants": [
+   {
+    "bytes": 22098,
+    "h": 227,
+    "url": "/img/news/opening-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 60588,
+    "h": 453,
+    "url": "/img/news/opening-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 117032,
+    "h": 680,
+    "url": "/img/news/opening.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/news/partnership.webp": {
+  "h": 680,
+  "variants": [
+   {
+    "bytes": 19100,
+    "h": 227,
+    "url": "/img/news/partnership-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 46266,
+    "h": 453,
+    "url": "/img/news/partnership-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 85458,
+    "h": 680,
+    "url": "/img/news/partnership.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/products/accessories.webp": {
+  "h": 800,
+  "variants": [
+   {
+    "bytes": 11668,
+    "h": 400,
+    "url": "/img/products/accessories-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 37042,
+    "h": 800,
+    "url": "/img/products/accessories.webp",
+    "w": 800
+   }
+  ],
+  "w": 800
+ },
+ "/img/products/audio.webp": {
+  "h": 800,
+  "variants": [
+   {
+    "bytes": 9408,
+    "h": 400,
+    "url": "/img/products/audio-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 27334,
+    "h": 800,
+    "url": "/img/products/audio.webp",
+    "w": 800
+   }
+  ],
+  "w": 800
+ },
+ "/img/products/powerbanks.webp": {
+  "h": 800,
+  "variants": [
+   {
+    "bytes": 5908,
+    "h": 400,
+    "url": "/img/products/powerbanks-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 18898,
+    "h": 800,
+    "url": "/img/products/powerbanks.webp",
+    "w": 800
+   }
+  ],
+  "w": 800
+ },
+ "/img/products/smartphones.webp": {
+  "h": 800,
+  "variants": [
+   {
+    "bytes": 5402,
+    "h": 400,
+    "url": "/img/products/smartphones-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 16108,
+    "h": 800,
+    "url": "/img/products/smartphones.webp",
+    "w": 800
+   }
+  ],
+  "w": 800
+ },
+ "/img/products/smartwatches.webp": {
+  "h": 800,
+  "variants": [
+   {
+    "bytes": 11112,
+    "h": 400,
+    "url": "/img/products/smartwatches-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 36244,
+    "h": 800,
+    "url": "/img/products/smartwatches.webp",
+    "w": 800
+   }
+  ],
+  "w": 800
+ },
+ "/img/sections/feature1.webp": {
+  "h": 566,
+  "variants": [
+   {
+    "bytes": 21608,
+    "h": 226,
+    "url": "/img/sections/feature1-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 67156,
+    "h": 453,
+    "url": "/img/sections/feature1-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 103564,
+    "h": 566,
+    "url": "/img/sections/feature1.webp",
+    "w": 1000
+   }
+  ],
+  "w": 1000
+ },
+ "/img/sections/feature2.webp": {
+  "h": 566,
+  "variants": [
+   {
+    "bytes": 25614,
+    "h": 226,
+    "url": "/img/sections/feature2-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 80702,
+    "h": 453,
+    "url": "/img/sections/feature2-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 121446,
+    "h": 566,
+    "url": "/img/sections/feature2.webp",
+    "w": 1000
+   }
+  ],
+  "w": 1000
+ },
+ "/img/sections/feature3.webp": {
+  "h": 1000,
+  "variants": [
+   {
+    "bytes": 5502,
+    "h": 400,
+    "url": "/img/sections/feature3-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 13840,
+    "h": 800,
+    "url": "/img/sections/feature3-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 22840,
+    "h": 1000,
+    "url": "/img/sections/feature3.webp",
+    "w": 1000
+   }
+  ],
+  "w": 1000
+ },
+ "/img/services/oem.webp": {
+  "h": 795,
+  "variants": [
+   {
+    "bytes": 22960,
+    "h": 265,
+    "url": "/img/services/oem-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 57600,
+    "h": 530,
+    "url": "/img/services/oem-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 105042,
+    "h": 795,
+    "url": "/img/services/oem.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/services/packaging.webp": {
+  "h": 795,
+  "variants": [
+   {
+    "bytes": 20986,
+    "h": 265,
+    "url": "/img/services/packaging-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 58962,
+    "h": 530,
+    "url": "/img/services/packaging-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 107920,
+    "h": 795,
+    "url": "/img/services/packaging.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/services/qc.webp": {
+  "h": 795,
+  "variants": [
+   {
+    "bytes": 19102,
+    "h": 265,
+    "url": "/img/services/qc-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 49224,
+    "h": 530,
+    "url": "/img/services/qc-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 89708,
+    "h": 795,
+    "url": "/img/services/qc.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/services/smt.webp": {
+  "h": 795,
+  "variants": [
+   {
+    "bytes": 28522,
+    "h": 265,
+    "url": "/img/services/smt-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 76050,
+    "h": 530,
+    "url": "/img/services/smt-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 135026,
+    "h": 795,
+    "url": "/img/services/smt.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ },
+ "/img/services/support.webp": {
+  "h": 795,
+  "variants": [
+   {
+    "bytes": 20102,
+    "h": 265,
+    "url": "/img/services/support-400w.webp",
+    "w": 400
+   },
+   {
+    "bytes": 49364,
+    "h": 530,
+    "url": "/img/services/support-800w.webp",
+    "w": 800
+   },
+   {
+    "bytes": 86610,
+    "h": 795,
+    "url": "/img/services/support.webp",
+    "w": 1200
+   }
+  ],
+  "w": 1200
+ }
+}

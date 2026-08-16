@@ -132,11 +132,47 @@
     <link rel="alternate icon" href="~/favicon.ico" sizes="16x16 32x32 48x48 64x64" />
     <link rel="apple-touch-icon" href="~/img/brand/apple-touch-icon.png" sizes="180x180" />
 
-    <link rel="stylesheet" href="~/fonts/inter.local.css" />
-    <link rel="stylesheet" href="~/fonts/plexar.local.css" />
-    <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
-    <link rel="stylesheet" href="~/lib/swiper/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="~/lib/glightbox/glightbox.min.css" />
+    @* Both font families used to load on every page, but a page only ever renders
+       in one language: the Arabic page was pulling Inter's whole Latin family
+       (~280 KB of weights it never paints with) and the English page was pulling
+       IBM Plex Arabic. Each language now links only its own stylesheet.
+
+       The browser cannot discover a webfont until it has parsed the CSS that
+       references it, which costs an extra round-trip on the critical path — so
+       the regular weight of the active language is preloaded here as well. *@
+    @if (Lang.IsAr)
+    {
+        <link rel="preload" as="font" type="font/woff2"
+              href="~/fonts/files/Qw3CZRtWPQCuHme67tEYUIx3Kh0PHR9N6Ys43PWrfQ.woff2" crossorigin />
+        <link rel="stylesheet" href="~/fonts/plexar.local.css" />
+    }
+    else
+    {
+        <link rel="preload" as="font" type="font/woff2"
+              href="~/fonts/files/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2" crossorigin />
+        <link rel="stylesheet" href="~/fonts/inter.local.css" />
+    }
+
+    @* FontAwesome ships three webfonts totalling ~295 KB, but icons are pure
+       decoration: none of them carry meaning that the text does not already
+       convey. Loading the stylesheet with media="print" + onload keeps it off
+       the critical path entirely, so first paint no longer waits on it. The
+       <noscript> copy keeps icons working without JavaScript. Applied to the
+       carousel and lightbox CSS too — neither is needed before paint. *@
+    <link rel="preload" as="style" href="~/lib/fontawesome/css/all.min.css" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css"
+          media="print" data-async-style="1" />
+    <link rel="stylesheet" href="~/lib/swiper/swiper-bundle.min.css"
+          media="print" data-async-style="1" />
+    <link rel="stylesheet" href="~/lib/glightbox/glightbox.min.css"
+          media="print" data-async-style="1" />
+    <noscript>
+        <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
+        <link rel="stylesheet" href="~/lib/swiper/swiper-bundle.min.css" />
+        <link rel="stylesheet" href="~/lib/glightbox/glightbox.min.css" />
+    </noscript>
+    @* Must run before those sheets finish downloading, hence no defer. ~1 KB. *@
+    <script src="~/js/async-css.js" asp-append-version="true"></script>
     <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
@@ -179,8 +215,11 @@
     @* ── Header ──────────────────────────────────────────────────────────── *@
     <header class="sv-header">
         <div class="sv-container sv-header__inner">
+            @* The header logo is above the fold on every page: lazy-loading it
+               would visibly pop in after paint. *@
             <a class="sv-logo" href="@Lang.Url("/")" aria-label="@siteName">
-                <img src="@logoDark" alt="@siteName" width="@logoW" height="100" />
+                <img src="@logoDark" alt="@siteName" width="@logoW" height="100"
+                     loading="eager" fetchpriority="high" sv-responsive="false" />
             </a>
 
             <nav class="sv-nav" aria-label="@tMainNav">
@@ -216,7 +255,8 @@
         <div class="sv-drawer__panel">
             <div class="sv-drawer__head">
                 <a class="sv-logo" href="@Lang.Url("/")">
-                    <img src="@logoDark" alt="@siteName" width="@logoW" height="100" />
+                    <img src="@logoDark" alt="@siteName" width="@logoW" height="100"
+                         loading="eager" sv-responsive="false" />
                 </a>
                 <button class="sv-drawer__close" type="button" aria-label="@tClose">
                     <i class="fa-solid fa-xmark"></i>

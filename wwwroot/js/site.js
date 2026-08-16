@@ -146,9 +146,38 @@
 
     const count = el.querySelectorAll('.swiper-slide').length;
 
+    // Slides after the first hold their real URL in data-src so they do not
+    // compete with the LCP image for bandwidth. Swap them in once the page has
+    // finished loading (or as soon as the user interacts with the carousel).
+    let heroHydrated = false;
+    function hydrateHeroSlides() {
+      if (heroHydrated) return;
+      heroHydrated = true;
+      el.querySelectorAll('img[data-src]').forEach(img => {
+        // srcset/sizes must be applied BEFORE src, otherwise the browser starts
+        // fetching the plain src and then discards it for the srcset pick.
+        const ss = img.getAttribute('data-srcset');
+        const sz = img.getAttribute('data-sizes');
+        if (sz) { img.sizes = sz; img.removeAttribute('data-sizes'); }
+        if (ss) { img.srcset = ss; img.removeAttribute('data-srcset'); }
+        img.src = img.getAttribute('data-src');
+        img.removeAttribute('data-src');
+        img.classList.remove('sv-hero__deferred');
+      });
+    }
+    if (document.readyState === 'complete') {
+      setTimeout(hydrateHeroSlides, 200);
+    } else {
+      window.addEventListener('load', () => setTimeout(hydrateHeroSlides, 200), { once: true });
+    }
+
     // Mark as ready so the CSS can reveal the slides. Without this the hero
     // stayed hidden (or flickered) whenever Swiper bailed out or was slow.
     const ready = () => hero.classList.add('is-ready');
+
+    // If Swiper never initialises we still must reveal the other slides,
+    // otherwise they would stay blank forever.
+    if (typeof Swiper === 'undefined' || count < 2) hydrateHeroSlides();
 
     if (typeof Swiper === 'undefined' || count < 2) { ready(); return; }
 
@@ -163,7 +192,12 @@
       autoplay: { delay: 6500, disableOnInteraction: false, pauseOnMouseEnter: true },
       pagination: { el: '.sv-hero .swiper-pagination', clickable: true },
       a11y: { enabled: true },
-      on: { init: ready }
+      on: {
+        init: ready,
+        // Any move towards another slide must have the image ready first.
+        beforeTransitionStart: hydrateHeroSlides,
+        touchStart: hydrateHeroSlides
+      }
     });
   }
 

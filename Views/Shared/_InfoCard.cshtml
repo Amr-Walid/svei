@@ -10,7 +10,7 @@
 <div class="sv-icard sv-reveal" style="@style">
     @if (!string.IsNullOrWhiteSpace(Model.ImagePath))
     {
-        <img class="sv-icard__img" src="@Model.ImagePath" alt="@title" loading="lazy" />
+        <img class="sv-icard__img" src="@Model.ImagePath" alt="@title" loading="lazy" sv-sizes="(max-width: 700px) 92vw, (max-width: 1100px) 46vw, 380px" />
     }
     else if (!string.IsNullOrWhiteSpace(Model.Icon))
     {

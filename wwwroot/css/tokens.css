@@ -40,8 +40,13 @@
   --sv-text-invert:  #FFFFFF;
 
   /* ── Typography ────────────────────────────────────────────────────────── */
+  /* Each page links only the font stylesheet for its own language (see
+     _Layout.cshtml), so 'Inter' is no longer listed as an Arabic fallback —
+     it is not downloaded on Arabic pages and naming it would only cost a
+     failed lookup. IBM Plex Sans Arabic ships Latin subsets of its own, so
+     mixed content like "SVEI" and figures still render in the same family. */
   --sv-font-en: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --sv-font-ar: 'IBM Plex Sans Arabic', 'Inter', system-ui, sans-serif;
+  --sv-font-ar: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --sv-font:    var(--sv-font-en);
   --sv-font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Code', monospace;
 

@@ -35,7 +35,7 @@
             <div class="sv-featured">
                 <article class="sv-featured__lead sv-reveal">
                     <a class="sv-featured__media" href="@leadUrl">
-                        <img src="@leadImg" alt="@leadTitle" loading="lazy" />
+                        <img src="@leadImg" alt="@leadTitle" loading="lazy" sv-sizes="(max-width: 900px) 100vw, 60vw" />
                     </a>
                     <div class="sv-featured__body">
                         <div class="sv-card__meta">
@@ -63,7 +63,7 @@
                             var t = Lang.Pick(p.TitleAr, p.TitleEn);
                             <article class="sv-mini sv-reveal">
                                 <a class="sv-mini__media" href="@u">
-                                    <img src="@(p.CoverImagePath ?? "/img/sections/feature2.webp")" alt="@t" loading="lazy" />
+                                    <img src="@(p.CoverImagePath ?? "/img/sections/feature2.webp")" alt="@t" loading="lazy" sv-sizes="(max-width: 700px) 92vw, (max-width: 1100px) 46vw, 380px" />
                                 </a>
                                 <div class="sv-mini__body">
                                     <span class="sv-mini__date">@p.PublishedAt.ToString("dd MMM yyyy", ci)</span>
