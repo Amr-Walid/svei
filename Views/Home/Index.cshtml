@@ -43,13 +43,13 @@
                                     <div class="sv-hero__actions">
                                         @if (!string.IsNullOrWhiteSpace(b1))
                                         {
-                                            <a class="sv-btn sv-btn--primary sv-btn--lg" href="@(slide.ButtonUrl ?? "#")">
+                                            <a class="sv-btn sv-btn--primary sv-btn--lg" href="@(Lang.LinkUrl(slide.ButtonUrl) ?? "#")">
                                                 @b1 <i class="fa-solid @arrow"></i>
                                             </a>
                                         }
                                         @if (!string.IsNullOrWhiteSpace(b2))
                                         {
-                                            <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@(slide.Button2Url ?? "#")">@b2</a>
+                                            <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@(Lang.LinkUrl(slide.Button2Url) ?? "#")">@b2</a>
                                         }
                                     </div>
                                 </div>
@@ -103,13 +103,13 @@
                     <div class="sv-split__actions">
                         @if (!string.IsNullOrWhiteSpace(Lang.Pick(intro.ButtonTextAr, intro.ButtonTextEn)))
                         {
-                            <a class="sv-btn sv-btn--primary" href="@(intro.ButtonUrl ?? Lang.Url("/about"))">
+                            <a class="sv-btn sv-btn--primary" href="@(Lang.LinkUrl(intro.ButtonUrl) ?? Lang.Url("/about"))">
                                 @Lang.Pick(intro.ButtonTextAr, intro.ButtonTextEn) <i class="fa-solid @arrow"></i>
                             </a>
                         }
                         @if (!string.IsNullOrWhiteSpace(Lang.Pick(intro.Button2TextAr, intro.Button2TextEn)))
                         {
-                            <a class="sv-btn sv-btn--outline" href="@(intro.Button2Url ?? Lang.Url("/contact"))">
+                            <a class="sv-btn sv-btn--outline" href="@(Lang.LinkUrl(intro.Button2Url) ?? Lang.Url("/contact"))">
                                 @Lang.Pick(intro.Button2TextAr, intro.Button2TextEn)
                             </a>
                         }
@@ -432,13 +432,13 @@
                 <div class="sv-cta__actions">
                     @if (!string.IsNullOrWhiteSpace(Lang.Pick(cta.ButtonTextAr, cta.ButtonTextEn)))
                     {
-                        <a class="sv-btn sv-btn--light sv-btn--lg" href="@(cta.ButtonUrl ?? Lang.Url("/quote"))">
+                        <a class="sv-btn sv-btn--light sv-btn--lg" href="@(Lang.LinkUrl(cta.ButtonUrl) ?? Lang.Url("/quote"))">
                             @Lang.Pick(cta.ButtonTextAr, cta.ButtonTextEn) <i class="fa-solid @arrow"></i>
                         </a>
                     }
                     @if (!string.IsNullOrWhiteSpace(Lang.Pick(cta.Button2TextAr, cta.Button2TextEn)))
                     {
-                        <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@(cta.Button2Url ?? Lang.Url("/contact"))">
+                        <a class="sv-btn sv-btn--on-dark sv-btn--lg" href="@(Lang.LinkUrl(cta.Button2Url) ?? Lang.Url("/contact"))">
                             @Lang.Pick(cta.Button2TextAr, cta.Button2TextEn)
                         </a>
                     }

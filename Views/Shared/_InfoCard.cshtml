@@ -28,6 +28,6 @@
     }
     @if (!string.IsNullOrWhiteSpace(Model.LinkUrl) && !string.IsNullOrWhiteSpace(link))
     {
-        <a class="sv-icard__link" href="@Model.LinkUrl">@link <i class="fa-solid fa-arrow-@(Lang.IsAr ? "left" : "right")"></i></a>
+        <a class="sv-icard__link" href="@Lang.LinkUrl(Model.LinkUrl)">@link <i class="fa-solid fa-arrow-@(Lang.IsAr ? "left" : "right")"></i></a>
     }
 </div>

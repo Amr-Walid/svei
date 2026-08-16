@@ -56,18 +56,14 @@ namespace SVEI.Web.ViewComponents
             };
         }
 
-        /// <summary>Internal links get the /{culture} prefix; external links pass through.</summary>
-        private string Localize(string? url)
-        {
-            if (string.IsNullOrWhiteSpace(url)) return "#";
-            if (url.StartsWith("http", StringComparison.OrdinalIgnoreCase) ||
-                url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase) ||
-                url.StartsWith("tel:", StringComparison.OrdinalIgnoreCase) ||
-                url.StartsWith('#'))
-                return url;
-
-            return _lang.Url(url);
-        }
+        /// <summary>
+        /// Internal links get the /{culture} prefix; external links pass through.
+        /// Delegates to ILang.LinkUrl so menus, hero buttons and info cards all
+        /// resolve admin-entered links by exactly the same rules — this used to be a
+        /// weaker private copy that, for example, double-prefixed a link an admin
+        /// had already written as "/en/contact".
+        /// </summary>
+        private string Localize(string? url) => _lang.LinkUrl(url) ?? "#";
 
         private static bool IsActive(string url, string currentPath)
         {
